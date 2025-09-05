@@ -21,10 +21,10 @@ set(SOURCE_FILE
 
     src/core/static_imu_init.cc
 
-    src/icp/icp_3d.cc
-    src/icp/ndt_3d.cc
+    # src/icp/icp_3d.cc
+    # src/icp/ndt_3d.cc
     src/icp/ndt_inc.cc
-    src/lidar/feature_extraction.cc
+    # src/lidar/feature_extraction.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
     src/map/kdtree.cc
@@ -32,6 +32,7 @@ set(SOURCE_FILE
 
     src/slam/incremental_ndt_lo.cc
     src/slam/loosely_lio.cc
+    src/slam/incremental_vgicp_lo.cc
 
     src/tools/ui/pangolin_window_impl.cc
     src/tools/ui/pangolin_window.cc
@@ -47,6 +48,15 @@ add_executable(${PROJECT_NAME}_node
     src/app/main_ros.cc
     ${SOURCE_FILE}
 )
+
+
+add_executable(${PROJECT_NAME}_lo_node
+    src/app/main_lo.cc
+    ${SOURCE_FILE}
+)
+
+
+
 
 # 链接所有第三方库（包括 ROS 依赖库和其他第三方库）
 target_link_libraries(${PROJECT_NAME}_node

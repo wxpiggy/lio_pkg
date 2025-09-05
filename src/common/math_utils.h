@@ -717,6 +717,10 @@ bool PoseInterp(double query_time, const std::map<double, T>& data, const std::f
     best_match = s < 0.5 ? match_iter->second : match_iter_n->second;
     return true;
 }
+inline Eigen::Array4i fast_floor(const Eigen::Array4d& pt) {
+  const Eigen::Array4i ncoord = pt.cast<int>();
+  return ncoord - (pt < ncoord.cast<double>()).cast<int>();
+};
 
 }  // namespace wxpiggy::math
 

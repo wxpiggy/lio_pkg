@@ -25,8 +25,8 @@ class IncNdt3d {
 
     struct Options {
         int max_iteration_ = 4;        // 最大迭代次数
-        double voxel_size_ = 1.0;      // 体素大小
-        double inv_voxel_size_ = 1.0;  // 体素大小之逆
+        double voxel_size_ = 0.5;      // 体素大小
+        double inv_voxel_size_ = 2.0;  // 体素大小之逆
         int min_effective_pts_ = 10;   // 最近邻点数阈值
         int min_pts_in_voxel_ = 5;     // 每个栅格中最小点数
         int max_pts_in_voxel_ = 50;    // 每个栅格中最大点数

@@ -24,7 +24,7 @@ bool LooselyLIO::Init(const std::string &config_yaml) {
     wxpiggy::IncrementalNDTLO::Options indt_options;
     indt_options.display_realtime_cloud_ = false;  // 这个程序自己有UI，不用PCL中的
     inc_ndt_lo_ = std::make_shared<wxpiggy::IncrementalNDTLO>(indt_options);
-
+    
     /// 初始化UI
     if (options_.with_ui_) {
         ui_ = std::make_shared<ui::PangolinWindow>();
@@ -157,8 +157,10 @@ void LooselyLIO::Align() {
 
     /// 从EKF中获取预测pose，放入LO，获取LO位姿，最后合入EKF
     SE3 pose_predict = eskf_.GetNominalSE3();
+    //core
     inc_ndt_lo_->AddCloud(current_scan_filter, pose_predict, true);
     pose_of_lo_ = pose_predict;
+    
     eskf_.ObserveSE3(pose_of_lo_, 1e-2, 1e-2);
 
     if (options_.with_ui_) {
