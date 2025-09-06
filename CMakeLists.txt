@@ -10,6 +10,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g ${CMAKE_CXX_FLAGS}")
 add_definitions("-DCATKIN_ENABLE_TESTING=0")
 include(cmake/packages.cmake)
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/devel/include)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/build/devel/include)
 
@@ -24,7 +25,7 @@ set(SOURCE_FILE
     src/icp/icp_3d.cc
     src/icp/ndt_3d.cc
     src/icp/ndt_inc.cc
-    src/lidar/feature_extraction.cc
+    # src/lidar/feature_extraction.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
     src/map/kdtree.cc

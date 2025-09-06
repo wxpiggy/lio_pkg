@@ -15,13 +15,13 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include "point_types.h"
-#include "velodyne_msgs/VelodyneScan.h"
+// #include "velodyne_msgs/VelodyneScan.h"
 
 /// 雷达扫描的一些消息定义和工具函数
 using Scan2d = sensor_msgs::LaserScan;
 using MultiScan2d = sensor_msgs::MultiEchoLaserScan;
-using PacketsMsg = velodyne_msgs::VelodyneScan;
-using PacketsMsgPtr = boost::shared_ptr<PacketsMsg>;
+// using PacketsMsg = velodyne_msgs::VelodyneScan;
+// using PacketsMsgPtr = boost::shared_ptr<PacketsMsg>;
 
 namespace wxpiggy {
 
