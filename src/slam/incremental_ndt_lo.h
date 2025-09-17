@@ -5,7 +5,7 @@
 #ifndef SLAM_IN_AUTO_DRIVING_INCREMENTAL_NDT_LO_H
 #define SLAM_IN_AUTO_DRIVING_INCREMENTAL_NDT_LO_H
 
-#include "icp/ndt_inc.h"
+#include "map/ndt_inc.h"
 #include "common/eigen_types.h"
 #include "common/point_types.h"
 #include "tools/pcl_map_viewer.h"

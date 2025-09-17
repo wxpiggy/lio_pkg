@@ -2,7 +2,7 @@
 
 // #include <livox_ros_driver/CustomMsg.h>
 #include <pcl_conversions/pcl_conversions.h>
-
+#include "livox_ros_driver/CustomMsg.h"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -34,7 +34,7 @@ class CloudConvert {
      * @param msg
      * @param pcl_out
      */
-    // void Process(const livox_ros_driver::CustomMsg::ConstPtr &msg, FullCloudPtr &pcl_out);
+    void Process(const livox_ros_driver::CustomMsg::ConstPtr &msg, FullCloudPtr &pcl_out);
 
     /**
      * 处理sensor_msgs::PointCloud2点云
@@ -47,7 +47,7 @@ class CloudConvert {
     void LoadFromYAML(const std::string &yaml);
 
    private:
-    // void AviaHandler(const livox_ros_driver::CustomMsg::ConstPtr &msg);
+    void AviaHandler(const livox_ros_driver::CustomMsg::ConstPtr &msg);
     void Oust64Handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
     void VelodyneHandler(const sensor_msgs::PointCloud2::ConstPtr &msg);
 

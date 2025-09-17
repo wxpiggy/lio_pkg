@@ -8,7 +8,7 @@
 #include "preprocess/cloud_convert.h"
 #include "common/imu.h"
 #include "common/point_types.h"
-
+#include "livox_ros_driver/CustomMsg.h"
 #include <glog/logging.h>
 #include <deque>
 
@@ -68,25 +68,25 @@ class MessageSync {
     }
 
     /// 处理Livox点云
-    // void ProcessCloud(const livox_ros_driver::CustomMsg::ConstPtr &msg) {
-    //     if (msg->header.stamp.toSec() < last_timestamp_lidar_) {
-    //         LOG(WARNING) << "lidar loop back, clear buffer";
-    //         lidar_buffer_.clear();
-    //     }
+    void ProcessCloud(const livox_ros_driver::CustomMsg::ConstPtr &msg) {
+        if (msg->header.stamp.toSec() < last_timestamp_lidar_) {
+            LOG(WARNING) << "lidar loop back, clear buffer";
+            lidar_buffer_.clear();
+        }
 
-    //     last_timestamp_lidar_ = msg->header.stamp.toSec();
-    //     FullCloudPtr ptr(new FullPointCloudType());
-    //     conv_->Process(msg, ptr);
+        last_timestamp_lidar_ = msg->header.stamp.toSec();
+        FullCloudPtr ptr(new FullPointCloudType());
+        conv_->Process(msg, ptr);
 
-    //     if (ptr->empty()) {
-    //         return;
-    //     }
+        if (ptr->empty()) {
+            return;
+        }
 
-    //     lidar_buffer_.emplace_back(ptr);
-    //     time_buffer_.emplace_back(last_timestamp_lidar_);
+        lidar_buffer_.emplace_back(ptr);
+        time_buffer_.emplace_back(last_timestamp_lidar_);
 
-    //     Sync();
-    // }
+        Sync();
+    }
 
    private:
     /// 尝试同步IMU与激光数据，成功时返回true

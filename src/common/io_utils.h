@@ -17,6 +17,7 @@
 #include "gnss.h"
 #include "imu.h"
 #include "lidar_utils.h"
+#include "livox_ros_driver/CustomMsg.h"
 #include "math_utils.h"
 #include "message_def.h"
 #include "odom.h"
@@ -84,7 +85,7 @@ class RosbagIO {
     using ImuHandle = std::function<bool(IMUPtr)>;
     using GNSSHandle = std::function<bool(GNSSPtr)>;
     using OdomHandle = std::function<bool(const Odom &)>;
-    // using LivoxHandle = std::function<bool(const livox_ros_driver::CustomMsg::ConstPtr &msg)>;
+    using LivoxHandle = std::function<bool(const livox_ros_driver::CustomMsg::ConstPtr &msg)>;
 
     // 遍历文件内容，调用回调函数
     void Go();
@@ -162,16 +163,16 @@ class RosbagIO {
     }
 
     /// livox msg 处理
-    // RosbagIO &AddLivoxHandle(LivoxHandle f) {
-    //     return AddHandle(GetLidarTopicName(), [f, this](const rosbag::MessageInstance &m) -> bool {
-    //         auto msg = m.instantiate<livox_ros_driver::CustomMsg>();
-    //         if (msg == nullptr) {
-    //             LOG(INFO) << "cannot inst: " << m.getTopic();
-    //             return false;
-    //         }
-    //         return f(msg);
-    //     });
-    // }
+    RosbagIO &AddLivoxHandle(LivoxHandle f) {
+        return AddHandle(GetLidarTopicName(), [f, this](const rosbag::MessageInstance &m) -> bool {
+            auto msg = m.instantiate<livox_ros_driver::CustomMsg>();
+            if (msg == nullptr) {
+                LOG(INFO) << "cannot inst: " << m.getTopic();
+                return false;
+            }
+            return f(msg);
+        });
+    }
 
     /// wxb的velodyne packets处理
     // RosbagIO &AddVelodyneHandle(const std::string &topic_name, FullPointCloudHandle f) {
