@@ -2,19 +2,20 @@
 #define FASTER_LIO_LASER_MAPPING_H
 
 #include <livox_ros_driver/CustomMsg.h>
-#include <pcl/filters/voxel_grid.h>
+
 #include <sensor_msgs/PointCloud2.h>
 
 #include "core/eskf.hpp"
 #include "core/static_imu_init.h"
 #include "slam/incremental_ndt_lo.h"
-#include "preprocess/cloud_convert.h"
+
 #include "preprocess/measure_sync.h"
 
-#include "tools/ui/pangolin_window.h"
 
 namespace wxpiggy {
-
+namespace ui {
+class PangolinWindow;
+}
 /**
  * 7.5 节实现的松耦合LIO程序
  * 使用第3章的ekf, 7.3节的增量NDT里程计来实现

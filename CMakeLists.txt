@@ -17,11 +17,11 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")# 追求最小体积
 
 add_definitions("-DCATKIN_ENABLE_TESTING=0")
 include(cmake/packages.cmake)
-# include_directories(${PROJECT_SOURCE_DIR})
-# include_directories(${PROJECT_SOURCE_DIR}/../devel/include)
-include_directories(${PROJECT_SOURCE_DIR}/src)
-# include_directories(${PROJECT_SOURCE_DIR}/../build/devel/include)
 
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/build/devel/include)
+# add_subdirectory(src)
 add_library(lio_core SHARED
     src/common/io_utils.cc
     src/common/timer/timer.cc

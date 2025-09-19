@@ -6,16 +6,18 @@
 #include <sensor_msgs/PointCloud2.h>
 
 /// 部分类直接使用ch7的结果
-#include "core/static_imu_init.h"
-#include "preprocess/cloud_convert.h"
-#include "preprocess/measure_sync.h"
-#include "map/ndt_inc.h"
 #include "core/iekf.hpp"
+#include "core/static_imu_init.h"
+#include "map/ndt_inc.h"
 
-#include "tools/ui/pangolin_window.h"
+#include "preprocess/measure_sync.h"
+
+// #include "tools/ui/pangolin_window.h"
 
 namespace wxpiggy {
-
+namespace ui {
+class PangolinWindow;
+}
 class LioIEKF {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -94,6 +96,6 @@ class LioIEKF {
     std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
 };
 
-}  // namespace sad
+}  // namespace wxpiggy
 
 #endif  // FASTER_LIO_LASER_MAPPING_H

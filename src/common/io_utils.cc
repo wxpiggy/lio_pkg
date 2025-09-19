@@ -67,6 +67,7 @@ std::string RosbagIO::GetLidarTopicName() const {
     if (dataset_type_ == DatasetType::AVIA) {
         return avia_lidar_topic;
     }
+    
 }
 
 void RosbagIO::Go() {

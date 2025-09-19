@@ -1,5 +1,6 @@
 #include <pcl/common/transforms.h>
 #include <yaml-cpp/yaml.h>
+
 #include <execution>
 #include <fstream>
 
@@ -12,10 +13,10 @@
 // #include "ch4/g2o_types_preinteg.h"
 // #include "common/g2o_types.h"
 
+#include "tools/ui/pangolin_window.h"
 #include "common/lidar_utils.h"
 #include "common/point_cloud_utils.h"
 #include "common/timer/timer.h"
-
 #include "lio_iekf.h"
 
 namespace wxpiggy {
@@ -165,8 +166,12 @@ void LioIEKF::Undistort() {
 
         // 根据pt.time查找时间，pt.time是该点打到的时间与雷达开始时间之差，单位为毫秒
         math::PoseInterp<NavStated>(
-            measures_.lidar_begin_time_ + pt.time * 1e-3, imu_states_, [](const NavStated &s) { return s.timestamp_; },
-            [](const NavStated &s) { return s.GetSE3(); }, Ti, match);
+            measures_.lidar_begin_time_ + pt.time * 1e-3,
+            imu_states_,
+            [](const NavStated &s) { return s.timestamp_; },
+            [](const NavStated &s) { return s.GetSE3(); },
+            Ti,
+            match);
 
         Vec3d pi = ToVec3d(pt);
         Vec3d p_compensate = TIL_.inverse() * T_end.inverse() * Ti * TIL_ * pi;
@@ -193,17 +198,27 @@ void LioIEKF::Predict() {
     }
 }
 
-void LioIEKF::PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr &msg) { sync_->ProcessCloud(msg); }
+void LioIEKF::PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr &msg) {
+    sync_->ProcessCloud(msg);
+}
 
-void LioIEKF::LivoxPCLCallBack(const livox_ros_driver::CustomMsg::ConstPtr &msg) { sync_->ProcessCloud(msg); }
+void LioIEKF::LivoxPCLCallBack(const livox_ros_driver::CustomMsg::ConstPtr &msg) {
+    sync_->ProcessCloud(msg);
+}
 
-void LioIEKF::IMUCallBack(IMUPtr msg_in) { sync_->ProcessIMU(msg_in); }
+void LioIEKF::IMUCallBack(IMUPtr msg_in) {
+    sync_->ProcessIMU(msg_in);
+}
 
 void LioIEKF::Finish() {
-    if (ui_) {
+    if (options_.with_ui_) {
+        while (ui_->ShouldQuit() == false) {
+            usleep(1e5);
+        }
+
         ui_->Quit();
     }
     LOG(INFO) << "finish done";
 }
 
-}  // namespace sad
+}  // namespace wxpiggy

@@ -13,7 +13,6 @@
 #include "common/odom.h"
 
 #include <glog/logging.h>
-#include <iomanip>
 
 namespace wxpiggy {
 
@@ -38,7 +37,6 @@ class ESKF {
     using GnssNoiseT = Eigen::Matrix<S, 6, 6>;      // GNSS噪声类型
     using Mat18T = Eigen::Matrix<S, 18, 18>;        // 18维方差类型
     using NavStateT = NavState<S>;                  // 整体名义状态变量类型
-
     struct Options {
         Options() = default;
 

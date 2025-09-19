@@ -3,11 +3,18 @@
 //
 
 #include "incremental_ndt_lo.h"
+#include "map/ndt_inc.h"
 #include "common/math_utils.h"
 #include "common/timer/timer.h"
-
+#include "tools/pcl_map_viewer.h"
 namespace wxpiggy {
+    IncrementalNDTLO::IncrementalNDTLO(Options options) : options_(options) {
+        if (options_.display_realtime_cloud_) {
+            viewer_ = std::make_shared<PCLMapViewer>(0.5);
+        }
 
+        ndt_ = IncNdt3d(options_.ndt3d_options_);
+    }
 void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     if (first_frame_) {
         // 第一个帧，直接加入local map

@@ -3,13 +3,15 @@
 //
 
 #include "ndt_inc.h"
+
+#include <glog/logging.h>
+
+#include <execution>
+#include <set>
+
 #include "common/lidar_utils.h"
 #include "common/math_utils.h"
 #include "common/timer/timer.h"
-
-#include <glog/logging.h>
-#include <execution>
-#include <set>
 
 namespace wxpiggy {
 
@@ -24,7 +26,7 @@ void IncNdt3d::AddCloud(CloudPtr cloud_world) {
             data_.push_front({key, {pt}});
             grids_.insert({key, data_.begin()});
 
-            if (data_.size() >= options_.capacity_) {  //LRU
+            if (data_.size() >= options_.capacity_) {  // LRU
                 // 删除一个尾部的数据
                 grids_.erase(data_.back().first);
                 data_.pop_back();
@@ -40,8 +42,9 @@ void IncNdt3d::AddCloud(CloudPtr cloud_world) {
     }
 
     // 更新active_voxels
-    std::for_each(std::execution::par_unseq, active_voxels.begin(), active_voxels.end(),
-                  [this](const auto& key) { UpdateVoxel(grids_[key]->second); });
+    std::for_each(std::execution::par_unseq, active_voxels.begin(), active_voxels.end(), [this](const auto& key) {
+        UpdateVoxel(grids_[key]->second);
+    });
     flag_first_scan_ = false;
 }
 
@@ -49,8 +52,13 @@ void IncNdt3d::GenerateNearbyGrids() {
     if (options_.nearby_type_ == NearbyType::CENTER) {
         nearby_grids_.emplace_back(KeyType::Zero());
     } else if (options_.nearby_type_ == NearbyType::NEARBY6) {
-        nearby_grids_ = {KeyType(0, 0, 0),  KeyType(-1, 0, 0), KeyType(1, 0, 0), KeyType(0, 1, 0),
-                         KeyType(0, -1, 0), KeyType(0, 0, -1), KeyType(0, 0, 1)};
+        nearby_grids_ = {KeyType(0, 0, 0),
+                         KeyType(-1, 0, 0),
+                         KeyType(1, 0, 0),
+                         KeyType(0, 1, 0),
+                         KeyType(0, -1, 0),
+                         KeyType(0, 0, -1),
+                         KeyType(0, 0, 1)};
     }
 }
 
@@ -335,4 +343,4 @@ void IncNdt3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
 //     }
 // }
 
-}  // namespace sad
+}  // namespace wxpiggy

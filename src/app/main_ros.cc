@@ -32,10 +32,10 @@ int main(int argc, char** argv) {
             wxpiggy::common::Timer::Evaluate([&]() { lm.PCLCallBack(cloud); }, "loosely lio");
             return true;
         })
-        // .AddLivoxHandle([&](const livox_ros_driver::CustomMsg::ConstPtr& msg) -> bool {
-        //     wxpiggy::common::Timer::Evaluate([&]() { lm.LivoxPCLCallBack(msg); }, "loosely lio");
-        //     return true;
-        // })
+        .AddLivoxHandle([&](const livox_ros_driver::CustomMsg::ConstPtr& msg) -> bool {
+            wxpiggy::common::Timer::Evaluate([&]() { lm.LivoxPCLCallBack(msg); }, "loosely lio");
+            return true;
+        })
         .AddImuHandle([&](IMUPtr imu) {
             lm.IMUCallBack(imu);
             return true;

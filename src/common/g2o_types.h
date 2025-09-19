@@ -15,9 +15,10 @@
 #include "common/nav_state.h"
 
 // #include "ch4/imu_preintegration.h"
+#include <glog/logging.h>
+
 #include "g2o/core/robust_kernel_impl.h"
 
-#include <glog/logging.h>
 
 namespace wxpiggy {
 /**
@@ -425,6 +426,6 @@ class EdgeNDT : public g2o::BaseUnaryEdge<3, Vec3d, VertexPose> {
     Mat3d info_ = Mat3d::Identity();
     bool valid_ = false;
 };
-}  // namespace sad
+}  // namespace wxpiggy
 
 #endif  // SLAM_IN_AUTO_DRIVING_G2O_TYPES_H

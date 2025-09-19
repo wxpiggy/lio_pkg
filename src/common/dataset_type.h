@@ -54,7 +54,7 @@ const std::string ulhk_imu_topic = "/imu/data";
 const std::string utbm_imu_topic = "/imu/data";
 const std::string nclt_imu_topic = "imu_raw";
 const std::string wxb_imu_topic = "/ivsensorimu";
-const std::string avia_imu_topic = "/livox/imu";
+const std::string avia_imu_topic = "/zed2/zed_node/imu/data";
 // const std::string wxb_lidar_topic = "/velodyne_packets_1";
 // const std::string utbm_lidar_topic = "/velodyne_points";
 

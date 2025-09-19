@@ -2,7 +2,7 @@
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # livox ros driver
-# add_subdirectory(thirdparty/livox_ros_driver)
+add_subdirectory(thirdparty/livox_ros_driver)
 
 include_directories(${CMAKE_BINARY_DIR}/../devel/include) # 引用ros生成的msg header
 
@@ -11,7 +11,7 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 
 # sophus
-include_directories(${PROJECT_SOURCE_DIR}/thirdparty/sophus)
+# include_directories(${PROJECT_SOURCE_DIR}/thirdparty/sophus)
 
 # glog
 find_package(Glog REQUIRED)
@@ -56,7 +56,7 @@ find_package(catkin REQUIRED COMPONENTS
         sensor_msgs
         pcl_ros
         pcl_conversions
-        livox_ros_driver
+        # livox_ros_driver
         )
 include_directories(${catkin_INCLUDE_DIRS})
 

@@ -8,10 +8,11 @@
 #include "map/ndt_inc.h"
 #include "common/eigen_types.h"
 #include "common/point_types.h"
-#include "tools/pcl_map_viewer.h"
+
 
 namespace wxpiggy {
-
+class PCLMapViewer;
+class IncNdt3d;
 /**
  * 使用直接NDT方法进行递推的Lidar Odometry
  * 使用历史几个关键帧作为local map，进行NDT定位
@@ -26,13 +27,7 @@ class IncrementalNDTLO {
         IncNdt3d::Options ndt3d_options_;     // NDT3D 的配置
     };
 
-    IncrementalNDTLO(Options options = Options()) : options_(options) {
-        if (options_.display_realtime_cloud_) {
-            viewer_ = std::make_shared<PCLMapViewer>(0.5);
-        }
-
-        ndt_ = IncNdt3d(options_.ndt3d_options_);
-    }
+    IncrementalNDTLO(Options options = Options());
 
     /**
      * 往LO中增加一个点云
@@ -54,7 +49,7 @@ class IncrementalNDTLO {
     std::vector<SE3> estimated_poses_;  // 所有估计出来的pose，用于记录轨迹和预测下一个帧
     SE3 last_kf_pose_;                  // 上一关键帧的位姿
     int cnt_frame_ = 0;
-
+    
     IncNdt3d ndt_;
     std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
 };

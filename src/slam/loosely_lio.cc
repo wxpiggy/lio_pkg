@@ -1,11 +1,15 @@
+#include "loosely_lio.h"
+
+#include <pcl/common/transforms.h>
+#include <pcl/filters/voxel_grid.h>
 #include <yaml-cpp/yaml.h>
+
 #include <execution>
 
 #include "common/lidar_utils.h"
-#include "common/timer/timer.h"
 #include "common/point_cloud_utils.h"
-#include "loosely_lio.h"
-
+#include "common/timer/timer.h"
+#include "tools/ui/pangolin_window.h"
 namespace wxpiggy {
 
 LooselyLIO::LooselyLIO(Options options) : options_(options) {
@@ -115,8 +119,12 @@ void LooselyLIO::Undistort() {
 
         // 根据pt.time查找时间，pt.time是该点打到的时间与雷达开始时间之差，单位为毫秒
         math::PoseInterp<NavStated>(
-            measures_.lidar_begin_time_ + pt.time * 1e-3, imu_states_, [](const NavStated &s) { return s.timestamp_; },
-            [](const NavStated &s) { return s.GetSE3(); }, Ti, match);
+            measures_.lidar_begin_time_ + pt.time * 1e-3,
+            imu_states_,
+            [](const NavStated &s) { return s.timestamp_; },
+            [](const NavStated &s) { return s.GetSE3(); },
+            Ti,
+            match);
 
         Vec3d pi = ToVec3d(pt);
         Vec3d p_compensate = TIL_.inverse() * T_end.inverse() * Ti * TIL_ * pi;
@@ -169,11 +177,17 @@ void LooselyLIO::Align() {
     frame_num_++;
 }
 
-void LooselyLIO::PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr &msg) { sync_->ProcessCloud(msg); }
+void LooselyLIO::PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr &msg) {
+    sync_->ProcessCloud(msg);
+}
 
-// void LooselyLIO::LivoxPCLCallBack(const livox_ros_driver::CustomMsg::ConstPtr &msg) { sync_->ProcessCloud(msg); }
+void LooselyLIO::LivoxPCLCallBack(const livox_ros_driver::CustomMsg::ConstPtr &msg) {
+    sync_->ProcessCloud(msg);
+}
 
-void LooselyLIO::IMUCallBack(IMUPtr msg_in) { sync_->ProcessIMU(msg_in); }
+void LooselyLIO::IMUCallBack(IMUPtr msg_in) {
+    sync_->ProcessIMU(msg_in);
+}
 
 void LooselyLIO::Finish() {
     if (options_.with_ui_) {
@@ -186,4 +200,4 @@ void LooselyLIO::Finish() {
     LOG(INFO) << "finish done";
 }
 
-}  // namespace sad
+}  // namespace wxpiggy
