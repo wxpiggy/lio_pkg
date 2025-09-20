@@ -6,6 +6,7 @@
 #include <glog/logging.h>
 
 #include "slam/lio_iekf.h"
+#include "slam/voxel_lio.h"
 #include "common/io_utils.h"
 // #include "common/sys_utils.h"
 #include "common/timer/timer.h"
@@ -22,7 +23,8 @@ int main(int argc, char** argv) {
     google::ParseCommandLineFlags(&argc, &argv, true);
     
     wxpiggy::RosbagIO rosbag_io(fLS::FLAGS_bag_path, wxpiggy::Str2DatasetType(FLAGS_dataset_type));
-    wxpiggy::LioIEKF lio;
+    // wxpiggy::LioIEKF lio;
+    wxpiggy::VoxelLIO lio;
     lio.Init(FLAGS_config);
 
     rosbag_io

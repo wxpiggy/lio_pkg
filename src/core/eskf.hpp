@@ -108,6 +108,8 @@ class ESKF {
     /// 获取全量状态
     NavStateT GetNominalState() const { return NavStateT(current_time_, R_, p_, v_, bg_, ba_); }
 
+
+    Mat18T getCov() const {return cov_;}
     /// 获取SE3 状态
     SE3 GetNominalSE3() const { return SE3(R_, p_); }
 

@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     options.with_ui_ = FLAGS_display_map;
     wxpiggy::LooselyLIO lm(options);
     lm.Init(FLAGS_config);
-
+    
     rosbag_io
         .AddAutoPointCloudHandle([&](sensor_msgs::PointCloud2::Ptr cloud) -> bool {
             wxpiggy::common::Timer::Evaluate([&]() { lm.PCLCallBack(cloud); }, "loosely lio");

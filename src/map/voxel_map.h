@@ -16,48 +16,54 @@ which is included as part of this source code package.
 // #include "common_lib.h"
 #include <math.h>
 #include <omp.h>
-#include <pcl/common/io.h>
-#include <ros/ros.h>
-#include <unistd.h>
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
 
-#include <Eigen/Dense>
-#include <fstream>
 #include <functional>
-#include <mutex>
-#include <thread>
 #include <unordered_map>
 
+#include "common/eigen_types.h"
 #include "common/point_types.h"
-
 #define VOXELMAP_HASH_P 116101
 #define VOXELMAP_MAX_N 10000000000
 
 namespace wxpiggy {
 static int voxel_plane_id = 0;
-typedef struct pointWithCov {
-  Eigen::Vector3d point;
-  Eigen::Vector3d point_world;
-  Eigen::Matrix3d cov;
-  Eigen::Matrix3d cov_lidar;
-} pointWithCov;
+
+typedef struct pointWithVar {
+    Eigen::Vector3d point_b;      // point in the lidar body frame
+    Eigen::Vector3d point_i;      // point in the imu body frame
+    Eigen::Vector3d point_w;      // point in the world frame
+    Eigen::Matrix3d var_nostate;  // the var removed the state covarience
+    Eigen::Matrix3d body_var;
+    Eigen::Matrix3d var;
+    Eigen::Matrix3d point_crossmat;
+    Eigen::Vector3d normal;
+    pointWithVar() {
+        var_nostate = Eigen::Matrix3d::Zero();
+        var = Eigen::Matrix3d::Zero();
+        body_var = Eigen::Matrix3d::Zero();
+        point_crossmat = Eigen::Matrix3d::Zero();
+        point_b = Eigen::Vector3d::Zero();
+        point_i = Eigen::Vector3d::Zero();
+        point_w = Eigen::Vector3d::Zero();
+        normal = Eigen::Vector3d::Zero();
+    };
+} pointWithVar;
 typedef struct VoxelMapConfig {
-    double max_voxel_size_;
-    int max_layer_;
-    int max_iterations_;
-    std::vector<int> layer_init_num_;
-    int max_points_num_;
-    double planner_threshold_;
-    double beam_err_;
-    double dept_err_;
-    double sigma_num_;
-    bool is_pub_plane_map_;
+    double max_voxel_size_    = 0.5;                 // voxel_size
+    int max_layer_            = 1;                   // max_layer
+    int max_iterations_       = 5;                   // max_iterations
+    std::vector<int> layer_init_num_ = {5, 5, 5, 5, 5};  // layer_init_num
+    int max_points_num_       = 50;                  // max_points_num
+    double planner_threshold_ = 0.0025;              // min_eigen_value
+    double beam_err_          = 0.05;                // beam_err
+    double dept_err_          = 0.02;                // dept_err
+    double sigma_num_         = 3.0;                 // 你配置里没写，给个默认 1.0
+    bool is_pub_plane_map_    = false;               // 对应 yaml 里 pub_plane_en
 
     // config of local map sliding
-    double sliding_thresh;
-    bool map_sliding_en;
-    int half_map_size;
+    double sliding_thresh     = 8.0;                 // sliding_thresh
+    bool map_sliding_en       = false;               // map_sliding_en
+    int half_map_size         = 100;                 // half_map_size
 } VoxelMapConfig;
 
 typedef struct PointToPlane {
@@ -127,12 +133,10 @@ struct DS_POINT {
     int count = 0;
 };
 
-void calcBodyCov(Eigen::Vector3d &pb, const float range_inc, const float degree_inc, Eigen::Matrix3d &cov);
-
 class VoxelOctoTree {
    public:
     VoxelOctoTree() = default;
-    std::vector<pointWithCov> temp_points_;
+    std::vector<pointWithVar> temp_points_;
     VoxelPlane *plane_ptr_;
     int layer_;
     int octo_state_;  // 0 is end of tree, 1 is not
@@ -173,48 +177,46 @@ class VoxelOctoTree {
         }
         delete plane_ptr_;
     }
-    void init_plane(const std::vector<pointWithCov> &points, VoxelPlane *plane);
+    void init_plane(const std::vector<pointWithVar> &points, VoxelPlane *plane);
     void init_octo_tree();
     void cut_octo_tree();
-    void UpdateOctoTree(const pointWithCov &pv);
+    void UpdateOctoTree(const pointWithVar &pv);
 
     VoxelOctoTree *find_correspond(Eigen::Vector3d pw);
-    VoxelOctoTree *Insert(const pointWithCov &pv);
+    VoxelOctoTree *Insert(const pointWithVar &pv);
 };
 
-void loadVoxelConfig(ros::NodeHandle &nh, VoxelMapConfig &voxel_config);
+// void loadVoxelConfig(ros::NodeHandle &nh, VoxelMapConfig &voxel_config);
 
 class VoxelMapManager {
    public:
     VoxelMapManager() = default;
     VoxelMapConfig config_setting_;
     int current_frame_id_ = 0;
-    ros::Publisher voxel_map_pub_;
+    // ros::Publisher voxel_map_pub_;
     std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> voxel_map_;
 
     CloudPtr feats_undistort_;
     CloudPtr feats_down_body_;
     CloudPtr feats_down_world_;
     // Eigen::Matrix3d
-    Eigen::Matrix3d extR_;
+    Eigen::Matrix3d extR_ = Eigen::Matrix3d::Identity();
     // Eigen::Vector3d
-    Eigen::Vector3d extT_;
-    float build_residual_time, ekf_time;
-    float ave_build_residual_time = 0.0;
-    float ave_ekf_time = 0.0;
-    int scan_count = 0;
+    Eigen::Vector3d extT_ = Eigen::Vector3d::Zero();;
+
     // StatesGroup state_;
-    Eigen::Vector3d position_last_;
+    // SE3 pose;
+    // Mat6d cov;
 
     Eigen::Vector3d last_slide_position = {0, 0, 0};
 
-    geometry_msgs::Quaternion geoQuat_;
+    // geometry_msgs::Quaternion geoQuat_;
 
     int feats_down_size_;
     int effct_feat_num_;
     std::vector<Eigen::Matrix3d> cross_mat_list_;
     std::vector<Eigen::Matrix3d> body_cov_list_;
-    std::vector<pointWithCov> pv_list_;
+    std::vector<pointWithVar> pv_list_;
     std::vector<PointToPlane> ptpl_list_;
 
     VoxelMapManager(VoxelMapConfig &config_setting, std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &voxel_map)
@@ -226,19 +228,25 @@ class VoxelMapManager {
     };
 
     // void StateEstimation(StatesGroup &state_propagat);
-    // void TransformLidar(const Eigen::Matrix3d rot,
-    //                     const Eigen::Vector3d t,
-    //                     const CloudPtr &input_cloud,
-    //                     pcl::PointCloud<pcl::PointXYZI>::Ptr &trans_cloud);
-
-    void BuildVoxelMap();
+    void TransformLidar(const Eigen::Matrix3d rot,
+                        const Eigen::Vector3d t,
+                        const CloudPtr &input_cloud,
+                        pcl::PointCloud<pcl::PointXYZI>::Ptr &trans_cloud);
+    void calcBodyCov(Eigen::Vector3d &pb, const float range_inc, const float degree_inc, Eigen::Matrix3d &cov);
+    void BuildVoxelMap(const Mat6d &cov, const SE3 &pose);
     // Eigen::Vector3d RGBFromVoxel(const V3D &input_point);
+    void SetPointClouds(const CloudPtr &down_body , const CloudPtr &down_world) {
+        // 使用 shared_ptr 的赋值，自动管理引用计数
+        // feats_undistort_ = undistort;
+        feats_down_body_ = down_body;
+        feats_down_world_ = down_world;
+    }
 
-    void UpdateVoxelMap(const std::vector<pointWithCov> &input_points);
+    void UpdateVoxelMap(const std::vector<pointWithVar> &input_points);
+    void BuildHTVH_HTVr(const SE3 &pose, const Mat6d cov, Mat18d &HTVH, Vec18d &HTVr);
+    void BuildResidualListOMP(std::vector<pointWithVar> &pv_list, std::vector<PointToPlane> &ptpl_list);
 
-    void BuildResidualListOMP(std::vector<pointWithCov> &pv_list, std::vector<PointToPlane> &ptpl_list);
-
-    void build_single_residual(pointWithCov &pv,
+    void build_single_residual(pointWithVar &pv,
                                const VoxelOctoTree *current_octo,
                                const int current_layer,
                                bool &is_sucess,
@@ -265,10 +273,10 @@ class VoxelMapManager {
     //                     const VoxelPlane &single_plane,
     //                     const float alpha,
     //                     const Eigen::Vector3d rgb);
-    void CalcVectQuation(const Eigen::Vector3d &x_vec,
-                         const Eigen::Vector3d &y_vec,
-                         const Eigen::Vector3d &z_vec,
-                         geometry_msgs::Quaternion &q);
+    // void CalcVectQuation(const Eigen::Vector3d &x_vec,
+    //                      const Eigen::Vector3d &y_vec,
+    //                      const Eigen::Vector3d &z_vec,
+    //                      geometry_msgs::Quaternion &q);
 
     void mapJet(double v, double vmin, double vmax, uint8_t &r, uint8_t &g, uint8_t &b);
 };
