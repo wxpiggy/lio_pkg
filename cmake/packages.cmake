@@ -69,6 +69,7 @@ include_directories(${yaml-cpp_INCLUDE_DIRS})
 
 # 其他thirdparty下的内容
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/)
+include_directories(${PROJECT_SOURCE_DIR}/thirdparty/robin-map/include)
 # include_directories(${PROJECT_SOURCE_DIR}/thirdparty/velodyne/include)
 
 

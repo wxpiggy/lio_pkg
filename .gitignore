@@ -1,6 +1,7 @@
 # 忽略编译生成的文件
 build/
 devel/
+.vscode/
 *.o
 *.so
 *.a
@@ -14,3 +15,4 @@ devel/
 
 # # 忽略某些配置文件
 # config/local.yaml
+CATKIN_IGNORE
