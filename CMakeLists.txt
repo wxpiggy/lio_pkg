@@ -29,13 +29,11 @@ add_library(lio_core SHARED
     src/common/point_cloud_utils.cc
     src/core/static_imu_init.cc
     src/map/ndt_inc.cc
-    src/map/voxel_map.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
     src/slam/incremental_ndt_lo.cc
     src/slam/loosely_lio.cc
     src/slam/lio_iekf.cc
-    src/slam/voxel_lio.cc
     src/tools/ui/pangolin_window_impl.cc
     src/tools/ui/pangolin_window.cc
     src/tools/ui/ui_car.cc
