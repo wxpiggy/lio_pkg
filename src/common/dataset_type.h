@@ -48,13 +48,13 @@ const std::string nclt_lidar_topic = "points_raw";
 const std::string ulhk_lidar_topic = "/velodyne_points_0";
 const std::string wxb_lidar_topic = "/velodyne_packets_1";
 const std::string utbm_lidar_topic = "/velodyne_points";
-const std::string avia_lidar_topic = "/livox/lidar";
+const std::string avia_lidar_topic = "/livox/mid360/lidar";
 
 const std::string ulhk_imu_topic = "/imu/data";
 const std::string utbm_imu_topic = "/imu/data";
 const std::string nclt_imu_topic = "imu_raw";
 const std::string wxb_imu_topic = "/ivsensorimu";
-const std::string avia_imu_topic = "/zed2/zed_node/imu/data";
+const std::string avia_imu_topic = "/livox/mid360/imu";
 // const std::string wxb_lidar_topic = "/velodyne_packets_1";
 // const std::string utbm_lidar_topic = "/velodyne_points";
 
