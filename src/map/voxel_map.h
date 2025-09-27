@@ -34,22 +34,18 @@ which is included as part of this source code package.
 
 static int voxel_plane_id = 0;
 namespace wxpiggy {
-typedef struct VoxelMapConfig {
-    double max_voxel_size_;
-    int max_layer_;
-    int max_iterations_;
-    std::vector<int> layer_init_num_;
-    int max_points_num_;
-    double planner_threshold_;
-    double beam_err_;
-    double dept_err_;
-    double sigma_num_;
-    bool is_pub_plane_map_;
-
-    // config of local map sliding
-    double sliding_thresh;
-    bool map_sliding_en;
-    int half_map_size;
+typedef struct VoxelMapConfig
+{
+    double max_voxel_size_   = 0.6;                // mapping.voxel_size
+    int    max_layer_        = 4;                   // mapping.max_layer
+    int    max_iterations_   = 4;                   // mapping.max_iteration
+    std::vector<int> layer_init_num_ = {5, 5, 5, 5, 5}; // mapping.layer_point_size
+    int    max_points_num_   = 1000;                // mapping.max_points_size
+    double planner_threshold_= 0.01;                // mapping.plannar_threshold
+    double beam_err_         = 0.05;                // noise_model.ranging_cov
+    double dept_err_         = 0.02;                // noise_model.angle_cov
+    double sigma_num_        = 3;                
+    bool   is_pub_plane_map_ = false;               // publish.pub_voxel_map
 } VoxelMapConfig;
 
 typedef struct PointToPlane {
@@ -223,7 +219,7 @@ class VoxelMapManager {
     //   void StateEstimation(StatesGroup &state_propagat);
     void TransformLidar(const Eigen::Matrix3d rot,
                         const Eigen::Vector3d t,
-                        const pcl::PointCloud<pcl::PointXYZINormal>::Ptr &input_cloud,
+                        const CloudPtr &input_cloud,
                         pcl::PointCloud<pcl::PointXYZI>::Ptr &trans_cloud);
 
     void BuildVoxelMap();
@@ -238,7 +234,7 @@ class VoxelMapManager {
                                bool &is_sucess,
                                double &prob,
                                PointToPlane &single_ptpl);
-
+    void buildResidualandJacobians(Eigen::Matrix<double, 18, 18>& HTVH, Eigen::Matrix<double, 18, 1>& HTVr );
     void pubVoxelMap();
 
     void mapSliding();
@@ -248,9 +244,10 @@ class VoxelMapManager {
                           const int &y_min,
                           const int &z_max,
                           const int &z_min);
-    State setState(const SE3& state, const Eigen::Matrix<double, 6, 6>& cov);
+    void setState(const SE3& state, const Eigen::Matrix<double, 6, 6>& cov);
     void setInputCloud(const CloudPtr& feat_down_body, const CloudPtr& feat_down_world);
     void setInputCloud(const CloudPtr& feat_down_body);
+    void setExt(const SE3& ext);
 
    private:
     //   void GetUpdatePlane(const VoxelOctoTree *current_octo, const int pub_max_voxel_layer, std::vector<VoxelPlane>

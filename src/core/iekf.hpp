@@ -27,21 +27,22 @@ class IESKF {
     using MotionNoiseT = Eigen::Matrix<S, 18, 18>;  // 运动噪声类型
     using OdomNoiseT = Eigen::Matrix<S, 3, 3>;      // 里程计噪声类型
     using GnssNoiseT = Eigen::Matrix<S, 6, 6>;      // GNSS噪声类型
-    using Mat18T = Eigen::Matrix<S, 18, 18>;        // 18维方差类型
+    using Mat18T = Eigen::Matrix<S, 18, 18>; 
+    using Mat6T = Eigen::Matrix<S, 6, 6>;       // 18维方差类型
     using NavStateT = NavState<S>;                  // 整体名义状态变量类型
 
     struct Options {
         Options() = default;
         /// IEKF配置
-        int num_iterations_ = 3;  // 迭代次数
+        int num_iterations_ = 5;  // 迭代次数
         double quit_eps_ = 1e-3;  // 终止迭代的dx大小
 
         /// IMU 测量与零偏参数
-        double imu_dt_ = 0.01;         // IMU测量间隔
-        double gyro_var_ = 1e-5;       // 陀螺测量标准差
-        double acce_var_ = 1e-2;       // 加计测量标准差
-        double bias_gyro_var_ = 1e-6;  // 陀螺零偏游走标准差
-        double bias_acce_var_ = 1e-4;  // 加计零偏游走标准差
+        double imu_dt_ = 0.005;         // IMU测量间隔
+        double gyro_var_ = 0.25;       // 陀螺测量标准差
+        double acce_var_ = 0.5;       // 加计测量标准差
+        double bias_gyro_var_ = 0.000266;  // 陀螺零偏游走标准差
+        double bias_acce_var_ = 0.0043;  // 加计零偏游走标准差
 
         /// RTK 观测参数
         double gnss_pos_noise_ = 0.1;                   // GNSS位置噪声
@@ -96,10 +97,11 @@ class IESKF {
      */
     using CustomObsFunc = std::function<void(const SE3& input_pose, Eigen::Matrix<S, 18, 18>& HT_Vinv_H,
                                              Eigen::Matrix<S, 18, 1>& HT_Vinv_r)>;
-
+        using CustomObsFuncwithCov = std::function<void(const SE3& input_pose, const Eigen::Matrix<double, 6, 6>& cov, Eigen::Matrix<S, 18, 18>& HT_Vinv_H,
+                                             Eigen::Matrix<S, 18, 1>& HT_Vinv_r)>;
     /// 使用自定义观测函数更新滤波器
     bool UpdateUsingCustomObserve(CustomObsFunc obs);
-    bool UpdateUsingCustomObserveWithCov(CustomObsFunc obs);
+    bool UpdateUsingCustomObserveWithCov(CustomObsFuncwithCov obs);
     /// accessors
     /// 全量状态
     NavStateT GetNominalState() const { return NavStateT(current_time_, R_, p_, v_, bg_, ba_); }
@@ -115,7 +117,14 @@ class IESKF {
     //     cov6.block<3, 3>(3, 3) = cov_.template block<3, 3>(0, 0);
     //     return cov6;
     // }
-    Mat18T getCov() const {return cov_;}
+    Mat6T getCov() const {
+       
+        Eigen::Matrix<S, 6, 6> cov;
+        cov = Mat6T::Identity();
+        cov.template block<3,3>(0,0) = cov_.template block<3,3>(6,6); //R cov
+        cov.template block<3,3>(3,3) = cov_.template block<3,3>(0,0); // P cov
+        return cov;
+    }
     void SetX(const NavStated& x) {
         current_time_ = x.timestamp_;
         R_ = x.R_;
@@ -269,7 +278,7 @@ bool IESKF<S>::UpdateUsingCustomObserve(IESKF::CustomObsFunc obs) {
 }
 
 template <typename S>
-bool IESKF<S>::UpdateUsingCustomObserveWithCov(IESKF::CustomObsFunc obs) {
+bool IESKF<S>::UpdateUsingCustomObserveWithCov(IESKF::CustomObsFuncwithCov obs) {
     // H阵由用户给定
 
     SO3 start_R = R_;
@@ -280,7 +289,8 @@ bool IESKF<S>::UpdateUsingCustomObserveWithCov(IESKF::CustomObsFunc obs) {
 
     for (int iter = 0; iter < options_.num_iterations_; ++iter) {
         // 调用obs function
-        obs(GetNominalSE3(), HTVH, HTVr);
+
+        obs(GetNominalSE3(),getCov(), HTVH, HTVr);
 
         // 投影P
         Mat18T J = Mat18T::Identity();

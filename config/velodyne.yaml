@@ -44,5 +44,5 @@ IMU:
   AccWalk: 1e-4     # m/s^2.5
   Frequency: 200.0
 
-point_filter_num: 7
+point_filter_num: 1
 max_iteration: 4
