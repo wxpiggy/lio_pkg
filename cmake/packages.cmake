@@ -56,7 +56,7 @@ find_package(catkin REQUIRED COMPONENTS
         sensor_msgs
         pcl_ros
         pcl_conversions
-        # livox_ros_driver
+        livox_ros_driver
         )
 include_directories(${catkin_INCLUDE_DIRS})
 

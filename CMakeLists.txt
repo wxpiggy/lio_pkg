@@ -20,7 +20,7 @@ include(cmake/packages.cmake)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/build/devel/include)
+include_directories(${PROJECT_SOURCE_DIR}/../build/devel/include)
 # add_subdirectory(src)
 add_library(lio_core SHARED
     src/common/io_utils.cc
@@ -29,6 +29,7 @@ add_library(lio_core SHARED
     src/common/point_cloud_utils.cc
     src/core/static_imu_init.cc
     src/map/ndt_inc.cc
+    src/map/icp_inc.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
     src/slam/incremental_ndt_lo.cc

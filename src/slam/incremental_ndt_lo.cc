@@ -13,7 +13,7 @@ namespace wxpiggy {
             viewer_ = std::make_shared<PCLMapViewer>(0.5);
         }
 
-        ndt_ = IncNdt3d(options_.ndt3d_options_);
+        ndt_ = IncIcp3d(options_.ndt3d_options_);
     }
 void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     if (first_frame_) {
@@ -29,7 +29,8 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     SE3 guess;
     ndt_.SetSource(scan);
     if (estimated_poses_.size() < 2) {
-        ndt_.AlignNdt(guess);
+        // ndt_.AlignNdt(guess);
+         ndt_.AlignICP(guess);
     } else {
         if (!use_guess) {
             // 从最近两个pose来推断
@@ -40,7 +41,8 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
             guess = pose;
         }
 
-        ndt_.AlignNdt(guess);
+        // ndt_.AlignNdt(guess);
+        ndt_.AlignICP(guess);
     }
 
     pose = guess;

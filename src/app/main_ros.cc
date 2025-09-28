@@ -11,7 +11,7 @@
 
 DEFINE_string(bag_path, "/dataset/nclt/nclt9.bag", "path to rosbag");
 DEFINE_string(dataset_type, "NCLT", "NCLT/ULHK/UTBM/AVIA");                   // 数据集类型
-DEFINE_string(config, "/root/ws_livox/src/lio_pkg/config/velodyne_nclt.yaml", "path of config yaml");  // 配置文件类型
+DEFINE_string(config, "/livox_ws/src/lio_pkg/config/velodyne_nclt.yaml", "path of config yaml");  // 配置文件类型
 DEFINE_bool(display_map, true, "display map?");
 
 int main(int argc, char** argv) {
