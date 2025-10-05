@@ -49,15 +49,16 @@ target_link_libraries(lio_core
 # 创建可执行文件
 add_executable(${PROJECT_NAME}_node
     src/app/main_ros.cc
- 
+)
+add_executable(${PROJECT_NAME}_eskf_ndt
+    src/app/main_eskf_ndt.cc
 )
 add_executable(${PROJECT_NAME}_iekf_node
     src/app/iekf_lio_node.cc
-
-
 )
 target_link_libraries(${PROJECT_NAME}_node lio_core)
 target_link_libraries(${PROJECT_NAME}_iekf_node lio_core)
+target_link_libraries(${PROJECT_NAME}_eskf_ndt lio_core)
 # # 安装规则
 # install(TARGETS ${PROJECT_NAME}_node
 #     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

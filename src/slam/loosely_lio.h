@@ -49,7 +49,26 @@ class LooselyLIO {
     /// 结束程序，退出UI
     void Finish();
 
+
+    // 点云发布函数类型
+    using CloudPublishFunc = std::function<bool(const std::string&, const FullCloudPtr&, double)>;
+    // 位姿发布函数类型
+    using PosePublishFunc = std::function<bool(const std::string&, const SE3&, double)>;
+    
+    // 重载 setFunc
+    void setFunc(CloudPublishFunc func) {
+        cloud_pub_func_ = func;
+    }
+    
+    void setFunc(PosePublishFunc func) {
+        pose_pub_func_ = func;
+    }
    private:
+
+
+    CloudPublishFunc cloud_pub_func_;
+    PosePublishFunc pose_pub_func_;
+
     /// 处理同步之后的IMU和雷达数据
     void ProcessMeasurements(const MeasureGroup &meas);
 
@@ -92,6 +111,9 @@ class LooselyLIO {
     SE3 TIL_;                            // Lidar与IMU之间外参
 
     std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
+
+    std::string cloud_pub_topic_;   
+    std::string pose_pub_topic_; 
 };
 
 }  // namespace sad

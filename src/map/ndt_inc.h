@@ -32,7 +32,7 @@ class IncNdt3d {
         int max_pts_in_voxel_ = 50;    // 每个栅格中最大点数
         double eps_ = 1e-3;            // 收敛判定条件
         double res_outlier_th_ = 5.0;  // 异常值拒绝阈值
-        size_t capacity_ = 4500;     // 缓存的体素数量
+        size_t capacity_ = 500000;     // 缓存的体素数量
 
         NearbyType nearby_type_ = NearbyType::NEARBY6;
     };
