@@ -94,7 +94,7 @@ void LioIEKF::Align() {
 
     /// the first scan
     if (flg_first_scan_) {
-        ndt_.AddCloud(current_scan_);
+        icp_.AddCloud(current_scan_);
         flg_first_scan_ = false;
 
         return;
@@ -103,9 +103,9 @@ void LioIEKF::Align() {
     // 后续的scan，使用NDT配合pose进行更新
     LOG(INFO) << "=== frame " << frame_num_;
 
-    ndt_.SetSource(current_scan_filter);
+    icp_.SetSource(current_scan_filter);
     ieskf_.UpdateUsingCustomObserve([this](const SE3 &input_pose, Mat18d &HTVH, Vec18d &HTVr) {
-        ndt_.ComputeResidualAndJacobians(input_pose, HTVH, HTVr);
+        icp_.ComputeResidualAndJacobians(input_pose, HTVH, HTVr);
     });
 
     auto current_nav_state = ieskf_.GetNominalState();
@@ -114,13 +114,13 @@ void LioIEKF::Align() {
     SE3 current_pose = ieskf_.GetNominalSE3();
     SE3 delta_pose = last_pose_.inverse() * current_pose;
 
-    if (delta_pose.translation().norm() > 1.0 || delta_pose.so3().log().norm() > math::deg2rad(10.0)) {
+    // if (delta_pose.translation().norm() > 1.0 || delta_pose.so3().log().norm() > math::deg2rad(10.0)) {
         // 将地图合入NDT中
         CloudPtr current_scan_world(new PointCloudType);
         pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
-        ndt_.AddCloud(current_scan_world);
+        icp_.AddCloud(current_scan_world);
         last_pose_ = current_pose;
-    }
+    // }
 
     // 放入UI
     if (ui_) {

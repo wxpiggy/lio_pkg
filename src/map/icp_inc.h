@@ -93,7 +93,7 @@ class IncIcp3d {
         int min_effective_pts_ = 10;   // 最近邻点数阈值
         double max_correspond = 10;
         double eps_ = 1e-2;         // 收敛判定条件
-        size_t capacity_ = 4500;  // 缓存体素容量
+        size_t capacity_ = 5000000;  // 
         size_t max_points_ = 20;
         NearbyType nearby_type_ = NearbyType::NEARBY6;
     };
@@ -129,16 +129,12 @@ class IncIcp3d {
      * @param HTVH 累积的 Hessian
      * @param HTVr 累积的梯度
      */
-    void ComputeResidualAndJacobians(const SE3& pose, Mat6d& HTVH, Vec6d& HTVr);
+    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr);
     bool FindKNearestNeighbors(const Eigen::Vector3d& point,
                                int k,
                                std::vector<Eigen::Vector3d>& neighbors,
-                               double max_distance = 1.0);
+                               double max_distance = 2.0);
 
-    bool FitPlanePCA(const std::vector<Eigen::Vector3d>& points,
-                        Eigen::Vector4d& pabcd,
-                        double planarity_threshold = 0.01,
-                        double max_residual = 0.05);
 
    private:
     void GenerateNearbyGrids();

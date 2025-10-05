@@ -5,8 +5,8 @@
 #ifndef SLAM_IN_AUTO_DRIVING_INCREMENTAL_NDT_LO_H
 #define SLAM_IN_AUTO_DRIVING_INCREMENTAL_NDT_LO_H
 
-// #include "map/ndt_inc.h"
-#include "map/icp_inc.h"
+#include "map/ndt_inc.h"
+// #include "map/icp_inc.h"
 #include "common/eigen_types.h"
 #include "common/point_types.h"
 
@@ -25,7 +25,7 @@ class IncrementalNDTLO {
         double kf_distance_ = 0.5;            // 关键帧距离
         double kf_angle_deg_ = 30;            // 旋转角度
         bool display_realtime_cloud_ = true;  // 是否显示实时点云
-        IncIcp3d::Options ndt3d_options_;     // NDT3D 的配置
+        IncNdt3d::Options ndt3d_options_;     // NDT3D 的配置
     };
 
     IncrementalNDTLO(Options options = Options());
@@ -51,7 +51,7 @@ class IncrementalNDTLO {
     SE3 last_kf_pose_;                  // 上一关键帧的位姿
     int cnt_frame_ = 0;
     
-    IncIcp3d ndt_;
+    IncNdt3d ndt_;
     std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
 };
 
