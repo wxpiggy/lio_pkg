@@ -2,8 +2,7 @@
 // Created by xiang on 2022/3/15.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_LIDAR_UTILS_H
-#define SLAM_IN_AUTO_DRIVING_LIDAR_UTILS_H
+#pragma once
 
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/MultiEchoLaserScan.h>
@@ -102,4 +101,4 @@ inline Eigen::Matrix<int, n, 1> CastToInt(const Eigen::Matrix<S, n, 1>& value) {
 
 }  // namespace wxpiggy
 
-#endif  // SLAM_IN_AUTO_DRIVING_LIDAR_UTILS_H
+

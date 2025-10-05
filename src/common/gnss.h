@@ -2,8 +2,7 @@
 // Created by xiang on 2022/1/4.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_GNSS_H
-#define SLAM_IN_AUTO_DRIVING_GNSS_H
+#pragma once
 
 #include "eigen_types.h"
 #include "message_def.h"
@@ -71,4 +70,4 @@ struct GNSS {
 
 using GNSSPtr = std::shared_ptr<wxpiggy::GNSS>;
 
-#endif  // SLAM_IN_AUTO_DRIVING_GNSS_H
+

@@ -2,8 +2,7 @@
 // Created by xiang on 2021/7/20.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_IO_UTILS_H
-#define SLAM_IN_AUTO_DRIVING_IO_UTILS_H
+#pragma once
 
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
@@ -212,4 +211,4 @@ class RosbagIO {
 
 }  // namespace wxpiggy
 
-#endif  // SLAM_IN_AUTO_DRIVING_IO_UTILS_H
+

@@ -2,8 +2,7 @@
 // Created by xiang on 2022/7/20.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_NDT_INC_H
-#define SLAM_IN_AUTO_DRIVING_NDT_INC_H
+#pragma once
 
 #include "common/eigen_types.h"
 // #include "common/g2o_types.h"
@@ -120,4 +119,3 @@ class IncNdt3d {
 
 }  // namespace sad
 
-#endif  // SLAM_IN_AUTO_DRIVING_NDT_INC_H

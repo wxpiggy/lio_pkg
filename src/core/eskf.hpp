@@ -2,8 +2,7 @@
 // Created by xiang on 2021/11/11.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_ESKF_HPP
-#define SLAM_IN_AUTO_DRIVING_ESKF_HPP
+#pragma once
 
 #include "common/eigen_types.h"
 #include "common/gnss.h"
@@ -333,4 +332,3 @@ bool ESKF<S>::ObserveSE3(const SE3& pose, double trans_noise, double ang_noise) 
 
 }  // namespace sad
 
-#endif  // SLAM_IN_AUTO_DRIVING_ESKF_HPP

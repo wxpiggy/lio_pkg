@@ -2,8 +2,7 @@
 // Created by xiang on 2021/7/19.
 //
 
-#ifndef MAPPING_IMU_H
-#define MAPPING_IMU_H
+#pragma once
 
 #include <memory>
 #include "eigen_types.h"
@@ -23,4 +22,4 @@ struct IMU {
 
 using IMUPtr = std::shared_ptr<wxpiggy::IMU>;
 
-#endif  // MAPPING_IMU_H
+

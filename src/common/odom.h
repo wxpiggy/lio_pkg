@@ -2,8 +2,7 @@
 // Created by xiang on 2021/7/19.
 //
 
-#ifndef MAPPING_ODOM_H
-#define MAPPING_ODOM_H
+#pragma once
 
 namespace wxpiggy {
 
@@ -19,4 +18,4 @@ struct Odom {
 
 }  // namespace wxpiggy
 
-#endif  // MAPPING_ODOM_H
+

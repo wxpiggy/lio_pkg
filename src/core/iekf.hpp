@@ -1,9 +1,7 @@
 //
 // Created by xiang on 22-9-16.
 //
-
-#ifndef SLAM_IN_AUTO_DRIVING_IESKF_HPP
-#define SLAM_IN_AUTO_DRIVING_IESKF_HPP
+#pragma once
 
 #include "common/eigen_types.h"
 #include "common/imu.h"
@@ -314,4 +312,4 @@ bool IESKF<S>::UpdateUsingCustomObserveWithCov(IESKF::CustomObsFunc obs) {
 }
 
 }  // namespace sad
-#endif  // SLAM_IN_AUTO_DRIVING_IEKF_HPP
+

@@ -1,9 +1,8 @@
 //
 // Created by xiang on 22-8-16.
 //
+#pragma once
 
-#ifndef SLAM_IN_AUTO_DRIVING_DATASET_TYPE_H
-#define SLAM_IN_AUTO_DRIVING_DATASET_TYPE_H
 
 #include <string>
 namespace wxpiggy {
@@ -60,4 +59,3 @@ const std::string avia_imu_topic = "/zed2/zed_node/imu/data";
 
 }  // namespace wxpiggy
 
-#endif  // SLAM_IN_AUTO_DRIVING_DATASET_TYPE_H

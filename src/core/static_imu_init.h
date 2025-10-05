@@ -2,8 +2,7 @@
 // Created by xiang on 2021/11/11.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_STATIC_IMU_INIT_H
-#define SLAM_IN_AUTO_DRIVING_STATIC_IMU_INIT_H
+#pragma once
 
 #include "common/eigen_types.h"
 #include "common/imu.h"
@@ -70,5 +69,3 @@ class StaticIMUInit {
 };
 
 }  // namespace sad
-
-#endif  // SLAM_IN_AUTO_DRIVING_STATIC_IMU_INIT_H

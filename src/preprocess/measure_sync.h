@@ -2,8 +2,7 @@
 // Created by xiang on 22-9-9.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_MEASURE_SYNC_H
-#define SLAM_IN_AUTO_DRIVING_MEASURE_SYNC_H
+#pragma once
 
 #include "preprocess/cloud_convert.h"
 #include "common/imu.h"
@@ -106,4 +105,3 @@ class MessageSync {
 
 }  // namespace sad
 
-#endif  // SLAM_IN_AUTO_DRIVING_MEASURE_SYNC_H

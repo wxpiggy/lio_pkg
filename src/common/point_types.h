@@ -2,8 +2,7 @@
 // Created by xiang on 2021/8/18.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_POINT_TYPES_H
-#define SLAM_IN_AUTO_DRIVING_POINT_TYPES_H
+#pragma once
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -159,4 +158,4 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
     (std::int32_t, ring, ring)
 )
 // clang-format off
-#endif  // SLAM_IN_AUTO_DRIVING_POINT_TYPES_H
+

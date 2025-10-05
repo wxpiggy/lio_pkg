@@ -1,5 +1,4 @@
-#ifndef SAD_CH8_LASER_MAPPING_H
-#define SAD_CH8_LASER_MAPPING_H
+#pragma once
 
 #include <livox_ros_driver/CustomMsg.h>
 #include <pcl/filters/voxel_grid.h>
@@ -97,5 +96,3 @@ class LioIEKF {
 };
 
 }  // namespace wxpiggy
-
-#endif  // FASTER_LIO_LASER_MAPPING_H

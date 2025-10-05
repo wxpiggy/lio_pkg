@@ -2,8 +2,7 @@
 // Created by xiang on 2021/7/19.
 //
 
-#ifndef MAPPING_MATH_UTILS_H
-#define MAPPING_MATH_UTILS_H
+#pragma once
 
 #include <glog/logging.h>
 #include <boost/array.hpp>
@@ -720,4 +719,4 @@ bool PoseInterp(double query_time, const std::map<double, T>& data, const std::f
 
 }  // namespace wxpiggy::math
 
-#endif  // MAPPING_MATH_UTILS_H
+

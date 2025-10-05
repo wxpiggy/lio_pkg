@@ -2,8 +2,7 @@
 // Created by xiang on 2022/7/19.
 //
 #define PCL_NO_PRECOMPILE
-#ifndef SLAM_IN_AUTO_DRIVING_PCL_MAP_VIEWER_H
-#define SLAM_IN_AUTO_DRIVING_PCL_MAP_VIEWER_H
+#pragma once
 
 #include <glog/logging.h>
 
@@ -95,4 +94,4 @@ class PCLMapViewer {
 };
 }  // namespace sad
 
-#endif  // SLAM_IN_AUTO_DRIVING_PCL_MAP_VIEWER_H
+

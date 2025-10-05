@@ -2,8 +2,7 @@
 // Created by xiang on 2022/7/14.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_NDT_3D_H
-#define SLAM_IN_AUTO_DRIVING_NDT_3D_H
+#pragma once
 
 #include "common/eigen_types.h"
 #include "common/point_types.h"
@@ -105,4 +104,3 @@ class Ndt3d {
 
 }  // namespace sad
 
-#endif  // SLAM_IN_AUTO_DRIVING_NDT_3D_H

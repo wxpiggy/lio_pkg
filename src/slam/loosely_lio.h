@@ -1,6 +1,4 @@
-#ifndef FASTER_LIO_LASER_MAPPING_H
-#define FASTER_LIO_LASER_MAPPING_H
-
+#pragma once
 #include <livox_ros_driver/CustomMsg.h>
 
 #include <sensor_msgs/PointCloud2.h>
@@ -96,4 +94,3 @@ class LooselyLIO {
 
 }  // namespace sad
 
-#endif  // FASTER_LIO_LASER_MAPPING_H

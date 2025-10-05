@@ -2,8 +2,7 @@
 // Created by xiang on 2022/7/20.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_INCREMENTAL_NDT_LO_H
-#define SLAM_IN_AUTO_DRIVING_INCREMENTAL_NDT_LO_H
+#pragma once
 
 #include "map/ndt_inc.h"
 #include "common/eigen_types.h"
@@ -56,4 +55,4 @@ class IncrementalNDTLO {
 
 }  // namespace sad
 
-#endif  // SLAM_IN_AUTO_DRIVING_INCREMENTAL_NDT_LO_H
+

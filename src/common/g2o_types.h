@@ -2,8 +2,7 @@
 // Created by xiang on 2021/7/20.
 //
 
-#ifndef SLAM_IN_AUTO_DRIVING_COMMON_G2O_TYPES_H
-#define SLAM_IN_AUTO_DRIVING_COMMON_G2O_TYPES_H
+#pragma once
 
 #include <g2o/core/base_binary_edge.h>
 #include <g2o/core/base_multi_edge.h>
@@ -428,4 +427,4 @@ class EdgeNDT : public g2o::BaseUnaryEdge<3, Vec3d, VertexPose> {
 };
 }  // namespace wxpiggy
 
-#endif  // SLAM_IN_AUTO_DRIVING_G2O_TYPES_H
+

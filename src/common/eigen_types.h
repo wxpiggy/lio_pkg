@@ -2,8 +2,7 @@
 // Created by xiang on 2021/7/16.
 //
 
-#ifndef MAPPING_EIGEN_TYPES_H
-#define MAPPING_EIGEN_TYPES_H
+#pragma once
 
 // 引入Eigen头文件与常用类型
 #include <Eigen/Core>
@@ -118,4 +117,4 @@ inline SE3 Mat4ToSE3(const Eigen::Matrix<S, 4, 4>& m) {
 
 }  // namespace wxpiggy
 
-#endif  // MAPPING_EIGEN_TYPES_H
+
