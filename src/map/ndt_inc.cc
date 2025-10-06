@@ -212,12 +212,12 @@ bool IncNdt3d::AlignNdt(SE3& init_pose) {
         pose.translation() += dx.tail<3>();
 
         // 更新
-        LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num
-                  << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm()
-                  << ", dx: " << dx.transpose();
+        // LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num
+        //           << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm()
+        //           << ", dx: " << dx.transpose();
 
         if (dx.norm() < options_.eps_) {
-            LOG(INFO) << "converged, dx = " << dx.transpose();
+            // LOG(INFO) << "converged, dx = " << dx.transpose();
             break;
         }
     }

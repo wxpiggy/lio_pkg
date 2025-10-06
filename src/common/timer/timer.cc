@@ -7,20 +7,20 @@
 #include <glog/logging.h>
 #include <fstream>
 #include <numeric>
-
+#include "../color_print.h"
 namespace wxpiggy::common {
 
 std::map<std::string, Timer::TimerRecord> Timer::records_;
 
 void Timer::PrintAll() {
-    LOG(INFO) << ">>> ===== Printing run time =====";
+    LOG(INFO) << ANSI_COLOR_GREEN_BOLD<< ">>> ===== Printing run time =====" << ANSI_COLOR_RESET;
     for (const auto& r : records_) {
-        LOG(INFO) << "> [ " << r.first << " ] average time usage: "
+        LOG(INFO) << ANSI_COLOR_GREEN << "> [ " << r.first << " ] average time usage: "
                   << std::accumulate(r.second.time_usage_in_ms_.begin(), r.second.time_usage_in_ms_.end(), 0.0) /
                          double(r.second.time_usage_in_ms_.size())
-                  << " ms , called times: " << r.second.time_usage_in_ms_.size();
+                  << " ms , called times: " << r.second.time_usage_in_ms_.size()<<ANSI_COLOR_RESET << std::endl;
     }
-    LOG(INFO) << ">>> ===== Printing run time end =====";
+    LOG(INFO) <<  ANSI_COLOR_GREEN_BOLD<< ">>> ===== Printing run time end =====" << ANSI_COLOR_RESET << std::endl;;
 }
 
 void Timer::DumpIntoFile(const std::string& file_name) {

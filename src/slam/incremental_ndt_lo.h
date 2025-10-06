@@ -5,6 +5,7 @@
 #pragma once
 
 #include "map/ndt_inc.h"
+// #include "map/icp_inc.h"
 #include "common/eigen_types.h"
 #include "common/point_types.h"
 
@@ -50,7 +51,7 @@ class IncrementalNDTLO {
     int cnt_frame_ = 0;
     
     IncNdt3d ndt_;
-    std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
+    // std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
 };
 
 }  // namespace sad
