@@ -32,17 +32,19 @@ add_library(lio_core SHARED
     src/core/imu_preintegration.cc
     src/map/ndt_inc.cc
     src/map/icp_inc.cc
+    src/map/voxel_map.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
     src/slam/incremental_ndt_lo.cc
     src/slam/loosely_lio.cc
     src/slam/lio_iekf.cc
     src/slam/lio_preinteg.cc
-    # src/tools/ui/pangolin_window_impl.cc
-    # src/tools/ui/pangolin_window.cc
-    # src/tools/ui/ui_car.cc
-    # src/tools/ui/ui_cloud.cc
-    # src/tools/ui/ui_trajectory.cc
+    src/slam/voxel_lio.cc
+    src/tools/ui/pangolin_window_impl.cc
+    src/tools/ui/pangolin_window.cc
+    src/tools/ui/ui_car.cc
+    src/tools/ui/ui_cloud.cc
+    src/tools/ui/ui_trajectory.cc
 )
 target_link_libraries(lio_core
    ${third_party_libs}
@@ -73,3 +75,7 @@ target_link_libraries(lio_eskf_ndt_online lio_core)
 # install(TARGETS ${PROJECT_NAME}_node
 #     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
+add_executable(test1 
+    src/app/test.cc
+)
+target_link_libraries(test1 lio_core)

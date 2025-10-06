@@ -6,14 +6,7 @@
 #include "common/eigen_types.h"
 #include "common/point_types.h"
 namespace wxpiggy {
-struct point3D {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    Eigen::Vector3d point_body;  //  raw point
-    Eigen::Vector3d point;       //  global frame
-
-    point3D() = default;
-};
 
 struct voxel {
     voxel() = default;

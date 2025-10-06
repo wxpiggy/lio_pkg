@@ -412,7 +412,7 @@ class EdgeNDT : public g2o::BaseUnaryEdge<3, Vec3d, VertexPose> {
         query_ = func;
 
         Vec3d q = v0->estimate().so3() * pt_ + v0->estimate().translation();
-        if (query_(q, mu_, info_)) {
+        if (query_(q, mu_, info_)) { //query_就是ndt inc里面那个
             setInformation(info_);
             valid_ = true;
         } else {

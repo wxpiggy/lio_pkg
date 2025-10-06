@@ -62,8 +62,7 @@ class IESKF {
      * @param init_ba
      * @param gravity
      */
-    IESKF(Options options, const VecT& init_bg, const VecT& init_ba, const VecT& gravity = VecT(0, 0, -9.8))
-        : options_(options) {
+    IESKF(Options options, const VecT& init_bg, const VecT& init_ba, const VecT& gravity = VecT(0, 0, -9.8)) : options_(options) {
         BuildNoise(options);
         bg_ = init_bg;
         ba_ = init_ba;
@@ -71,8 +70,7 @@ class IESKF {
     }
 
     /// 设置初始条件
-    void SetInitialConditions(Options options, const VecT& init_bg, const VecT& init_ba,
-                              const VecT& gravity = VecT(0, 0, -9.8)) {
+    void SetInitialConditions(Options options, const VecT& init_bg, const VecT& init_ba, const VecT& gravity = VecT(0, 0, -9.8)) {
         BuildNoise(options);
         options_ = options;
         bg_ = init_bg;
@@ -92,12 +90,11 @@ class IESKF {
      * H^T V{-1} r
      * 二者都可以用求和的形式来做
      */
-    using CustomObsFunc = std::function<void(const SE3& input_pose, Eigen::Matrix<S, 18, 18>& HT_Vinv_H,
-                                             Eigen::Matrix<S, 18, 1>& HT_Vinv_r)>;
-
+    using CustomObsFunc = std::function<void(const SE3& input_pose, Eigen::Matrix<S, 18, 18>& HT_Vinv_H, Eigen::Matrix<S, 18, 1>& HT_Vinv_r)>;
+    using CustomObsFuncWithCov = std::function<void(const SE3& input_pose, const Eigen::Matrix<double, 6, 6>& cov, Eigen::Matrix<S, 18, 18>& HT_Vinv_H, Eigen::Matrix<S, 18, 1>& HT_Vinv_r)>;
     /// 使用自定义观测函数更新滤波器
     bool UpdateUsingCustomObserve(CustomObsFunc obs);
-    bool UpdateUsingCustomObserveWithCov(CustomObsFunc obs);
+    bool UpdateUsingCustomObserveWithCov(CustomObsFuncWithCov obs);
     /// accessors
     /// 全量状态
     NavStateT GetNominalState() const { return NavStateT(current_time_, R_, p_, v_, bg_, ba_); }
@@ -105,15 +102,14 @@ class IESKF {
     /// SE3 状态
     SE3 GetNominalSE3() const { return SE3(R_, p_); }
 
-    // Eigen::Matrix<S, 6, 6> GetRotPosCov() const {
-    //     Eigen::Matrix<S, 6, 6> cov6 = Eigen::Matrix<S, 6, 6>::Zero();
-    //     // 左上 3x3: 旋转误差协方差
-    //     cov6.block<3, 3>(0, 0) = cov_.template block<3, 3>(6, 6);
-    //     // 右下 3x3: 位置误差协方差
-    //     cov6.block<3, 3>(3, 3) = cov_.template block<3, 3>(0, 0);
-    //     return cov6;
-    // }
-    Mat18T getCov() const {return cov_;}
+    Eigen::Matrix<S, 6, 6> GetRotPosCov() const {
+        Eigen::Matrix<S, 6, 6> cov6 = Eigen::Matrix<S, 6, 6>::Zero();
+        // 左上 3x3: 旋转误差协方差
+        cov6.template block<3, 3>(0, 0) = cov_.template block<3, 3>(6, 6);
+        cov6.template block<3, 3>(3, 3) = cov_.template block<3, 3>(0, 0);
+        return cov6;
+    }
+    Mat18T getCov() const { return cov_; }
     void SetX(const NavStated& x) {
         current_time_ = x.timestamp_;
         R_ = x.R_;
@@ -267,7 +263,7 @@ bool IESKF<S>::UpdateUsingCustomObserve(IESKF::CustomObsFunc obs) {
 }
 
 template <typename S>
-bool IESKF<S>::UpdateUsingCustomObserveWithCov(IESKF::CustomObsFunc obs) {
+bool IESKF<S>::UpdateUsingCustomObserveWithCov(IESKF::CustomObsFuncWithCov obs) {
     // H阵由用户给定
 
     SO3 start_R = R_;
@@ -278,7 +274,7 @@ bool IESKF<S>::UpdateUsingCustomObserveWithCov(IESKF::CustomObsFunc obs) {
 
     for (int iter = 0; iter < options_.num_iterations_; ++iter) {
         // 调用obs function
-        obs(GetNominalSE3(), HTVH, HTVr);
+        obs(GetNominalSE3(), GetRotPosCov(), HTVH, HTVr);
 
         // 投影P
         Mat18T J = Mat18T::Identity();
@@ -311,5 +307,4 @@ bool IESKF<S>::UpdateUsingCustomObserveWithCov(IESKF::CustomObsFunc obs) {
     return true;
 }
 
-}  // namespace sad
-
+}  // namespace wxpiggy

@@ -6,6 +6,7 @@
 
 #include "common/eigen_types.h"
 // #include "common/g2o_types.h"
+#include "common/g2o_types.h"
 #include "common/point_types.h"
 
 #include <list>
@@ -97,7 +98,7 @@ class IncNdt3d {
      * @param v
      * @param edges
      */
-    // void BuildNDTEdges(VertexPose* v, std::vector<EdgeNDT*>& edges);
+    void BuildNDTEdges(VertexPose* v, std::vector<EdgeNDT*>& edges);
 
    private:
     /// 根据最近邻的类型，生成附近网格

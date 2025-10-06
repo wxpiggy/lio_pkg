@@ -115,7 +115,7 @@ void LioPreinteg::Align() {
     LOG(INFO) << "=== frame " << frame_num_;
     ndt_.SetSource(current_scan_filter);
 
-    current_nav_state_ = preinteg_->Predict(last_nav_state_, imu_init_.GetGravity());
+    current_nav_state_ = preinteg_->Predict(last_nav_state_, imu_init_.GetGravity());//重力一直是fixed？
     ndt_pose_ = current_nav_state_.GetSE3();
 
     ndt_.AlignNdt(ndt_pose_);
@@ -325,11 +325,16 @@ void LioPreinteg::Optimize() {
     edge_prior->setVertex(3, v0_ba);
     optimizer.addEdge(edge_prior);
 
-    /// 使用NDT的pose进行观测
-    auto *edge_ndt = new EdgeGNSS(v1_pose, ndt_pose_);
-    edge_ndt->setInformation(options_.ndt_info_);
-    optimizer.addEdge(edge_ndt);
-
+    // /// 使用NDT的pose进行观测
+    // auto *edge_ndt = new EdgeGNSS(v1_pose, ndt_pose_);
+    // edge_ndt->setInformation(options_.ndt_info_);
+    // optimizer.addEdge(edge_ndt);
+    //这里用更加紧密的耦合，每一步迭代都重新寻找最近邻，耗时从2.5ms涨到了12ms左右
+    std::vector<EdgeNDT*> edges_ndt;
+    ndt_.BuildNDTEdges(v1_pose, edges_ndt);
+    for(auto it = edges_ndt.begin(); it != edges_ndt.end(); it++){
+        optimizer.addEdge(*it);
+    }
     if (options_.verbose_) {
         LOG(INFO) << "last: " << last_nav_state_;
         LOG(INFO) << "pred: " << current_nav_state_;
@@ -358,11 +363,11 @@ void LioPreinteg::Optimize() {
     current_nav_state_.ba_ = v1_ba->estimate();
 
     if (options_.verbose_) {
-        LOG(INFO) << "last changed to: " << last_nav_state_;
-        LOG(INFO) << "curr changed to: " << current_nav_state_;
-        LOG(INFO) << "preinteg chi2: " << edge_inertial->chi2() << ", err: " << edge_inertial->error().transpose();
-        LOG(INFO) << "prior chi2: " << edge_prior->chi2() << ", err: " << edge_prior->error().transpose();
-        LOG(INFO) << "ndt: " << edge_ndt->chi2() << "/" << edge_ndt->error().transpose();
+        // LOG(INFO) << "last changed to: " << last_nav_state_;
+        // LOG(INFO) << "curr changed to: " << current_nav_state_;
+        // LOG(INFO) << "preinteg chi2: " << edge_inertial->chi2() << ", err: " << edge_inertial->error().transpose();
+        // LOG(INFO) << "prior chi2: " << edge_prior->chi2() << ", err: " << edge_prior->error().transpose();
+        // LOG(INFO) << "ndt: " << edge_ndt->chi2() << "/" << edge_ndt->error().transpose();
     }
 
     /// 重置预积分
@@ -393,8 +398,11 @@ void LioPreinteg::Optimize() {
     H.block<3, 3>(27, 27) += Har.block<3, 3>(3, 3);
 
     H.block<15, 15>(0, 0) += edge_prior->GetHessian();
-    H.block<6, 6>(15, 15) += edge_ndt->GetHessian();
+    for(auto it = edges_ndt.begin(); it != edges_ndt.end(); it++){
+        H.block<6, 6>(15, 15) += (*it)->GetHessian();
 
+    }
+    
     H = math::Marginalize(H, 0, 14);
     prior_info_ = H.block<15, 15>(15, 15);
 
