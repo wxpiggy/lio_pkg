@@ -13,7 +13,7 @@
 // #include "ch4/g2o_types_preinteg.h"
 // #include "common/g2o_types.h"
 
-#include "tools/ui/pangolin_window.h"
+// #include "tools/ui/pangolin_window.h"
 #include "common/lidar_utils.h"
 #include "common/point_cloud_utils.h"
 #include "common/timer/timer.h"
@@ -33,10 +33,10 @@ bool LioIEKF::Init(const std::string &config_yaml) {
         return false;
     }
 
-    if (options_.with_ui_) {
-        ui_ = std::make_shared<ui::PangolinWindow>();
-        ui_->Init();
-    }
+    // if (options_.with_ui_) {
+    //     ui_ = std::make_shared<ui::PangolinWindow>();
+    //     ui_->Init();
+    // }
 
     return true;
 }
@@ -123,10 +123,10 @@ void LioIEKF::Align() {
     // }
 
     // 放入UI
-    if (ui_) {
-        ui_->UpdateScan(current_scan_, current_nav_state.GetSE3());  // 转成Lidar Pose传给UI
-        ui_->UpdateNavState(current_nav_state);
-    }
+    // if (ui_) {
+    //     ui_->UpdateScan(current_scan_, current_nav_state.GetSE3());  // 转成Lidar Pose传给UI
+    //     ui_->UpdateNavState(current_nav_state);
+    // }
 
     frame_num_++;
     return;
@@ -211,13 +211,13 @@ void LioIEKF::IMUCallBack(IMUPtr msg_in) {
 }
 
 void LioIEKF::Finish() {
-    if (options_.with_ui_) {
-        while (ui_->ShouldQuit() == false) {
-            usleep(1e5);
-        }
+    // if (options_.with_ui_) {
+    //     while (ui_->ShouldQuit() == false) {
+    //         usleep(1e5);
+    //     }
 
-        ui_->Quit();
-    }
+    //     ui_->Quit();
+    // }
     LOG(INFO) << "finish done";
 }
 

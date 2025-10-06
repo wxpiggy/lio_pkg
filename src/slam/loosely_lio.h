@@ -110,7 +110,7 @@ class LooselyLIO {
     ESKFD eskf_;                         // ESKF
     SE3 TIL_;                            // Lidar与IMU之间外参
 
-    std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
+    // std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
 
     std::string cloud_pub_topic_;   
     std::string pose_pub_topic_; 

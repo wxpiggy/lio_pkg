@@ -58,7 +58,18 @@ class LioPreinteg {
 
     /// 结束程序，退出UI
     void Finish();
-
+        using CloudPublishFunc = std::function<bool(const std::string&, const FullCloudPtr&, double)>;
+    // 位姿发布函数类型
+    using PosePublishFunc = std::function<bool(const std::string&, const SE3&, double)>;
+    
+    // 重载 setFunc
+    void setFunc(CloudPublishFunc func) {
+        cloud_pub_func_ = func;
+    }
+    
+    void setFunc(PosePublishFunc func) {
+        pose_pub_func_ = func;
+    }
    private:
     bool LoadFromYAML(const std::string& yaml_file);
 
@@ -84,6 +95,10 @@ class LioPreinteg {
     /// 将速度限制在正常区间
     void NormalizeVelocity();
 
+    CloudPublishFunc cloud_pub_func_;
+    PosePublishFunc pose_pub_func_;
+    std::string cloud_pub_topic_;   
+    std::string pose_pub_topic_; 
     /// modules
     std::shared_ptr<MessageSync> sync_ = nullptr;
     StaticIMUInit imu_init_;
@@ -114,7 +129,7 @@ class LioPreinteg {
     SE3 TIL_;  // Lidar与IMU之间外参
 
     Options options_;
-    std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
+    // std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
 };
 
 }  // namespace sad

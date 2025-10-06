@@ -52,7 +52,7 @@ class IncrementalNDTLO {
     int cnt_frame_ = 0;
     
     IncNdt3d ndt_;
-    std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
+    // std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
 };
 
 }  // namespace sad

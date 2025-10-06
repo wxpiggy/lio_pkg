@@ -93,7 +93,7 @@ class IncIcp3d {
         int min_effective_pts_ = 10;   // 最近邻点数阈值
         double max_correspond = 10;
         double eps_ = 1e-2;         // 收敛判定条件
-        size_t capacity_ = 5000000;  // 
+        size_t capacity_ = 500000;  // 
         size_t max_points_ = 20;
         NearbyType nearby_type_ = NearbyType::NEARBY6;
     };

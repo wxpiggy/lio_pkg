@@ -9,7 +9,7 @@
 #include "common/lidar_utils.h"
 #include "common/point_cloud_utils.h"
 #include "common/timer/timer.h"
-#include "tools/ui/pangolin_window.h"
+// #include "tools/ui/pangolin_window.h"
 namespace wxpiggy {
 
 LooselyLIO::LooselyLIO(Options options) : options_(options) {
@@ -30,10 +30,10 @@ bool LooselyLIO::Init(const std::string &config_yaml) {
     inc_ndt_lo_ = std::make_shared<wxpiggy::IncrementalNDTLO>(indt_options);
 
     /// 初始化UI
-    if (options_.with_ui_) {
-        ui_ = std::make_shared<ui::PangolinWindow>();
-        ui_->Init();
-    }
+    // if (options_.with_ui_) {
+    //     ui_ = std::make_shared<ui::PangolinWindow>();
+    //     ui_->Init();
+    // }
 
     return true;
 }
@@ -56,7 +56,7 @@ bool LooselyLIO::LoadFromYAML(const std::string &yaml_file) {
 }
 
 void LooselyLIO::ProcessMeasurements(const MeasureGroup &meas) {
-    LOG(INFO) << "call meas, imu: " << meas.imu_.size() << ", lidar pts: " << meas.lidar_->size();
+    // LOG(INFO) << "call meas, imu: " << meas.imu_.size() << ", lidar pts: " << meas.lidar_->size();
     measures_ = meas;
     
     if (imu_need_init_) {
@@ -170,16 +170,16 @@ void LooselyLIO::Align() {
     pose_of_lo_ = pose_predict;
     eskf_.ObserveSE3(pose_of_lo_, 1e-2, 1e-2);
     SE3 pose_updated = eskf_.GetNominalSE3();
-    if (options_.with_ui_) {
-        ui_->UpdateScan(current_scan, pose_updated);  // 转成Lidar Pose传给UI
-        ui_->UpdateNavState(eskf_.GetNominalState());
-    }else{
-                // 放入UI
-        pcl::transformPointCloud(*scan_undistort_,*scan_undistort_trans,pose_updated.matrix());
-        cloud_pub_func_(cloud_pub_topic_,scan_undistort_trans,measures_.lidar_end_time_);
+    // if (options_.with_ui_) {
+    //     ui_->UpdateScan(current_scan, pose_updated);  // 转成Lidar Pose传给UI
+    //     ui_->UpdateNavState(eskf_.GetNominalState());
+    // }else{
+    FullCloudPtr scan_pub(new FullPointCloudType);        // 放入UI
+    pcl::transformPointCloud(*scan_undistort_,*scan_pub,pose_updated.matrix());
+    cloud_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_);
         // 放入UI
-        pose_pub_func_(pose_pub_topic_,pose_updated,measures_.lidar_end_time_);
-    }
+    pose_pub_func_(pose_pub_topic_,pose_updated,measures_.lidar_end_time_);
+    // }
     frame_num_++;
 }
 
@@ -196,13 +196,13 @@ void LooselyLIO::IMUCallBack(IMUPtr msg_in) {
 }
 
 void LooselyLIO::Finish() {
-    if (options_.with_ui_) {
-        while (ui_->ShouldQuit() == false) {
-            usleep(1e5);
-        }
+    // if (options_.with_ui_) {
+    //     while (ui_->ShouldQuit() == false) {
+    //         usleep(1e5);
+    //     }
 
-        ui_->Quit();
-    }
+    //     ui_->Quit();
+    // }
     LOG(INFO) << "finish done";
 }
 

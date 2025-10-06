@@ -94,7 +94,7 @@ class LioIEKF {
     SE3 TIL_;       // Lidar与IMU之间外参
 
     Options options_;
-    std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
+    // std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
 };
 
 }  // namespace wxpiggy

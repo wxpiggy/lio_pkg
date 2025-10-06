@@ -17,6 +17,7 @@
 // #include "ch4/imu_preintegration.h"
 #include <glog/logging.h>
 
+#include "core/imu_preintegration.h"
 #include "g2o/core/robust_kernel_impl.h"
 
 
@@ -59,132 +60,173 @@ class VertexPose : public g2o::BaseVertex<6, SE3> {
 /**
  * 速度顶点，单纯的Vec3d
  */
-// class VertexVelocity : public g2o::BaseVertex<3, Vec3d> {
-//    public:
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-//     VertexVelocity() {}
+class VertexVelocity : public g2o::BaseVertex<3, Vec3d> {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    VertexVelocity() {}
 
-//     virtual bool read(std::istream& is) { return false; }
-//     virtual bool write(std::ostream& os) const { return false; }
+    virtual bool read(std::istream& is) { return false; }
+    virtual bool write(std::ostream& os) const { return false; }
 
-//     virtual void setToOriginImpl() { _estimate.setZero(); }
+    virtual void setToOriginImpl() { _estimate.setZero(); }
 
-//     virtual void oplusImpl(const double* update_) { _estimate += Eigen::Map<const Vec3d>(update_); }
-// };
+    virtual void oplusImpl(const double* update_) { _estimate += Eigen::Map<const Vec3d>(update_); }
+};
 
-// /**
-//  * 陀螺零偏顶点，亦为Vec3d，从速度顶点继承
-//  */
-// class VertexGyroBias : public VertexVelocity {
-//    public:
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-//     VertexGyroBias() {}
-// };
+/**
+ * 陀螺零偏顶点，亦为Vec3d，从速度顶点继承
+ */
+class VertexGyroBias : public VertexVelocity {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    VertexGyroBias() {}
+};
 
-// /**
-//  * 加计零偏顶点，Vec3d，亦从速度顶点继承
-//  */
-// class VertexAccBias : public VertexVelocity {
-//    public:
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-//     VertexAccBias() {}
-// };
+/**
+ * 加计零偏顶点，Vec3d，亦从速度顶点继承
+ */
+class VertexAccBias : public VertexVelocity {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    VertexAccBias() {}
+};
 
-// /**
-//  * 陀螺随机游走
-//  */
-// class EdgeGyroRW : public g2o::BaseBinaryEdge<3, Vec3d, VertexGyroBias, VertexGyroBias> {
-//    public:
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+/**
+ * 陀螺随机游走
+ */
+class EdgeGyroRW : public g2o::BaseBinaryEdge<3, Vec3d, VertexGyroBias, VertexGyroBias> {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-//     EdgeGyroRW() {}
+    EdgeGyroRW() {}
 
-//     virtual bool read(std::istream& is) { return false; }
-//     virtual bool write(std::ostream& os) const { return false; }
+    virtual bool read(std::istream& is) { return false; }
+    virtual bool write(std::ostream& os) const { return false; }
 
-//     void computeError() {
-//         const auto* VG1 = dynamic_cast<const VertexGyroBias*>(_vertices[0]);
-//         const auto* VG2 = dynamic_cast<const VertexGyroBias*>(_vertices[1]);
-//         _error = VG2->estimate() - VG1->estimate();
-//     }
+    void computeError() {
+        const auto* VG1 = dynamic_cast<const VertexGyroBias*>(_vertices[0]);
+        const auto* VG2 = dynamic_cast<const VertexGyroBias*>(_vertices[1]);
+        _error = VG2->estimate() - VG1->estimate();
+    }
 
-//     virtual void linearizeOplus() {
-//         _jacobianOplusXi = -Mat3d::Identity();
-//         _jacobianOplusXj.setIdentity();
-//     }
+    virtual void linearizeOplus() {
+        _jacobianOplusXi = -Mat3d::Identity();
+        _jacobianOplusXj.setIdentity();
+    }
 
-//     Eigen::Matrix<double, 6, 6> GetHessian() {
-//         linearizeOplus();
-//         Eigen::Matrix<double, 3, 6> J;
-//         J.block<3, 3>(0, 0) = _jacobianOplusXi;
-//         J.block<3, 3>(0, 3) = _jacobianOplusXj;
-//         return J.transpose() * information() * J;
-//     }
-// };
+    Eigen::Matrix<double, 6, 6> GetHessian() {
+        linearizeOplus();
+        Eigen::Matrix<double, 3, 6> J;
+        J.block<3, 3>(0, 0) = _jacobianOplusXi;
+        J.block<3, 3>(0, 3) = _jacobianOplusXj;
+        return J.transpose() * information() * J;
+    }
+};
 
-// /**
-//  * 加计随机游走
-//  */
-// class EdgeAccRW : public g2o::BaseBinaryEdge<3, Vec3d, VertexAccBias, VertexAccBias> {
-//    public:
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+/**
+ * 加计随机游走
+ */
+class EdgeAccRW : public g2o::BaseBinaryEdge<3, Vec3d, VertexAccBias, VertexAccBias> {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-//     EdgeAccRW() {}
+    EdgeAccRW() {}
 
-//     virtual bool read(std::istream& is) { return false; }
-//     virtual bool write(std::ostream& os) const { return false; }
+    virtual bool read(std::istream& is) { return false; }
+    virtual bool write(std::ostream& os) const { return false; }
 
-//     void computeError() {
-//         const auto* VA1 = dynamic_cast<const VertexAccBias*>(_vertices[0]);
-//         const auto* VA2 = dynamic_cast<const VertexAccBias*>(_vertices[1]);
-//         _error = VA2->estimate() - VA1->estimate();
-//     }
+    void computeError() {
+        const auto* VA1 = dynamic_cast<const VertexAccBias*>(_vertices[0]);
+        const auto* VA2 = dynamic_cast<const VertexAccBias*>(_vertices[1]);
+        _error = VA2->estimate() - VA1->estimate();
+    }
 
-//     virtual void linearizeOplus() {
-//         _jacobianOplusXi = -Mat3d::Identity();
-//         _jacobianOplusXj.setIdentity();
-//     }
+    virtual void linearizeOplus() {
+        _jacobianOplusXi = -Mat3d::Identity();
+        _jacobianOplusXj.setIdentity();
+    }
 
-//     Eigen::Matrix<double, 6, 6> GetHessian() {
-//         linearizeOplus();
-//         Eigen::Matrix<double, 3, 6> J;
-//         J.block<3, 3>(0, 0) = _jacobianOplusXi;
-//         J.block<3, 3>(0, 3) = _jacobianOplusXj;
-//         return J.transpose() * information() * J;
-//     }
-// };
+    Eigen::Matrix<double, 6, 6> GetHessian() {
+        linearizeOplus();
+        Eigen::Matrix<double, 3, 6> J;
+        J.block<3, 3>(0, 0) = _jacobianOplusXi;
+        J.block<3, 3>(0, 3) = _jacobianOplusXj;
+        return J.transpose() * information() * J;
+    }
+};
 
-// /**
-//  * 对上一帧IMU pvq bias的先验
-//  * info 由外部指定，通过时间窗口边缘化给出
-//  *
-//  * 顶点顺序：pose, v, bg, ba
-//  * 残差顺序：R, p, v, bg, ba，15维
-//  */
-// class EdgePriorPoseNavState : public g2o::BaseMultiEdge<15, Vec15d> {
-//    public:
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-//     EdgePriorPoseNavState(const NavStated& state, const Mat15d& info);
+/**
+ * 对上一帧IMU pvq bias的先验
+ * info 由外部指定，通过时间窗口边缘化给出
+ *
+ * 顶点顺序：pose, v, bg, ba
+ * 残差顺序：R, p, v, bg, ba，15维
+ */
+class EdgePriorPoseNavState : public g2o::BaseMultiEdge<15, Vec15d> {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    EdgePriorPoseNavState(const NavStated& state, const Mat15d& info);
 
-//     virtual bool read(std::istream& is) { return false; }
-//     virtual bool write(std::ostream& os) const { return false; }
+    virtual bool read(std::istream& is) { return false; }
+    virtual bool write(std::ostream& os) const { return false; }
 
-//     void computeError();
-//     virtual void linearizeOplus();
+    void computeError();
+    virtual void linearizeOplus();
 
-//     Eigen::Matrix<double, 15, 15> GetHessian() {
-//         linearizeOplus();
-//         Eigen::Matrix<double, 15, 15> J;
-//         J.block<15, 6>(0, 0) = _jacobianOplus[0];
-//         J.block<15, 3>(0, 6) = _jacobianOplus[1];
-//         J.block<15, 3>(0, 9) = _jacobianOplus[2];
-//         J.block<15, 3>(0, 12) = _jacobianOplus[3];
-//         return J.transpose() * information() * J;
-//     }
+    Eigen::Matrix<double, 15, 15> GetHessian() {
+        linearizeOplus();
+        Eigen::Matrix<double, 15, 15> J;
+        J.block<15, 6>(0, 0) = _jacobianOplus[0];
+        J.block<15, 3>(0, 6) = _jacobianOplus[1];
+        J.block<15, 3>(0, 9) = _jacobianOplus[2];
+        J.block<15, 3>(0, 12) = _jacobianOplus[3];
+        return J.transpose() * information() * J;
+    }
 
-//     NavStated state_;
-// };
+    NavStated state_;
+};
+/// 与预积分相关的vertex, edge
+/**
+ * 预积分边
+ * 连接6个顶点：上一帧的pose, v, bg, ba，下一帧的pose, v
+ * 观测量为9维，即预积分残差, 顺序：R, v, p
+ * information从预积分类中获取，构造函数中计算
+ */
+class EdgeInertial : public g2o::BaseMultiEdge<9, Vec9d> {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+    /**
+     * 构造函数中需要指定预积分类对象
+     * @param preinteg  预积分对象指针
+     * @param gravity   重力矢量
+     * @param weight    权重
+     */
+    EdgeInertial(std::shared_ptr<IMUPreintegration> preinteg, const Vec3d& gravity, double weight = 1.0);
+
+    bool read(std::istream& is) override { return false; }
+    bool write(std::ostream& os) const override { return false; }
+
+    void computeError() override;
+    void linearizeOplus() override;
+
+    Eigen::Matrix<double, 24, 24> GetHessian() {
+        linearizeOplus();
+        Eigen::Matrix<double, 9, 24> J;
+        J.block<9, 6>(0, 0) = _jacobianOplus[0];
+        J.block<9, 3>(0, 6) = _jacobianOplus[1];
+        J.block<9, 3>(0, 9) = _jacobianOplus[2];
+        J.block<9, 3>(0, 12) = _jacobianOplus[3];
+        J.block<9, 6>(0, 15) = _jacobianOplus[4];
+        J.block<9, 3>(0, 21) = _jacobianOplus[5];
+        return J.transpose() * information() * J;
+    }
+
+   private:
+    const double dt_;
+    std::shared_ptr<IMUPreintegration> preint_ = nullptr;
+    Vec3d grav_;
+};
 /**
  * 6 自由度的GNSS
  * 误差的角度在前，平移在后

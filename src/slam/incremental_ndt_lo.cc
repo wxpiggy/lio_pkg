@@ -3,18 +3,21 @@
 //
 
 #include "incremental_ndt_lo.h"
-#include "map/ndt_inc.h"
+
+#include <pcl/common/transforms.h>
+
 #include "common/math_utils.h"
 #include "common/timer/timer.h"
-#include "tools/pcl_map_viewer.h"
+#include "map/ndt_inc.h"
+// #include "tools/pcl_map_viewer.h"
 namespace wxpiggy {
-    IncrementalNDTLO::IncrementalNDTLO(Options options) : options_(options) {
-        if (options_.display_realtime_cloud_) {
-            viewer_ = std::make_shared<PCLMapViewer>(0.5);
-        }
+IncrementalNDTLO::IncrementalNDTLO(Options options) : options_(options) {
+    // if (options_.display_realtime_cloud_) {
+    //     viewer_ = std::make_shared<PCLMapViewer>(0.5);
+    // }
 
-        ndt_ = IncNdt3d(options_.ndt3d_options_);
-    }
+    ndt_ = IncNdt3d(options_.ndt3d_options_);
+}
 void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     if (first_frame_) {
         // 第一个帧，直接加入local map
@@ -58,9 +61,9 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
         ndt_.AddCloud(scan_world);
     }
 
-    if (viewer_ != nullptr) {
-        viewer_->SetPoseAndCloud(pose, scan_world);
-    }
+    // if (viewer_ != nullptr) {
+    //     viewer_->SetPoseAndCloud(pose, scan_world);
+    // }
     cnt_frame_++;
 }
 
@@ -70,14 +73,13 @@ bool IncrementalNDTLO::IsKeyframe(const SE3& current_pose) {
     }
 
     SE3 delta = last_kf_pose_.inverse() * current_pose;
-    return delta.translation().norm() > options_.kf_distance_ ||
-           delta.so3().log().norm() > options_.kf_angle_deg_ * math::kDEG2RAD;
+    return delta.translation().norm() > options_.kf_distance_ || delta.so3().log().norm() > options_.kf_angle_deg_ * math::kDEG2RAD;
 }
 
 void IncrementalNDTLO::SaveMap(const std::string& map_path) {
-    if (viewer_) {
-        viewer_->SaveMap(map_path);
-    }
+    // if (viewer_) {
+    //     viewer_->SaveMap(map_path);
+    // }
 }
 
-}  // namespace sad
+}  // namespace wxpiggy

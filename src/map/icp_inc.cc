@@ -61,26 +61,26 @@ void IncIcp3d::AddCloud(CloudPtr cloud_world) {
             // voxel 不存在，创建新体素
             voxelBlock block;
             block.AddPoint(pt);
-            data_.emplace_front(key, std::move(block));  // 插入到队列头部
-            grids_.emplace(key, data_.begin());
-
-            // 立即检查容量，执行LRU删除
-            if (data_.size() >= options_.capacity_) {
-                grids_.erase(data_.back().first);  // 删除哈希表映射
-                data_.pop_back();                  // 删除队列尾部
+            data_.push_front({key,{block}});
+            // data_.emplace_front(key, std::move(block));  // 插入到队列头部
+            grids_.insert({key,data_.begin()});
+            // grids_.emplace(key, data_.begin());
+            if(data_.size() > options_.capacity_){
+                grids_.erase(data_.back().first);
+                data_.pop_back();
             }
+
         } else {
             // voxel 已存在
             auto& voxel_block = iter.value()->second;
             if (voxel_block.NumPoints() < options_.max_points_) {
                 voxel_block.AddPoint(pt);  // 添加点
             }
-            // 更新LRU：将使用过的体素移到队列头部
             data_.splice(data_.begin(), data_, iter.value());
-            iter.value() = data_.begin();
+            iter.value() = data_.begin();   
         }
     }
-
+    LOG(INFO) << "cloud size " << data_.size();
     flag_first_scan_ = false;
 }
 bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::vector<Eigen::Vector3d>& neighbors, double max_distance) {
