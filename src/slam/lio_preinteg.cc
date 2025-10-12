@@ -126,13 +126,13 @@ void LioPreinteg::Align() {
     SE3 current_pose = current_nav_state_.GetSE3();
     SE3 delta_pose = last_ndt_pose_.inverse() * current_pose;
 
-    if (delta_pose.translation().norm() > 0.3 || delta_pose.so3().log().norm() > math::deg2rad(5.0)) {
+    // if (delta_pose.translation().norm() > 0.3 || delta_pose.so3().log().norm() > math::deg2rad(5.0)) {
         // 将地图合入NDT中
         CloudPtr current_scan_world(new PointCloudType);
         pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
         ndt_.AddCloud(current_scan_world);
         last_ndt_pose_ = current_pose;
-    }
+    // }
 
     // if (options_.with_ui_) {
     //     ui_->UpdateScan(current_scan, pose_updated);  // 转成Lidar Pose传给UI
@@ -326,19 +326,19 @@ void LioPreinteg::Optimize() {
     optimizer.addEdge(edge_prior);
 
     // /// 使用NDT的pose进行观测
-    // auto *edge_ndt = new EdgeGNSS(v1_pose, ndt_pose_);
-    // edge_ndt->setInformation(options_.ndt_info_);
-    // optimizer.addEdge(edge_ndt);
+    auto *edge_ndt = new EdgeGNSS(v1_pose, ndt_pose_);
+    edge_ndt->setInformation(options_.ndt_info_);
+    optimizer.addEdge(edge_ndt);
     //这里用更加紧密的耦合，每一步迭代都重新寻找最近邻，耗时从2.5ms涨到了12ms左右
-    std::vector<EdgeNDT*> edges_ndt;
-    ndt_.BuildNDTEdges(v1_pose, edges_ndt);
-    for(auto it = edges_ndt.begin(); it != edges_ndt.end(); it++){
-        optimizer.addEdge(*it);
-    }
+    // std::vector<EdgeNDT*> edges_ndt;
+    // ndt_.BuildNDTEdges(v1_pose, edges_ndt);
+    // for(auto it = edges_ndt.begin(); it != edges_ndt.end(); it++){
+    //     optimizer.addEdge(*it);
+    // }
     if (options_.verbose_) {
-        LOG(INFO) << "last: " << last_nav_state_;
-        LOG(INFO) << "pred: " << current_nav_state_;
-        LOG(INFO) << "NDT: " << ndt_pose_.translation().transpose() << "," << ndt_pose_.so3().unit_quaternion().coeffs().transpose();
+    //     LOG(INFO) << "last: " << last_nav_state_;
+    //     LOG(INFO) << "pred: " << current_nav_state_;
+    //     LOG(INFO) << "NDT: " << ndt_pose_.translation().transpose() << "," << ndt_pose_.so3().unit_quaternion().coeffs().transpose();
     }
 
     v0_bg->setFixed(true);
@@ -398,10 +398,11 @@ void LioPreinteg::Optimize() {
     H.block<3, 3>(27, 27) += Har.block<3, 3>(3, 3);
 
     H.block<15, 15>(0, 0) += edge_prior->GetHessian();
-    for(auto it = edges_ndt.begin(); it != edges_ndt.end(); it++){
-        H.block<6, 6>(15, 15) += (*it)->GetHessian();
+    H.block<6, 6>(15, 15) += edge_ndt->GetHessian();
+    // for(auto it = edges_ndt.begin(); it != edges_ndt.end(); it++){
+    //     H.block<6, 6>(15, 15) += (*it)->GetHessian();
 
-    }
+    // }
     
     H = math::Marginalize(H, 0, 14);
     prior_info_ = H.block<15, 15>(15, 15);

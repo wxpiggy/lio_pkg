@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     options.with_ui_ = FLAGS_display_map;
     lm = new wxpiggy::LooselyLIO(options);
     
-    // 设置发布函数（简洁！）
+    
     lm->setFunc(ros_publisher.GetCloudPublishFunc());
     lm->setFunc(ros_publisher.GetPosePublishFunc());
     lm->Init(FLAGS_config);

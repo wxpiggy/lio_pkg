@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 namespace wxpiggy {
 
 struct Odom {
@@ -18,4 +19,4 @@ struct Odom {
 
 }  // namespace wxpiggy
 
-
+using OdomPtr = std::shared_ptr<wxpiggy::Odom>;

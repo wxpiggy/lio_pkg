@@ -1,19 +1,38 @@
-//
-// Created by xiang on 22-11-10.
-//
-
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+#include <pcl/console/print.h>
 
 #include "slam/lio_preinteg.h"
-#include "common/io_utils.h"
-// #include "common/sys_utils.h"
 #include "common/timer/timer.h"
 #include "ros_publisher.h"
-DEFINE_string(bag_path, "/dataset/nclt/20120115.bag", "path to rosbag");
-DEFINE_string(dataset_type, "NCLT", "NCLT/ULHK/UTBM/AVIA");                   // 数据集类型
-DEFINE_string(config, "/livox_ws/src/lio_pkg/config/velodyne_nclt.yaml", "path of config yaml");  // 配置文件类型
+
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/Imu.h>
+#include <livox_ros_driver/CustomMsg.h>
+
+DEFINE_string(dataset_type, "NCLT", "NCLT/ULHK/UTBM/AVIA");
+DEFINE_string(config, "/livox_ws/src/lio_pkg/config/velodyne_nclt.yaml", "path of config yaml");
 DEFINE_bool(display_map, true, "display map?");
+
+wxpiggy::LioPreinteg* lio = nullptr;
+
+void pointCloudCallback(const sensor_msgs::PointCloud2::ConstPtr& msg) {
+    sensor_msgs::PointCloud2::Ptr cloud(new sensor_msgs::PointCloud2(*msg));
+    wxpiggy::common::Timer::Evaluate([&]() { lio->PCLCallBack(cloud); }, "Pre-Integration LIO");
+}
+
+void livoxCallback(const livox_ros_driver::CustomMsg::ConstPtr& msg) {
+    wxpiggy::common::Timer::Evaluate([&]() { lio->LivoxPCLCallBack(msg); }, "Pre-Integration LIO");
+}
+
+void imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
+    IMUPtr imu = std::make_shared<wxpiggy::IMU>(
+        msg->header.stamp.toSec(),
+        Vec3d(msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z),
+        Vec3d(msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z));
+    lio->IMUCallBack(imu);
+}
 
 int main(int argc, char** argv) {
     google::InitGoogleLogging(argv[0]);
@@ -23,42 +42,42 @@ int main(int argc, char** argv) {
 
     // 屏蔽 PCL 警告
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
-    std::string bag_path, dataset_type, config_path;
-    // 初始化 ROS 节点
-    ros::init(argc, argv, "loosely_lio_offline");
+
+    ros::init(argc, argv, "lio_preinteg_online");
     ros::NodeHandle nh;
-    
-    // nh.param<std::string>("bag_path", bag_path, "/dataset/nclt/nclt9.bag");
-    // nh.param<std::string>("dataset_type", dataset_type, "NCLT");
-    // nh.param<std::string>("config", config_path, "$(find lio_pkg)/config/velodyne_nclt.yaml");
 
     // 创建 ROS 发布器（封装所有发布功能）
     wxpiggy::ROSPublisher ros_publisher(nh);
-    wxpiggy::RosbagIO rosbag_io(fLS::FLAGS_bag_path, wxpiggy::Str2DatasetType(FLAGS_dataset_type));
 
-    wxpiggy::LioPreinteg lio;
-    lio.setFunc(ros_publisher.GetCloudPublishFunc());
-    lio.setFunc(ros_publisher.GetPosePublishFunc());
-    lio.Init(FLAGS_config);
+    // 初始化 LioPreinteg
+    wxpiggy::LioPreinteg::Options options;
+    options.with_ui_ = FLAGS_display_map;
+    lio = new wxpiggy::LioPreinteg(options);
 
-    rosbag_io
-        .AddAutoPointCloudHandle([&](sensor_msgs::PointCloud2::Ptr cloud) -> bool {
-            wxpiggy::common::Timer::Evaluate([&]() { lio.PCLCallBack(cloud); }, "Pre-Integration lio");
-            return true;
-        })
-        .AddLivoxHandle([&](const livox_ros_driver::CustomMsg::ConstPtr& msg) -> bool {
-            wxpiggy::common::Timer::Evaluate([&]() { lio.LivoxPCLCallBack(msg); }, "Pre-Integration lio");
-            return true;
-        })
-        .AddImuHandle([&](IMUPtr imu) {
-            lio.IMUCallBack(imu);
-            return true;
-        })
-        .Go();
+    // 设置发布函数
+    lio->setFunc(ros_publisher.GetCloudPublishFunc());
+    lio->setFunc(ros_publisher.GetPosePublishFunc());
+    lio->Init(FLAGS_config);
 
-    lio.Finish();
+    // 根据数据集类型订阅点云
+    ros::Subscriber subPointCloud;
+    if (FLAGS_dataset_type == "AVIA") {
+        subPointCloud = nh.subscribe<livox_ros_driver::CustomMsg>("/livox/lidar", 100, livoxCallback);
+    } else {
+        subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>("points_raw", 100, pointCloudCallback);
+    }
+
+    // IMU 订阅
+    ros::Subscriber subImu = nh.subscribe<sensor_msgs::Imu>("imu_raw", 500, imuCallback);
+
+    LOG(INFO) << "LioPreinteg online node started, waiting for data...";
+
+    ros::spin();
+
+    lio->Finish();
     wxpiggy::common::Timer::PrintAll();
-    LOG(INFO) << "done.";
+    LOG(INFO) << "done. Total path points: " << ros_publisher.GetPathSize();
 
+    delete lio;
     return 0;
 }

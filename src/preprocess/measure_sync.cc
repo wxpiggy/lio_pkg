@@ -34,7 +34,11 @@ bool MessageSync::Sync() {
         measures_.imu_.push_back(imu_buffer_.front());
         imu_buffer_.pop_front();
     }
-
+    measures_.odom_.clear();
+    while (!odom_buffer_.empty() && odom_buffer_.front()->timestamp_ < lidar_end_time_) {
+        measures_.odom_.push_back(odom_buffer_.front());
+        odom_buffer_.pop_front();
+    }
     lidar_buffer_.pop_front();
     time_buffer_.pop_front();
     lidar_pushed_ = false;
@@ -46,6 +50,8 @@ bool MessageSync::Sync() {
     return true;
 }
 
-void MessageSync::Init(const std::string& yaml) { conv_->LoadFromYAML(yaml); }
+void MessageSync::Init(const std::string& yaml) {
+    conv_->LoadFromYAML(yaml);
+}
 
-}  // namespace sad
+}  // namespace wxpiggy

@@ -58,9 +58,7 @@ add_executable( lio_preinteg
 add_executable(lio_iekf
      src/app/main_iekf.cc
 )
-add_executable(lio_eskf_ndt_offline
-    src/app/main_eskf_ndt_offline.cc
-)
+
 add_executable(lio_eskf_ndt_online
     src/app/main_eskf_ndt_online.cc
 )
@@ -69,13 +67,9 @@ add_executable(lio_eskf_ndt_online
 target_link_libraries( lio_preinteg lio_core)
 target_link_libraries( lio_iekf lio_core)
 
-target_link_libraries(lio_eskf_ndt_offline lio_core)
+
 target_link_libraries(lio_eskf_ndt_online lio_core)
 # # 安装规则
 # install(TARGETS ${PROJECT_NAME}_node
 #     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
-add_executable(test1 
-    src/app/test.cc
-)
-target_link_libraries(test1 lio_core)

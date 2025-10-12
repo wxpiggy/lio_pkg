@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "common/odom.h"
 #include "preprocess/cloud_convert.h"
 #include "common/imu.h"
 #include "common/point_types.h"
@@ -21,6 +22,7 @@ struct MeasureGroup {
     double lidar_end_time_ = 0;     // 雷达的终止时间
     FullCloudPtr lidar_ = nullptr;  // 雷达点云
     std::deque<IMUPtr> imu_;        // 上一时时刻到现在的IMU读数
+    std::deque<OdomPtr> odom_;
 };
 
 /**
@@ -46,7 +48,15 @@ class MessageSync {
         last_timestamp_imu_ = timestamp;
         imu_buffer_.emplace_back(imu);
     }
-
+    void ProcessOdom(OdomPtr odom){
+        double timestamp = odom->timestamp_;
+        if(timestamp < last_timestamp_odom_){
+            LOG(WARNING) << "odom loop back, clear buffer";
+            odom_buffer_.clear();
+        }
+        last_timestamp_odom_ = timestamp;
+        odom_buffer_.emplace_back(odom);
+    }
     /**
      * 处理sensor_msgs::PointCloud2点云
      * @param msg
@@ -95,8 +105,10 @@ class MessageSync {
     std::shared_ptr<CloudConvert> conv_ = nullptr;  // 点云转换
     std::deque<FullCloudPtr> lidar_buffer_;         // 雷达数据缓冲
     std::deque<IMUPtr> imu_buffer_;                 // imu数据缓冲
+    std::deque<OdomPtr> odom_buffer_;
     double last_timestamp_imu_ = -1.0;              // 最近imu时间
     double last_timestamp_lidar_ = 0;               // 最近lidar时间
+    double last_timestamp_odom_ = -1.0;
     std::deque<double> time_buffer_;
     bool lidar_pushed_ = false;
     MeasureGroup measures_;
