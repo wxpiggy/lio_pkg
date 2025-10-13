@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "map/ndt_inc.h"
+#include "registration/ndt_inc.h"
 // #include "map/icp_inc.h"
 #include "common/eigen_types.h"
 #include "common/point_types.h"
@@ -49,7 +49,6 @@ class IncrementalNDTLO {
     std::vector<SE3> estimated_poses_;  // 所有估计出来的pose，用于记录轨迹和预测下一个帧
     SE3 last_kf_pose_;                  // 上一关键帧的位姿
     int cnt_frame_ = 0;
-    
     IncNdt3d ndt_;
     // std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
 };

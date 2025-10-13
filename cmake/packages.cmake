@@ -46,9 +46,6 @@ set(g2o_libs
         ${CSPARSE_LIBRARY}
         ${CHOLMOD_LIBRARY}
         )
-
-# ros
-# 为了2D scan, pointcloud2
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         rospy
@@ -60,8 +57,8 @@ find_package(catkin REQUIRED COMPONENTS
         )
 include_directories(${catkin_INCLUDE_DIRS})
 
-find_package(Pangolin REQUIRED)
-include_directories(${Pangolin_INCLUDE_DIRS})
+# find_package(Pangolin REQUIRED)
+# include_directories(${Pangolin_INCLUDE_DIRS})
 
 # yaml-cpp
 find_package(yaml-cpp REQUIRED)
@@ -78,7 +75,7 @@ include_directories(${PROJECT_SOURCE_DIR}/thirdparty/robin-map/include)
             ${g2o_libs}
         #     ${OpenCV_LIBS}
             ${PCL_LIBRARIES}
-            ${Pangolin_LIBRARIES}
+        #     ${Pangolin_LIBRARIES}
             glog gflags
             yaml-cpp
             tbb

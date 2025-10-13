@@ -116,7 +116,7 @@ void IncNdt3d::UpdateVoxel(VoxelData& v) {
     }
 }
 
-bool IncNdt3d::AlignNdt(SE3& init_pose) {
+bool IncNdt3d::Align(SE3& init_pose) {
     LOG(INFO) << "aligning with inc ndt, pts: " << source_->size() << ", grids: " << grids_.size();
     assert(grids_.empty() == false);
 

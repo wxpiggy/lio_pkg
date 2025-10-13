@@ -9,6 +9,7 @@
 #include "common/g2o_types.h"
 #include "common/point_types.h"
 
+
 #include <list>
 namespace wxpiggy {
 
@@ -83,7 +84,7 @@ class IncNdt3d {
     void SetSource(CloudPtr source) { source_ = source; }
 
     /// 使用gauss-newton方法进行ndt配准
-    bool AlignNdt(SE3& init_pose);
+    bool Align(SE3& init_pose);
 
     /**
      * 计算给定Pose下的雅可比和残差矩阵，符合IEKF中符号（8.17, 8.19）

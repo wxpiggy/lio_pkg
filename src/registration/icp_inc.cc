@@ -125,7 +125,7 @@ bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::v
 // ICP 配准
 // =======================================================
 
-bool IncIcp3d::AlignICP(SE3& init_pose) {
+bool IncIcp3d::Align(SE3& init_pose) {
     LOG(INFO) << "aligning with point to plane";
     assert(target_ != nullptr && source_ != nullptr);
     // 整体流程与p2p一致，读者请关注变化部分

@@ -118,7 +118,7 @@ void LioPreinteg::Align() {
     current_nav_state_ = preinteg_->Predict(last_nav_state_, imu_init_.GetGravity());//重力一直是fixed？
     ndt_pose_ = current_nav_state_.GetSE3();
 
-    ndt_.AlignNdt(ndt_pose_);
+    ndt_.Align(ndt_pose_);
 
     Optimize();
 

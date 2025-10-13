@@ -23,28 +23,20 @@ include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/../build/devel/include)
 # add_subdirectory(src)
 add_library(lio_core SHARED
-    src/common/io_utils.cc
     src/common/timer/timer.cc
-    src/common/global_flags.cc
     src/common/point_cloud_utils.cc
     src/common/g2o_types.cc
     src/core/static_imu_init.cc
     src/core/imu_preintegration.cc
-    src/map/ndt_inc.cc
-    src/map/icp_inc.cc
-    src/map/voxel_map.cc
+    src/registration/ndt_inc.cc
+    src/registration/icp_inc.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
     src/slam/incremental_ndt_lo.cc
     src/slam/loosely_lio.cc
     src/slam/lio_iekf.cc
     src/slam/lio_preinteg.cc
-    src/slam/voxel_lio.cc
-    src/tools/ui/pangolin_window_impl.cc
-    src/tools/ui/pangolin_window.cc
-    src/tools/ui/ui_car.cc
-    src/tools/ui/ui_cloud.cc
-    src/tools/ui/ui_trajectory.cc
+
 )
 target_link_libraries(lio_core
    ${third_party_libs}

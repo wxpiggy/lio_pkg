@@ -10,10 +10,10 @@
 #include "core/imu_preintegration.h"
 #include "preprocess/cloud_convert.h"
 #include "preprocess/measure_sync.h"
-#include "map/ndt_inc.h"
+#include "registration//ndt_inc.h"
 
 #include "common/math_utils.h"
-#include "tools/ui/pangolin_window.h"
+// #include "tools/ui/pangolin_window.h"
 
 namespace wxpiggy {
 

@@ -7,8 +7,8 @@
 /// 部分类直接使用ch7的结果
 #include "core/iekf.hpp"
 #include "core/static_imu_init.h"
-#include "map/ndt_inc.h"
-#include "map/icp_inc.h"
+#include "registration//ndt_inc.h"
+#include "registration//icp_inc.h"
 #include "preprocess/measure_sync.h"
 
 // #include "tools/ui/pangolin_window.h"
@@ -77,6 +77,7 @@ class LioIEKF {
     CloudPtr current_scan_ = nullptr;
 
     /// NDT数据
+
     IncNdt3d ndt_;
     IncIcp3d icp_;
     SE3 last_pose_;
@@ -93,7 +94,6 @@ class LioIEKF {
     SE3 TIL_;       // Lidar与IMU之间外参
 
     Options options_;
-    // std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
 };
 
 }  // namespace wxpiggy

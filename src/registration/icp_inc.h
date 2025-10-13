@@ -70,7 +70,7 @@ struct hash<wxpiggy::voxel> {
 };
 }  // namespace std
 namespace wxpiggy {
-class IncIcp3d {
+class IncIcp3d   {
    public:
     enum class NearbyType {
         CENTER,    // 只考虑中心
@@ -115,7 +115,7 @@ class IncIcp3d {
     void SetSource(CloudPtr source) { source_ = source; }
 
     /// 点到面 ICP 配准
-    bool AlignICP(SE3& init_pose);
+    bool Align(SE3& init_pose);
     /**
      * 计算残差和雅可比
      * @param pose 当前位姿

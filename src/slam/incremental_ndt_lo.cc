@@ -8,7 +8,7 @@
 
 #include "common/math_utils.h"
 #include "common/timer/timer.h"
-#include "map/ndt_inc.h"
+#include "registration//ndt_inc.h"
 // #include "tools/pcl_map_viewer.h"
 namespace wxpiggy {
 IncrementalNDTLO::IncrementalNDTLO(Options options) : options_(options) {
@@ -32,7 +32,7 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     SE3 guess;
     ndt_.SetSource(scan);
     if (estimated_poses_.size() < 2) {
-        ndt_.AlignNdt(guess);
+        ndt_.Align(guess);
         //  ndt_.AlignICP(guess);
     } else {
         if (!use_guess) {
@@ -44,7 +44,7 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
             guess = pose;
         }
 
-        ndt_.AlignNdt(guess);
+        ndt_.Align(guess);
         // ndt_.AlignICP(guess);
     }
 

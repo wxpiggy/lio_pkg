@@ -69,7 +69,6 @@ public:
         cloud_msg->header.frame_id = "map";
         pub_cloud_.publish(*cloud_msg);
         
-        ros::spinOnce();
         return true;
     }
 
@@ -89,7 +88,6 @@ public:
         // 发布路径
         PublishPath(position, q_current, stamp);
         
-        ros::spinOnce();
         return true;
     }
 

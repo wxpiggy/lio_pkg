@@ -11,7 +11,6 @@
 #include "livox_ros_driver/CustomMsg.h"
 #include <glog/logging.h>
 #include <deque>
-
 namespace wxpiggy {
 
 /// IMU 数据与雷达同步
@@ -49,6 +48,7 @@ class MessageSync {
         imu_buffer_.emplace_back(imu);
     }
     void ProcessOdom(OdomPtr odom){
+
         double timestamp = odom->timestamp_;
         if(timestamp < last_timestamp_odom_){
             LOG(WARNING) << "odom loop back, clear buffer";
@@ -62,6 +62,7 @@ class MessageSync {
      * @param msg
      */
     void ProcessCloud(const sensor_msgs::PointCloud2::ConstPtr &msg) {
+
         if (msg->header.stamp.toSec() < last_timestamp_lidar_) {
             LOG(ERROR) << "lidar loop back, clear buffer";
             lidar_buffer_.clear();
@@ -78,6 +79,7 @@ class MessageSync {
 
     /// 处理Livox点云
     void ProcessCloud(const livox_ros_driver::CustomMsg::ConstPtr &msg) {
+
         if (msg->header.stamp.toSec() < last_timestamp_lidar_) {
             LOG(WARNING) << "lidar loop back, clear buffer";
             lidar_buffer_.clear();
