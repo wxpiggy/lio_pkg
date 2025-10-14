@@ -15,7 +15,7 @@
 
 // #include "tools/ui/pangolin_window.h"
 #include "common/lidar_utils.h"
-#include "common/point_cloud_utils.h"
+#include "tools/point_cloud_utils.h"
 #include "common/timer/timer.h"
 #include "lio_iekf.h"
 

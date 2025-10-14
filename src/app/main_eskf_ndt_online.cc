@@ -11,9 +11,9 @@
 #include <sensor_msgs/Imu.h>
 #include <livox_ros_driver/CustomMsg.h>
 
-DEFINE_string(dataset_type, "NCLT", "NCLT/ULHK/UTBM/AVIA");
-DEFINE_string(config, "/livox_ws/src/lio_pkg/config/velodyne_nclt.yaml", "path of config yaml");
-DEFINE_bool(display_map, true, "display map?");
+// DEFINE_string(dataset_type, "NCLT", "NCLT/ULHK/UTBM/AVIA");
+// DEFINE_string(config, "/livox_ws/src/lio_pkg/config/velodyne_nclt.yaml", "path of config yaml");
+// DEFINE_bool(display_map, true, "display map?");
 
 wxpiggy::LooselyLIO* lm = nullptr;
 
@@ -46,36 +46,28 @@ int main(int argc, char** argv) {
 
     // 屏蔽 PCL 警告
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
-    std::string bag_path, dataset_type, config_path;
+    std::string bag_path, config_path, lidar_topic, imu_topic;
     ros::init(argc, argv, "loosely_lio");
     ros::NodeHandle nh;
     nh.param<std::string>("bag_path", bag_path, "/dataset/nclt/nclt9.bag");
-    nh.param<std::string>("dataset_type", dataset_type, "NCLT");
-    nh.param<std::string>("config", config_path, "$(find lio_pkg)/config/velodyne_nclt.yaml");
+    // nh.param<std::string>("dataset_type", dataset_type, "NCLT");
+    nh.param<std::string>("config", config_path, "/project/src/lio_pkg/config/velodyne_nclt.yaml");
+    nh.param<std::string>("lidar_topic", lidar_topic, "points_raw");
+    nh.param<std::string>("imu_topic", imu_topic, "imu_raw");
     // 创建 ROS 发布器（封装所有发布功能）
     wxpiggy::ROSPublisher ros_publisher(nh);
 
     // 初始化 LooselyLIO
     wxpiggy::LooselyLIO::Options options;
-    options.with_ui_ = FLAGS_display_map;
     lm = new wxpiggy::LooselyLIO(options);
-    
     
     lm->setFunc(ros_publisher.GetCloudPublishFunc());
     lm->setFunc(ros_publisher.GetPosePublishFunc());
-    lm->Init(FLAGS_config);
+    lm->Init(config_path);
 
     // 根据数据集类型订阅不同的点云话题
-    ros::Subscriber subPointCloud;
-    // std::string dataset_type = FLAGS_dataset_type;
-    
-    if (dataset_type == "AVIA") {
-        subPointCloud = nh.subscribe<livox_ros_driver::CustomMsg>("/livox/lidar", 100, livoxCallback);
-    } else {
-        subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>("points_raw", 100, pointCloudCallback);
-    }
-
-    ros::Subscriber subImu = nh.subscribe<sensor_msgs::Imu>("imu_raw", 500, imuCallback);
+    ros::Subscriber subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>(lidar_topic, 1000, pointCloudCallback);
+    ros::Subscriber subImu = nh.subscribe<sensor_msgs::Imu>("imu_raw", 5000, imuCallback);
 
     LOG(INFO) << "LooselyLIO node started, waiting for data...";
 

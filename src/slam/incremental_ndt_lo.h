@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "registration/icp_inc.h"
 #include "registration/ndt_inc.h"
 // #include "map/icp_inc.h"
 #include "common/eigen_types.h"
@@ -25,6 +26,7 @@ class IncrementalNDTLO {
         double kf_angle_deg_ = 30;            // 旋转角度
         bool display_realtime_cloud_ = true;  // 是否显示实时点云
         IncNdt3d::Options ndt3d_options_;     // NDT3D 的配置
+        IncIcp3d::Options icp3d_options_;
     };
 
     IncrementalNDTLO(Options options = Options());
@@ -50,6 +52,7 @@ class IncrementalNDTLO {
     SE3 last_kf_pose_;                  // 上一关键帧的位姿
     int cnt_frame_ = 0;
     IncNdt3d ndt_;
+    IncIcp3d icp_;
     // std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
 };
 

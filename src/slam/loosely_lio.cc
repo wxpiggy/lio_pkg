@@ -7,7 +7,7 @@
 #include <execution>
 
 #include "common/lidar_utils.h"
-#include "common/point_cloud_utils.h"
+#include "tools/point_cloud_utils.h"
 #include "common/timer/timer.h"
 // #include "tools/ui/pangolin_window.h"
 namespace wxpiggy {
@@ -148,22 +148,21 @@ void LooselyLIO::Align() {
 
     auto current_scan = ConvertToCloud<FullPointType>(scan_undistort_);
 
-    // voxel 之
+ 
+
+    /// 处理首帧雷达数据
+    if (flg_first_scan_) {
+        SE3 pose;
+        inc_ndt_lo_->AddCloud(current_scan, pose);
+        flg_first_scan_ = false;
+        return;
+    }
     pcl::VoxelGrid<PointType> voxel;
     voxel.setLeafSize(0.5, 0.5, 0.5);
     voxel.setInputCloud(current_scan);
 
     CloudPtr current_scan_filter(new PointCloudType);
     voxel.filter(*current_scan_filter);
-
-    /// 处理首帧雷达数据
-    if (flg_first_scan_) {
-        SE3 pose;
-        inc_ndt_lo_->AddCloud(current_scan_filter, pose);
-        flg_first_scan_ = false;
-        return;
-    }
-
     /// 从EKF中获取预测pose，放入LO，获取LO位姿，最后合入EKF
     SE3 pose_predict = eskf_.GetNominalSE3();
     inc_ndt_lo_->AddCloud(current_scan_filter, pose_predict, true);

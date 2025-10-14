@@ -22,9 +22,13 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/../build/devel/include)
 # add_subdirectory(src)
+SET(LIB_FILE
+    lib/ikdtree/ikdtree.cc
+)
+
+
 add_library(lio_core SHARED
     src/common/timer/timer.cc
-    src/common/point_cloud_utils.cc
     src/common/g2o_types.cc
     src/core/static_imu_init.cc
     src/core/imu_preintegration.cc
@@ -37,9 +41,12 @@ add_library(lio_core SHARED
     src/slam/lio_iekf.cc
     src/slam/lio_preinteg.cc
 
+    src/tools/point_cloud_utils.cc
+
 )
 target_link_libraries(lio_core
    ${third_party_libs}
+   
 )
 
 

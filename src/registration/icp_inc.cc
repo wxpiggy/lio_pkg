@@ -127,7 +127,7 @@ bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::v
 
 bool IncIcp3d::Align(SE3& init_pose) {
     LOG(INFO) << "aligning with point to plane";
-    assert(target_ != nullptr && source_ != nullptr);
+    // assert(target_ != nullptr && source_ != nullptr);
     // 整体流程与p2p一致，读者请关注变化部分
 
     SE3 pose = init_pose;
@@ -151,9 +151,9 @@ bool IncIcp3d::Align(SE3& init_pose) {
             auto q = ToVec3d(source_->points[idx]);
             Vec3d qs = pose * q;  // 转换之后的q
             std::vector<Eigen::Vector3d> nn;
-            FindKNearestNeighbors(qs, 5, nn);
+            FindKNearestNeighbors(qs, 8, nn);
             // GetClosestPoint(ToPointType(qs), nn, 5);  // 这里取5个最近邻
-            if (nn.size() >= 5) {
+            if (nn.size() >= 8) {
                 // convert to eigen
                 // std::vector<Vec3d> nn_eigen;
                 // for (int i = 0; i < nn.size(); ++i) {
@@ -168,7 +168,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
                 }
 
                 double dis = n.head<3>().dot(qs) + n[3];
-                if (fabs(dis) > 0.5) {
+                if (fabs(dis) > 0.05) {
                     // 点离的太远了不要
                     effect_pts[idx] = false;
                     return;
@@ -238,7 +238,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
 // 计算残差和雅可比
 // =======================================================
 void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, Vec18d& HTVr) {
-    assert(target_ != nullptr && source_ != nullptr);
+    // assert(target_ != nullptr && source_ != nullptr);
 
     SE3 pose = input_pose;
 

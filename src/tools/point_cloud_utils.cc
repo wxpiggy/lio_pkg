@@ -3,7 +3,7 @@
 //
 #define PCL_NO_PRECOMPILE
 #include "point_cloud_utils.h"
-#include "point_types.h"
+
 
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>

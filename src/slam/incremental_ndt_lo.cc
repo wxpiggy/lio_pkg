@@ -15,7 +15,7 @@ IncrementalNDTLO::IncrementalNDTLO(Options options) : options_(options) {
     // if (options_.display_realtime_cloud_) {
     //     viewer_ = std::make_shared<PCLMapViewer>(0.5);
     // }
-
+    icp_ = IncIcp3d(options_.icp3d_options_);
     ndt_ = IncNdt3d(options_.ndt3d_options_);
 }
 void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
@@ -23,16 +23,19 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
         // 第一个帧，直接加入local map
         pose = SE3();
         last_kf_pose_ = pose;
-        ndt_.AddCloud(scan);
+        // ndt_.AddCloud(scan);
+        icp_.AddCloud(scan);
         first_frame_ = false;
         return;
     }
 
     // 此时local map位于NDT内部，直接配准即可
     SE3 guess;
-    ndt_.SetSource(scan);
+    // ndt_.SetSource(scan);
+    icp_.SetSource(scan);
     if (estimated_poses_.size() < 2) {
-        ndt_.Align(guess);
+        // ndt_.Align(guess);
+        icp_.Align(guess);
         //  ndt_.AlignICP(guess);
     } else {
         if (!use_guess) {
@@ -44,7 +47,8 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
             guess = pose;
         }
 
-        ndt_.Align(guess);
+        // ndt_.Align(guess);
+        icp_.Align(guess);
         // ndt_.AlignICP(guess);
     }
 
@@ -54,12 +58,13 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     CloudPtr scan_world(new PointCloudType);
     pcl::transformPointCloud(*scan, *scan_world, guess.matrix().cast<float>());
 
-    if (IsKeyframe(pose)) {
+    // if (IsKeyframe(pose)) {
         last_kf_pose_ = pose;
         cnt_frame_ = 0;
         // 放入ndt内部的local map
-        ndt_.AddCloud(scan_world);
-    }
+        // ndt_.AddCloud(scan_world);
+        icp_.AddCloud(scan_world);
+    // }
 
     // if (viewer_ != nullptr) {
     //     viewer_->SetPoseAndCloud(pose, scan_world);

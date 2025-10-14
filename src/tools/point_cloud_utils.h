@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "point_types.h"
+#include "common/point_types.h"
 
 /// 点云的一些工具函数
 

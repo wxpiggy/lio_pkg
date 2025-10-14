@@ -83,11 +83,11 @@ class IncIcp3d   {
         int max_iteration_ = 20;        // ICP 最大迭代次数
         double voxel_size_ = 0.5;      // 体素大小
         double inv_voxel_size_ = 2.0;  // 体素大小之逆
-        int min_effective_pts_ = 10;   // 最近邻点数阈值
+        int min_effective_pts_ = 10;   
         double max_correspond = 10;
         double eps_ = 1e-2;         // 收敛判定条件
         size_t capacity_ = 500000;  // 
-        size_t max_points_ = 20;
+        size_t max_points_ = 40;
         NearbyType nearby_type_ = NearbyType::NEARBY6;
     };
 
