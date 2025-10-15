@@ -19,6 +19,7 @@ bool LooselyLIO::Init(const std::string &config_yaml) {
     // if (!LoadFromYAML(config_yaml)) {
     //     return false;
     // }
+    eskf_ = std::make_shared<ESKFD>();
     StaticIMUInit::Options imu_init_options;
     imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
     imu_init_ = StaticIMUInit(imu_init_options);
@@ -79,12 +80,12 @@ void LooselyLIO::ProcessMeasurements(const MeasureGroup &meas) {
 
 void LooselyLIO::Predict() {
     imu_states_.clear();
-    imu_states_.emplace_back(eskf_.GetNominalState());
+    imu_states_.emplace_back(eskf_->GetNominalState());
 
     /// 对IMU状态进行预测
     for (auto &imu : measures_.imu_) {
-        eskf_.Predict(*imu);
-        imu_states_.emplace_back(eskf_.GetNominalState());
+        eskf_->Predict(*imu);
+        imu_states_.emplace_back(eskf_->GetNominalState());
     }
 }
 
@@ -99,7 +100,7 @@ void LooselyLIO::TryInitIMU() {
         // 噪声由初始化器估计
         options.gyro_var_ = sqrt(imu_init_.GetCovGyro()[0]);
         options.acce_var_ = sqrt(imu_init_.GetCovAcce()[0]);
-        eskf_.SetInitialConditions(options, imu_init_.GetInitBg(), imu_init_.GetInitBa(), imu_init_.GetGravity());
+        eskf_->SetInitialConditions(options, imu_init_.GetInitBg(), imu_init_.GetInitBa(), imu_init_.GetGravity());
         imu_need_init_ = false;
 
         LOG(INFO) << "IMU初始化成功";
@@ -108,7 +109,7 @@ void LooselyLIO::TryInitIMU() {
 
 void LooselyLIO::Undistort() {
     auto cloud = measures_.lidar_;
-    auto imu_state = eskf_.GetNominalState();  // 最后时刻的状态
+    auto imu_state = eskf_->GetNominalState();  // 最后时刻的状态
     SE3 T_end = SE3(imu_state.R_, imu_state.p_);
 
     // if (options_.save_motion_undistortion_pcd_) {
@@ -166,11 +167,11 @@ void LooselyLIO::Align() {
     CloudPtr current_scan_filter(new PointCloudType);
     voxel.filter(*current_scan_filter);
     /// 从EKF中获取预测pose，放入LO，获取LO位姿，最后合入EKF
-    SE3 pose_predict = eskf_.GetNominalSE3();
+    SE3 pose_predict = eskf_->GetNominalSE3();
     inc_lo_->AddCloud(current_scan_filter, pose_predict, true);
     pose_of_lo_ = pose_predict;
-    eskf_.ObserveSE3(pose_of_lo_, 1e-2, 1e-2);
-    SE3 pose_updated = eskf_.GetNominalSE3();
+    eskf_->ObserveSE3(pose_of_lo_, 1e-2, 1e-2);
+    SE3 pose_updated = eskf_->GetNominalSE3();
     // if (options_.with_ui_) {
     //     ui_->UpdateScan(current_scan, pose_updated);  // 转成Lidar Pose传给UI
     //     ui_->UpdateNavState(eskf_.GetNominalState());

@@ -5,9 +5,24 @@
 #include <algorithm>  // std::for_each
 #include <execution>  // std::execution::par, std::execution::par_unseq
 #include <set>
-
+#include <yaml-cpp/yaml.h>
 #include "common/math_utils.h"
 namespace wxpiggy {
+
+void IncIcp3d::LoadFromYAML(const std::string& config_file){
+    auto yaml = YAML::LoadFile(config_file);
+    auto reg = yaml["registration"];
+
+    options_.max_iteration_ = reg["max_iteration"].as<int>();
+    options_.voxel_size_ = reg["voxel_size"].as<double>();
+    options_.min_effective_pts_ = reg["min_effective_pts"].as<int>();
+    // options_.min_pts_in_voxel_ = reg["min_pts_in_voxel"].as<int>();
+    options_.max_points_ = reg["max_pts_in_voxel"].as<int>();
+    options_.eps_ = reg["eps"].as<double>();
+    // options_.res_outlier_th_ = reg["res_outlier_th"].as<double>();
+    options_.capacity_ = reg["capacity"].as<int>();
+    options_.nearby_type_ = NearbyType(reg["nearby_type"].as<int>());
+}
 void IncIcp3d::GenerateNearbyGrids() {
     nearby_grids_.clear();
 

@@ -1,5 +1,4 @@
-#ifndef SAD_CH8_LIO_PREINTEG_H
-#define SAD_CH8_LIO_PREINTEG_H
+#pragma once
 
 #include <livox_ros_driver/CustomMsg.h>
 #include <pcl/filters/voxel_grid.h>
@@ -132,5 +131,3 @@ class LioPreinteg {
 };
 
 }  // namespace sad
-
-#endif  // FASTER_LIO_LASER_MAPPING_H

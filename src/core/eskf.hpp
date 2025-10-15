@@ -13,6 +13,7 @@
 #include "common/odom.h"
 
 #include <glog/logging.h>
+#include <yaml-cpp/yaml.h>
 
 namespace wxpiggy {
 

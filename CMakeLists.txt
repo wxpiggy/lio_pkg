@@ -36,10 +36,10 @@ add_library(lio_core SHARED
     src/registration/icp_inc.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
-    src/slam/incremental_lo.cc
-    src/slam/loosely_lio.cc
-    src/slam/lio_iekf.cc
-    src/slam/lio_preinteg.cc
+    src/slam/frontend/incremental_lo.cc
+    src/slam/frontend/loosely_lio.cc
+    src/slam/frontend/lio_iekf.cc
+    src/slam/frontend/lio_preinteg.cc
 
     src/tools/point_cloud_utils.cc
 

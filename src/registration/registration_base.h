@@ -27,7 +27,7 @@ public:
 
 
     virtual void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) = 0;
-
+    virtual void LoadFromYAML(const std::string& config_file) = 0;
 };
 
 }  // namespace wxpiggy

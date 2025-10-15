@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <pcl/console/print.h>
 
-#include "slam/lio_iekf.h"
+#include "slam/frontend/lio_iekf.h"
 #include "common/timer/timer.h"
 
 #include <ros/ros.h>

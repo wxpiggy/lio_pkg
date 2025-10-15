@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <pcl/console/print.h>
 
-#include "slam/lio_preinteg.h"
+#include "slam/frontend/lio_preinteg.h"
 #include "common/timer/timer.h"
 #include "ros_publisher.h"
 

@@ -9,6 +9,17 @@ mapping:
                  0, 1, 0,
                  0, 0, 1 ]
   registration_type: 1
+regitstration:
+  max_iteration: 4       # 最大迭代次数
+  double voxel_size: 1.0     #体素大小
+  min_effective_pts: 10   #最小有效点数
+  min_pts_in_voxel: 5     #每个栅格中最小点数
+  max_pts_in_voxel: 50    #每个栅格中最大点数
+  eps: 1e-3            #收敛判定条件
+  res_outlier_th: 5.0  #异常值拒绝阈值
+  capacity: 500000     #缓存的体素数量
+  nearby_type: 6              # 0      6     18 26
+
 init:
   init_time_seconds: 2.0               # 静止时间
   init_imu_queue_max_size: 2000        # 初始化IMU队列最大长度

@@ -29,7 +29,7 @@ class IncNdt3d :public RegistrationBase{
         int max_iteration_ = 4;        // 最大迭代次数
         double voxel_size_ = 1.0;      // 体素大小
         double inv_voxel_size_ = 1.0;  // 体素大小之逆
-        int min_effective_pts_ = 10;   // 最近邻点数阈值
+        int min_effective_pts_ = 10;   // 有效点数
         int min_pts_in_voxel_ = 5;     // 每个栅格中最小点数
         int max_pts_in_voxel_ = 50;    // 每个栅格中最大点数
         double eps_ = 1e-3;            // 收敛判定条件
@@ -101,7 +101,7 @@ class IncNdt3d :public RegistrationBase{
      * @param edges
      */
     void BuildNDTEdges(VertexPose* v, std::vector<EdgeNDT*>& edges);
-
+    void LoadFromYAML(const std::string& config_file) override;
    private:
     /// 根据最近邻的类型，生成附近网格
     void GenerateNearbyGrids();

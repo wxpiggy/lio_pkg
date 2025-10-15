@@ -5,7 +5,7 @@
 
 #include "core/eskf.hpp"
 #include "core/static_imu_init.h"
-#include "slam/incremental_lo.h"
+#include "slam/frontend/incremental_lo.h"
 
 #include "preprocess/measure_sync.h"
 
@@ -104,7 +104,8 @@ class LooselyLIO {
     // EKF data
     MeasureGroup measures_;              // 同步之后的IMU和点云
     std::vector<NavStated> imu_states_;  // ESKF预测期间的状态
-    ESKFD eskf_;                         // ESKF
+    std::shared_ptr<ESKFD> eskf_;
+    // ESKFD eskf_;                         // ESKF
     SE3 TIL_;                            // Lidar与IMU之间外参
 
     // std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
