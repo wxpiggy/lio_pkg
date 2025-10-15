@@ -5,6 +5,7 @@
 
 #include "common/eigen_types.h"
 #include "common/point_types.h"
+#include "registration/registration_base.h"
 namespace wxpiggy {
 
 
@@ -70,7 +71,7 @@ struct hash<wxpiggy::voxel> {
 };
 }  // namespace std
 namespace wxpiggy {
-class IncIcp3d   {
+class IncIcp3d  :public RegistrationBase {
    public:
     enum class NearbyType {
         CENTER,    // 只考虑中心
@@ -109,20 +110,20 @@ class IncIcp3d   {
     inline int NumGrids() const { return grids_.size(); }
 
     /// 添加点云到 voxel hash map
-    void AddCloud(CloudPtr cloud_world);
+    void AddCloud(CloudPtr cloud_world) override;
 
     /// 设置源点云
-    void SetSource(CloudPtr source) { source_ = source; }
+    void SetSource(CloudPtr source) override{ source_ = source; }
 
     /// 点到面 ICP 配准
-    bool Align(SE3& init_pose);
+    bool Align(SE3& init_pose)override;
     /**
      * 计算残差和雅可比
      * @param pose 当前位姿
      * @param HTVH 累积的 Hessian
      * @param HTVr 累积的梯度
      */
-    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr);
+    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) override ;
     bool FindKNearestNeighbors(const Eigen::Vector3d& point,
                                int k,
                                std::vector<Eigen::Vector3d>& neighbors,

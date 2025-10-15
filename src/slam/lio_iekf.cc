@@ -21,18 +21,14 @@
 
 namespace wxpiggy {
 
-LioIEKF::LioIEKF(Options options) : options_(options) {
-    StaticIMUInit::Options imu_init_options;
-    imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
-    imu_init_ = StaticIMUInit(imu_init_options);
-}
-
 bool LioIEKF::Init(const std::string &config_yaml) {
     if (!LoadFromYAML(config_yaml)) {
         LOG(INFO) << "init failed.";
         return false;
     }
-
+    StaticIMUInit::Options imu_init_options;
+    imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
+    imu_init_ = StaticIMUInit(imu_init_options);
     // if (options_.with_ui_) {
     //     ui_ = std::make_shared<ui::PangolinWindow>();
     //     ui_->Init();
@@ -155,9 +151,9 @@ void LioIEKF::Undistort() {
     auto imu_state = ieskf_.GetNominalState();  // 最后时刻的状态
     SE3 T_end = SE3(imu_state.R_, imu_state.p_);
 
-    if (options_.save_motion_undistortion_pcd_) {
-        wxpiggy::SaveCloudToFile("./data/ch7/before_undist.pcd", *cloud);
-    }
+    // if (options_.save_motion_undistortion_pcd_) {
+    //     wxpiggy::SaveCloudToFile("./data/ch7/before_undist.pcd", *cloud);
+    // }
 
     /// 将所有点转到最后时刻状态上
     std::for_each(std::execution::par_unseq, cloud->points.begin(), cloud->points.end(), [&](auto &pt) {
@@ -182,9 +178,9 @@ void LioIEKF::Undistort() {
     });
     scan_undistort_ = cloud;
 
-    if (options_.save_motion_undistortion_pcd_) {
-        wxpiggy::SaveCloudToFile("./data/ch7/after_undist.pcd", *cloud);
-    }
+    // if (options_.save_motion_undistortion_pcd_) {
+    //     wxpiggy::SaveCloudToFile("./data/ch7/after_undist.pcd", *cloud);
+    // }
 }
 
 void LioIEKF::Predict() {

@@ -58,8 +58,8 @@ int main(int argc, char** argv) {
     wxpiggy::ROSPublisher ros_publisher(nh);
 
     // 初始化 LooselyLIO
-    wxpiggy::LooselyLIO::Options options;
-    lm = new wxpiggy::LooselyLIO(options);
+    // wxpiggy::LooselyLIO::Options options;
+    lm = new wxpiggy::LooselyLIO();
     
     lm->setFunc(ros_publisher.GetCloudPublishFunc());
     lm->setFunc(ros_publisher.GetPosePublishFunc());

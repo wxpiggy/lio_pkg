@@ -2,29 +2,33 @@
 // Created by xiang on 2022/7/20.
 //
 
-#include "incremental_ndt_lo.h"
+#include "incremental_lo.h"
 
 #include <pcl/common/transforms.h>
 
 #include "common/math_utils.h"
 #include "common/timer/timer.h"
-#include "registration//ndt_inc.h"
+#include "registration/ndt_inc.h"
 // #include "tools/pcl_map_viewer.h"
 namespace wxpiggy {
-IncrementalNDTLO::IncrementalNDTLO(Options options) : options_(options) {
-    // if (options_.display_realtime_cloud_) {
-    //     viewer_ = std::make_shared<PCLMapViewer>(0.5);
-    // }
-    icp_ = IncIcp3d(options_.icp3d_options_);
-    ndt_ = IncNdt3d(options_.ndt3d_options_);
+incrementalLO::incrementalLO(Options options) : options_(options) {
+    if(options_.registration_type_ == 1){
+        LOG(INFO) << "using hase voxel POINT-TO-PLANE-ICP";
+        registration_ = std::make_unique<IncIcp3d>();
+    }else{
+        LOG(INFO) << "using Incremental NDT";
+        registration_ = std::make_unique<IncNdt3d>();
+    }
+    
 }
-void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
+void incrementalLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     if (first_frame_) {
         // 第一个帧，直接加入local map
         pose = SE3();
         last_kf_pose_ = pose;
         // ndt_.AddCloud(scan);
-        icp_.AddCloud(scan);
+        // icp_.AddCloud(scan);
+        registration_->AddCloud(scan);
         first_frame_ = false;
         return;
     }
@@ -32,10 +36,12 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     // 此时local map位于NDT内部，直接配准即可
     SE3 guess;
     // ndt_.SetSource(scan);
-    icp_.SetSource(scan);
+    // icp_.SetSource(scan);
+    registration_->SetSource(scan);
     if (estimated_poses_.size() < 2) {
         // ndt_.Align(guess);
-        icp_.Align(guess);
+        // icp_.Align(guess);
+        registration_->Align(guess);
         //  ndt_.AlignICP(guess);
     } else {
         if (!use_guess) {
@@ -48,8 +54,9 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
         }
 
         // ndt_.Align(guess);
-        icp_.Align(guess);
+        // icp_.Align(guess);
         // ndt_.AlignICP(guess);
+        registration_->Align(guess);
     }
 
     pose = guess;
@@ -63,7 +70,8 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
         cnt_frame_ = 0;
         // 放入ndt内部的local map
         // ndt_.AddCloud(scan_world);
-        icp_.AddCloud(scan_world);
+        // icp_.AddCloud(scan_world);
+        registration_->AddCloud(scan_world);
     // }
 
     // if (viewer_ != nullptr) {
@@ -72,7 +80,7 @@ void IncrementalNDTLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     cnt_frame_++;
 }
 
-bool IncrementalNDTLO::IsKeyframe(const SE3& current_pose) {
+bool incrementalLO::IsKeyframe(const SE3& current_pose) {
     if (cnt_frame_ > 10) {
         return true;
     }
@@ -81,7 +89,7 @@ bool IncrementalNDTLO::IsKeyframe(const SE3& current_pose) {
     return delta.translation().norm() > options_.kf_distance_ || delta.so3().log().norm() > options_.kf_angle_deg_ * math::kDEG2RAD;
 }
 
-void IncrementalNDTLO::SaveMap(const std::string& map_path) {
+void incrementalLO::SaveMap(const std::string& map_path) {
     // if (viewer_) {
     //     viewer_->SaveMap(map_path);
     // }

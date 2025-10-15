@@ -8,6 +8,7 @@
 // #include "common/g2o_types.h"
 #include "common/g2o_types.h"
 #include "common/point_types.h"
+#include "registration/registration_base.h"
 
 
 #include <list>
@@ -17,7 +18,7 @@ namespace wxpiggy {
  * 增量版本的NDT
  * 内部会维护增量式的voxels，自动删除较旧的voxel，往voxel里添加点云时，更新其均值和协方差估计
  */
-class IncNdt3d {
+class IncNdt3d :public RegistrationBase{
    public:
     enum class NearbyType {
         CENTER,   // 只考虑中心
@@ -78,13 +79,13 @@ class IncNdt3d {
     int NumGrids() const { return grids_.size(); }
 
     /// 在voxel里添加点云，
-    void AddCloud(CloudPtr cloud_world);
+    void AddCloud(CloudPtr cloud_world) override;
 
     /// 设置被配准的Scan
-    void SetSource(CloudPtr source) { source_ = source; }
+    void SetSource(CloudPtr source) override{ source_ = source; }
 
     /// 使用gauss-newton方法进行ndt配准
-    bool Align(SE3& init_pose);
+    bool Align(SE3& init_pose) override;
 
     /**
      * 计算给定Pose下的雅可比和残差矩阵，符合IEKF中符号（8.17, 8.19）
@@ -92,7 +93,7 @@ class IncNdt3d {
      * @param HTVH
      * @param HTVr
      */
-    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr);
+    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) override;
 
     /**
      * 根据估计的NDT建立edges

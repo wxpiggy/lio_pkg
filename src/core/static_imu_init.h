@@ -50,7 +50,7 @@ class StaticIMUInit {
     Vec3d GetInitBg() const { return init_bg_; }
     Vec3d GetInitBa() const { return init_ba_; }
     Vec3d GetGravity() const { return gravity_; }
-
+    void LoadFromYaml(const std::string& config_file); 
    private:
     /// 尝试对系统初始化
     bool TryInit();

@@ -36,7 +36,7 @@ add_library(lio_core SHARED
     src/registration/icp_inc.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
-    src/slam/incremental_ndt_lo.cc
+    src/slam/incremental_lo.cc
     src/slam/loosely_lio.cc
     src/slam/lio_iekf.cc
     src/slam/lio_preinteg.cc
@@ -58,8 +58,8 @@ add_executable(lio_iekf
      src/app/main_iekf.cc
 )
 
-add_executable(lio_eskf_ndt_online
-    src/app/main_eskf_ndt_online.cc
+add_executable(lio_eskf_online
+    src/app/main_eskf_online.cc
 )
 
 
@@ -67,7 +67,7 @@ target_link_libraries( lio_preinteg lio_core)
 target_link_libraries( lio_iekf lio_core)
 
 
-target_link_libraries(lio_eskf_ndt_online lio_core)
+target_link_libraries(lio_eskf_online lio_core)
 # # 安装规则
 # install(TARGETS ${PROJECT_NAME}_node
 #     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

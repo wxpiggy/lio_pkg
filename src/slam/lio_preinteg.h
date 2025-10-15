@@ -27,8 +27,7 @@ class LioPreinteg {
 
     struct Options {
         Options() {}
-        bool with_ui_ = true;  // 是否带着UI
-        bool verbose_ = true;  // 打印调试信息
+        bool verbose_ = false;  // 打印调试信息
 
         double bias_gyro_var_ = 1e-2;           // 陀螺零偏游走标准差
         double bias_acce_var_ = 1e-2;           // 加计零偏游走标准差

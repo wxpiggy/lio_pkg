@@ -5,7 +5,7 @@
 
 #include "core/eskf.hpp"
 #include "core/static_imu_init.h"
-#include "slam/incremental_ndt_lo.h"
+#include "slam/incremental_lo.h"
 
 #include "preprocess/measure_sync.h"
 
@@ -25,13 +25,12 @@ class PangolinWindow;
 class LooselyLIO {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    struct Options {
-        Options() {}
-        bool save_motion_undistortion_pcd_ = false;  // 是否保存去畸变前后的点云
-        bool with_ui_ = true;                        // 是否带着UI
-    };
+    // struct Options {
+    //     Options() {}
+    //     bool save_motion_undistortion_pcd_ = false;  // 是否保存去畸变前后的点云
+    // };
 
-    LooselyLIO(Options options);
+    // LooselyLIO();
     ~LooselyLIO() = default;
 
     /// 从配置文件初始化
@@ -89,13 +88,13 @@ class LooselyLIO {
     /// modules
     std::shared_ptr<MessageSync> sync_ = nullptr;  // 消息同步器
     StaticIMUInit imu_init_;                       // IMU静止初始化
-    std::shared_ptr<wxpiggy::IncrementalNDTLO> inc_ndt_lo_ = nullptr;
+    std::shared_ptr<wxpiggy::incrementalLO> inc_lo_ = nullptr;
 
     /// point clouds data
     FullCloudPtr scan_undistort_{new FullPointCloudType()};  // scan after undistortion
     SE3 pose_of_lo_;
 
-    Options options_;
+    // Options options_;
 
     // flags
     bool imu_need_init_ = true;   // 是否需要估计IMU初始零偏

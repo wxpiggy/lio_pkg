@@ -21,13 +21,12 @@ class LioIEKF {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-    struct Options {
-        Options() {}
-        bool save_motion_undistortion_pcd_ = false;  // 是否保存去畸变前后的点云
-        bool with_ui_ = true;                        // 是否带着UI
-    };
+    // struct Options {
+    //     Options() {}
+    //     bool save_motion_undistortion_pcd_ = false;  // 是否保存去畸变前后的点云
+    // };
 
-    LioIEKF(Options options = Options());
+    // LioIEKF();
     ~LioIEKF() = default;
 
     /// init without ros
@@ -93,7 +92,7 @@ class LioIEKF {
     IESKFD ieskf_;  // IESKF
     SE3 TIL_;       // Lidar与IMU之间外参
 
-    Options options_;
+    // Options options_;
 };
 
 }  // namespace wxpiggy

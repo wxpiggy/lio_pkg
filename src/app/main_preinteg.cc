@@ -51,7 +51,6 @@ int main(int argc, char** argv) {
 
     // 初始化 LioPreinteg
     wxpiggy::LioPreinteg::Options options;
-    options.with_ui_ = FLAGS_display_map;
     lio = new wxpiggy::LioPreinteg(options);
 
     // 设置发布函数

@@ -12,41 +12,26 @@
 // #include "tools/ui/pangolin_window.h"
 namespace wxpiggy {
 
-LooselyLIO::LooselyLIO(Options options) : options_(options) {
-    StaticIMUInit::Options imu_init_options;
-    imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
-    imu_init_ = StaticIMUInit(imu_init_options);
-}
+
 
 bool LooselyLIO::Init(const std::string &config_yaml) {
     /// 初始化自身的参数
-    if (!LoadFromYAML(config_yaml)) {
-        return false;
-    }
-
-    /// 初始化NDT LO的参数
-    wxpiggy::IncrementalNDTLO::Options indt_options;
-    indt_options.display_realtime_cloud_ = false;  // 这个程序自己有UI，不用PCL中的
-    inc_ndt_lo_ = std::make_shared<wxpiggy::IncrementalNDTLO>(indt_options);
-
-    /// 初始化UI
-    // if (options_.with_ui_) {
-    //     ui_ = std::make_shared<ui::PangolinWindow>();
-    //     ui_->Init();
+    // if (!LoadFromYAML(config_yaml)) {
+    //     return false;
     // }
-
-    return true;
-}
-
-bool LooselyLIO::LoadFromYAML(const std::string &yaml_file) {
-    // get params from yaml
+    StaticIMUInit::Options imu_init_options;
+    imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
+    imu_init_ = StaticIMUInit(imu_init_options);
+    imu_init_.LoadFromYaml(config_yaml);
+    /// 初始化NDT LO的参数
+    wxpiggy::incrementalLO::Options incLO_options;
+    inc_lo_ = std::make_shared<wxpiggy::incrementalLO>(incLO_options);
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
-    sync_->Init(yaml_file);
-
-    /// 自身参数主要是雷达与IMU外参
-    auto yaml = YAML::LoadFile(yaml_file);
+    sync_->Init(config_yaml);
+    auto yaml = YAML::LoadFile(config_yaml);
     std::vector<double> ext_t = yaml["mapping"]["extrinsic_T"].as<std::vector<double>>();
     std::vector<double> ext_r = yaml["mapping"]["extrinsic_R"].as<std::vector<double>>();
+    incLO_options.registration_type_ = yaml["mapping"]["registration_type"].as<int>();
     cloud_pub_topic_ = "/cloud";
     pose_pub_topic_ = "/pose";
     Vec3d lidar_T_wrt_IMU = math::VecFromArray(ext_t);
@@ -54,6 +39,23 @@ bool LooselyLIO::LoadFromYAML(const std::string &yaml_file) {
     TIL_ = SE3(lidar_R_wrt_IMU, lidar_T_wrt_IMU);
     return true;
 }
+
+// bool LooselyLIO::LoadFromYAML(const std::string &yaml_file) {
+//     // get params from yaml
+//     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
+//     sync_->Init(yaml_file);
+
+//     /// 自身参数主要是雷达与IMU外参
+//     auto yaml = YAML::LoadFile(yaml_file);
+//     std::vector<double> ext_t = yaml["mapping"]["extrinsic_T"].as<std::vector<double>>();
+//     std::vector<double> ext_r = yaml["mapping"]["extrinsic_R"].as<std::vector<double>>();
+//     cloud_pub_topic_ = "/cloud";
+//     pose_pub_topic_ = "/pose";
+//     Vec3d lidar_T_wrt_IMU = math::VecFromArray(ext_t);
+//     Mat3d lidar_R_wrt_IMU = math::MatFromArray(ext_r);
+//     TIL_ = SE3(lidar_R_wrt_IMU, lidar_T_wrt_IMU);
+//     return true;
+// }
 
 void LooselyLIO::ProcessMeasurements(const MeasureGroup &meas) {
     // LOG(INFO) << "call meas, imu: " << meas.imu_.size() << ", lidar pts: " << meas.lidar_->size();
@@ -109,9 +111,9 @@ void LooselyLIO::Undistort() {
     auto imu_state = eskf_.GetNominalState();  // 最后时刻的状态
     SE3 T_end = SE3(imu_state.R_, imu_state.p_);
 
-    if (options_.save_motion_undistortion_pcd_) {
-        wxpiggy::SaveCloudToFile("./data/ch7/before_undist.pcd", *cloud);
-    }
+    // if (options_.save_motion_undistortion_pcd_) {
+    //     wxpiggy::SaveCloudToFile("./data/ch7/before_undist.pcd", *cloud);
+    // }
 
     /// 将所有点转到最后时刻状态上
     std::for_each(std::execution::par_unseq, cloud->points.begin(), cloud->points.end(), [&](auto &pt) {
@@ -136,9 +138,9 @@ void LooselyLIO::Undistort() {
     });
     scan_undistort_ = cloud;
 
-    if (options_.save_motion_undistortion_pcd_) {
-        wxpiggy::SaveCloudToFile("./data/ch7/after_undist.pcd", *cloud);
-    }
+    // if (options_.save_motion_undistortion_pcd_) {
+    //     wxpiggy::SaveCloudToFile("./data/ch7/after_undist.pcd", *cloud);
+    // }
 }
 
 void LooselyLIO::Align() {
@@ -153,7 +155,7 @@ void LooselyLIO::Align() {
     /// 处理首帧雷达数据
     if (flg_first_scan_) {
         SE3 pose;
-        inc_ndt_lo_->AddCloud(current_scan, pose);
+        inc_lo_->AddCloud(current_scan, pose);
         flg_first_scan_ = false;
         return;
     }
@@ -165,7 +167,7 @@ void LooselyLIO::Align() {
     voxel.filter(*current_scan_filter);
     /// 从EKF中获取预测pose，放入LO，获取LO位姿，最后合入EKF
     SE3 pose_predict = eskf_.GetNominalSE3();
-    inc_ndt_lo_->AddCloud(current_scan_filter, pose_predict, true);
+    inc_lo_->AddCloud(current_scan_filter, pose_predict, true);
     pose_of_lo_ = pose_predict;
     eskf_.ObserveSE3(pose_of_lo_, 1e-2, 1e-2);
     SE3 pose_updated = eskf_.GetNominalSE3();
