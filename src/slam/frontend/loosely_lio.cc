@@ -26,7 +26,7 @@ bool LooselyLIO::Init(const std::string &config_yaml) {
     imu_init_.LoadFromYaml(config_yaml);
     /// 初始化NDT LO的参数
     wxpiggy::incrementalLO::Options incLO_options;
-    inc_lo_ = std::make_shared<wxpiggy::incrementalLO>(incLO_options);
+    
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
     sync_->Init(config_yaml);
     auto yaml = YAML::LoadFile(config_yaml);
@@ -38,6 +38,7 @@ bool LooselyLIO::Init(const std::string &config_yaml) {
     Vec3d lidar_T_wrt_IMU = math::VecFromArray(ext_t);
     Mat3d lidar_R_wrt_IMU = math::MatFromArray(ext_r);
     TIL_ = SE3(lidar_R_wrt_IMU, lidar_T_wrt_IMU);
+    inc_lo_ = std::make_shared<wxpiggy::incrementalLO>(incLO_options);
     return true;
 }
 

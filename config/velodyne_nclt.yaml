@@ -21,7 +21,7 @@ regitstration:
   nearby_type: 6              # 0      6     18 26
 
 init:
-  init_time_seconds: 2.0               # 静止时间
+  init_time_seconds: 0.5               # 静止时间
   init_imu_queue_max_size: 2000        # 初始化IMU队列最大长度
   static_odom_pulse: 5                 # 静止时轮速计输出噪声
   max_static_gyro_var: 0.5             # 静态下陀螺测量方差
