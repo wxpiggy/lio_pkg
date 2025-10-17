@@ -25,10 +25,12 @@ class PangolinWindow;
 class LooselyLIO {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    // struct Options {
-    //     Options() {}
-    //     bool save_motion_undistortion_pcd_ = false;  // 是否保存去畸变前后的点云
-    // };
+    struct Options {
+        Options() {}
+        StaticIMUInit::Options static_init_options_;
+        
+        bool save_motion_undistortion_pcd_ = false;  // 是否保存去畸变前后的点云
+    };
 
     // LooselyLIO();
     ~LooselyLIO() = default;

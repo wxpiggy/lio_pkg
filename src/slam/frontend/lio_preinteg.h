@@ -113,6 +113,7 @@ class LioPreinteg {
     IMUPtr last_imu_ = nullptr;
 
     /// NDT数据
+    std::shared_ptr<RegistrationBase> registration_;
     IncNdt3d ndt_;
     SE3 ndt_pose_;
     SE3 last_ndt_pose_;
@@ -127,7 +128,6 @@ class LioPreinteg {
     SE3 TIL_;  // Lidar与IMU之间外参
 
     Options options_;
-    // std::shared_ptr<ui::PangolinWindow> ui_ = nullptr;
 };
 
 }  // namespace sad

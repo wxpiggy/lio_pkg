@@ -15,13 +15,11 @@
 #include "common/lidar_utils.h"
 #include "common/math_utils.h"
 #include "common/timer/timer.h"
+#include "registration/icp_inc.h"
 
 namespace wxpiggy {
 
 LioPreinteg::LioPreinteg(Options options) : options_(options), preinteg_(new IMUPreintegration()) {
-    StaticIMUInit::Options imu_init_options;
-    imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
-    imu_init_ = StaticIMUInit(imu_init_options);
 
     double bg_rw2 = 1.0 / (options_.bias_gyro_var_ * options_.bias_gyro_var_);
     options_.bg_rw_info_.diagonal() << bg_rw2, bg_rw2, bg_rw2;
@@ -33,8 +31,8 @@ LioPreinteg::LioPreinteg(Options options) : options_(options), preinteg_(new IMU
 
     options_.ndt_info_.diagonal() << 1.0 / ga2, 1.0 / ga2, 1.0 / ga2, 1.0 / gp2, 1.0 / gp2, 1.0 / gp2;
 
-    options_.ndt_options_.nearby_type_ = IncNdt3d::NearbyType::CENTER;
-    ndt_ = IncNdt3d(options_.ndt_options_);
+    // options_.ndt_options_.nearby_type_ = IncNdt3d::NearbyType::CENTER;
+    // ndt_ = IncNdt3d(options_.ndt_options_);
 }
 
 bool LioPreinteg::Init(const std::string &config_yaml) {
@@ -73,8 +71,13 @@ void LioPreinteg::ProcessMeasurements(const MeasureGroup &meas) {
 
 bool LioPreinteg::LoadFromYAML(const std::string &yaml_file) {
     // get params from yaml
+    std::cout << yaml_file << std::endl;
+    imu_init_ = StaticIMUInit();
+    imu_init_.LoadFromYaml(yaml_file);
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
     sync_->Init(yaml_file);
+    registration_ = std::make_shared<IncNdt3d>();
+    registration_->LoadFromYAML(yaml_file);
     cloud_pub_topic_ = "/cloud";
     pose_pub_topic_ = "/pose";
     /// 自身参数主要是雷达与IMU外参
@@ -105,7 +108,7 @@ void LioPreinteg::Align() {
 
     /// the first scan
     if (flg_first_scan_) {
-        ndt_.AddCloud(current_scan_);
+        registration_->AddCloud(current_scan_);
         preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
         flg_first_scan_ = false;
         return;
@@ -113,12 +116,12 @@ void LioPreinteg::Align() {
 
     // 后续的scan，使用NDT配合pose进行更新
     LOG(INFO) << "=== frame " << frame_num_;
-    ndt_.SetSource(current_scan_filter);
+    registration_->SetSource(current_scan_filter);
 
     current_nav_state_ = preinteg_->Predict(last_nav_state_, imu_init_.GetGravity());//重力一直是fixed？
     ndt_pose_ = current_nav_state_.GetSE3();
 
-    ndt_.Align(ndt_pose_);
+    registration_->Align(ndt_pose_);
 
     Optimize();
 
@@ -126,13 +129,13 @@ void LioPreinteg::Align() {
     SE3 current_pose = current_nav_state_.GetSE3();
     SE3 delta_pose = last_ndt_pose_.inverse() * current_pose;
 
-    // if (delta_pose.translation().norm() > 0.3 || delta_pose.so3().log().norm() > math::deg2rad(5.0)) {
+    if (delta_pose.translation().norm() > 0.3 || delta_pose.so3().log().norm() > math::deg2rad(5.0)) {
         // 将地图合入NDT中
         CloudPtr current_scan_world(new PointCloudType);
         pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
-        ndt_.AddCloud(current_scan_world);
+        registration_->AddCloud(current_scan_world);
         last_ndt_pose_ = current_pose;
-    // }
+    }
 
     // if (options_.with_ui_) {
     //     ui_->UpdateScan(current_scan, pose_updated);  // 转成Lidar Pose传给UI

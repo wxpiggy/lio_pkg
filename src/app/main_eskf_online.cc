@@ -49,11 +49,12 @@ int main(int argc, char** argv) {
     std::string bag_path, config_path, lidar_topic, imu_topic;
     ros::init(argc, argv, "loosely_lio");
     ros::NodeHandle nh;
-    nh.param<std::string>("bag_path", bag_path, "/dataset/nclt/nclt9.bag");
+    // nh.param<std::string>("bag_path", bag_path, "/dataset/nclt/nclt9.bag");
     // nh.param<std::string>("dataset_type", dataset_type, "NCLT");
     nh.param<std::string>("config", config_path, "/project/src/lio_pkg/config/velodyne_nclt.yaml");
     nh.param<std::string>("lidar_topic", lidar_topic, "points_raw");
     nh.param<std::string>("imu_topic", imu_topic, "imu_raw");
+    
     // 创建 ROS 发布器（封装所有发布功能）
     wxpiggy::ROSPublisher ros_publisher(nh);
 

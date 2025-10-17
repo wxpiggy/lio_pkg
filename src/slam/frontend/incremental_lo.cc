@@ -11,13 +11,15 @@
 #include "registration/ndt_inc.h"
 // #include "tools/pcl_map_viewer.h"
 namespace wxpiggy {
-incrementalLO::incrementalLO(Options options) : options_(options) {
+incrementalLO::incrementalLO(Options options,const std::string& yaml) : options_(options) {
     if(options_.registration_type_ == 1){
         LOG(INFO) << "using hase voxel POINT-TO-PLANE-ICP";
         registration_ = std::make_unique<IncIcp3d>();
+        registration_->LoadFromYAML(yaml);
     }else{
         LOG(INFO) << "using Incremental NDT";
         registration_ = std::make_unique<IncNdt3d>();
+        registration_->LoadFromYAML(yaml);
     }
     
 }

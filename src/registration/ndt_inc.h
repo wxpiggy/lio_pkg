@@ -21,8 +21,8 @@ namespace wxpiggy {
 class IncNdt3d :public RegistrationBase{
    public:
     enum class NearbyType {
-        CENTER,   // 只考虑中心
-        NEARBY6,  // 上下左右前后
+        CENTER = 0 ,   // 只考虑中心
+        NEARBY6 = 6,  // 上下左右前后
     };
 
     struct Options {

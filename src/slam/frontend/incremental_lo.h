@@ -27,7 +27,7 @@ class incrementalLO {
         int registration_type_;
     };
 
-    incrementalLO(Options options = Options());
+    incrementalLO(Options options = Options(),const std::string& yaml = "");
 
     /**
      * 往LO中增加一个点云

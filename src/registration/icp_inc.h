@@ -74,10 +74,10 @@ namespace wxpiggy {
 class IncIcp3d  :public RegistrationBase {
    public:
     enum class NearbyType {
-        CENTER,    // 只考虑中心
-        NEARBY6,   
-        NEARBY18,   
-        NEARBY26,  
+        CENTER = 0 ,    // 只考虑中心
+        NEARBY6 = 6 ,   
+        NEARBY18 = 18,   
+        NEARBY26 = 26,  
     };
 
     struct Options {
@@ -128,7 +128,7 @@ class IncIcp3d  :public RegistrationBase {
                                std::vector<Eigen::Vector3d>& neighbors,
                                double max_distance = 2.0);
     void LoadFromYAML(const std::string& config_file) override;    
-
+    double computeConditionNumber(const Eigen::MatrixXd& H);
    private:
     void GenerateNearbyGrids();
 

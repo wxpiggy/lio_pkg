@@ -26,9 +26,9 @@ bool LioIEKF::Init(const std::string &config_yaml) {
         LOG(INFO) << "init failed.";
         return false;
     }
-    StaticIMUInit::Options imu_init_options;
-    imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
-    imu_init_ = StaticIMUInit(imu_init_options);
+    // StaticIMUInit::Options imu_init_options;
+    // imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
+    // imu_init_ = StaticIMUInit(imu_init_options);
     // if (options_.with_ui_) {
     //     ui_ = std::make_shared<ui::PangolinWindow>();
     //     ui_->Init();
@@ -58,10 +58,15 @@ void LioIEKF::ProcessMeasurements(const MeasureGroup &meas) {
 }
 
 bool LioIEKF::LoadFromYAML(const std::string &yaml_file) {
+    cloud_pub_topic_ = "/cloud";   
+    pose_pub_topic_= "/pose"; 
     // get params from yaml
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
     sync_->Init(yaml_file);
-
+    imu_init_ = StaticIMUInit();
+    imu_init_.LoadFromYaml(yaml_file);
+    registration_ = std::make_shared<IncIcp3d>();
+    registration_->LoadFromYAML(yaml_file);
     /// 自身参数主要是雷达与IMU外参
     auto yaml = YAML::LoadFile(yaml_file);
     std::vector<double> ext_t = yaml["mapping"]["extrinsic_T"].as<std::vector<double>>();
@@ -79,29 +84,23 @@ void LioIEKF::Align() {
     scan_undistort_ = scan_undistort_trans;
 
     current_scan_ = ConvertToCloud<FullPointType>(scan_undistort_);
+    if (flg_first_scan_) {
+        registration_->AddCloud(current_scan_);
+        flg_first_scan_ = false;
 
-    // voxel 之
+        return;
+    }
     pcl::VoxelGrid<PointType> voxel;
     voxel.setLeafSize(0.5, 0.5, 0.5);
     voxel.setInputCloud(current_scan_);
 
     CloudPtr current_scan_filter(new PointCloudType);
     voxel.filter(*current_scan_filter);
-
-    /// the first scan
-    if (flg_first_scan_) {
-        icp_.AddCloud(current_scan_);
-        flg_first_scan_ = false;
-
-        return;
-    }
-
-    // 后续的scan，使用NDT配合pose进行更新
     LOG(INFO) << "=== frame " << frame_num_;
 
-    icp_.SetSource(current_scan_filter);
+    registration_->SetSource(current_scan_filter);
     ieskf_.UpdateUsingCustomObserve([this](const SE3 &input_pose, Mat18d &HTVH, Vec18d &HTVr) {
-        icp_.ComputeResidualAndJacobians(input_pose, HTVH, HTVr);
+        registration_->ComputeResidualAndJacobians(input_pose, HTVH, HTVr);
     });
 
     auto current_nav_state = ieskf_.GetNominalState();
@@ -114,10 +113,14 @@ void LioIEKF::Align() {
         // 将地图合入NDT中
         CloudPtr current_scan_world(new PointCloudType);
         pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
-        icp_.AddCloud(current_scan_world);
+        registration_->AddCloud(current_scan_world);
         last_pose_ = current_pose;
     // }
-
+     FullCloudPtr scan_pub(new FullPointCloudType);        // 放入UI
+    pcl::transformPointCloud(*scan_undistort_,*scan_pub,current_pose.matrix());
+    cloud_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_);
+        // 放入UI
+    pose_pub_func_(pose_pub_topic_,current_pose,measures_.lidar_end_time_);
     // 放入UI
     // if (ui_) {
     //     ui_->UpdateScan(current_scan_, current_nav_state.GetSE3());  // 转成Lidar Pose传给UI

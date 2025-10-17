@@ -38,7 +38,7 @@ bool LooselyLIO::Init(const std::string &config_yaml) {
     Vec3d lidar_T_wrt_IMU = math::VecFromArray(ext_t);
     Mat3d lidar_R_wrt_IMU = math::MatFromArray(ext_r);
     TIL_ = SE3(lidar_R_wrt_IMU, lidar_T_wrt_IMU);
-    inc_lo_ = std::make_shared<wxpiggy::incrementalLO>(incLO_options);
+    inc_lo_ = std::make_shared<wxpiggy::incrementalLO>(incLO_options,config_yaml);
     return true;
 }
 

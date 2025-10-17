@@ -141,15 +141,7 @@ bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::v
 // =======================================================
 
 bool IncIcp3d::Align(SE3& init_pose) {
-    LOG(INFO) << "aligning with point to plane";
-    // assert(target_ != nullptr && source_ != nullptr);
-    // 整体流程与p2p一致，读者请关注变化部分
-
     SE3 pose = init_pose;
-    // if (!options_.use_initial_translation_) {
-    //     pose.translation() = target_center_ - source_center_;  // 设置平移初始值
-    // }
-
     std::vector<int> index(source_->points.size());
     for (int i = 0; i < index.size(); ++i) {
         index[i] = i;
@@ -166,31 +158,21 @@ bool IncIcp3d::Align(SE3& init_pose) {
             auto q = ToVec3d(source_->points[idx]);
             Vec3d qs = pose * q;  // 转换之后的q
             std::vector<Eigen::Vector3d> nn;
-            FindKNearestNeighbors(qs, 8, nn);
-            // GetClosestPoint(ToPointType(qs), nn, 5);  // 这里取5个最近邻
-            if (nn.size() >= 8) {
-                // convert to eigen
-                // std::vector<Vec3d> nn_eigen;
-                // for (int i = 0; i < nn.size(); ++i) {
-                //     nn_eigen.emplace_back(ToVec3d(target_->points[nn[i]]));
-                // }
-
+            FindKNearestNeighbors(qs, 5, nn);
+            if (nn.size() >= 5) {
                 Vec4d n;
                 if (!wxpiggy::math::FitPlane(nn, n)) {
                     // 失败的不要
                     effect_pts[idx] = false;
                     return;
                 }
-
                 double dis = n.head<3>().dot(qs) + n[3];
                 if (fabs(dis) > 0.05) {
                     // 点离的太远了不要
                     effect_pts[idx] = false;
                     return;
                 }
-
                 effect_pts[idx] = true;
-
                 // build residual
                 Eigen::Matrix<double, 1, 6> J;
                 J.block<1, 3>(0, 0) = -n.head<3>().transpose() * pose.so3().matrix() * SO3::hat(q);
@@ -231,14 +213,10 @@ bool IncIcp3d::Align(SE3& init_pose) {
         Vec6d dx = H.inverse() * err;
         pose.so3() = pose.so3() * SO3::exp(dx.head<3>());
         pose.translation() += dx.tail<3>();
-
+        double contidtion = computeConditionNumber(H);
+        LOG(INFO) << "contionNumber " << contidtion;
         // 更新
-        LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
-
-        // if (gt_set_) {
-        //     double pose_error = (gt_pose_.inverse() * pose).log().norm();
-        //     LOG(INFO) << "iter " << iter << " pose error: " << pose_error;
-        // }
+        // LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
 
         if (dx.norm() < options_.eps_) {
             LOG(INFO) << "converged, dx = " << dx.transpose();
@@ -248,6 +226,13 @@ bool IncIcp3d::Align(SE3& init_pose) {
 
     init_pose = pose;
     return true;
+}
+double IncIcp3d::computeConditionNumber(const Eigen::MatrixXd& H) {
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(H);
+    auto eigvals = eig.eigenvalues();
+    double lambda_min = eigvals.minCoeff();
+    double lambda_max = eigvals.maxCoeff();
+    return lambda_max / lambda_min;
 }
 // =======================================================
 // 计算残差和雅可比
@@ -275,9 +260,9 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
         Vec3d qs = pose * q;  // 转换之后的q
 
         std::vector<Eigen::Vector3d> nn;
-        FindKNearestNeighbors(qs, 5, nn);
+        FindKNearestNeighbors(qs, 8, nn);
 
-        if (nn.size() > 3) {
+        if (nn.size() >= 8) {
             Vec4d n;
             if (!wxpiggy::math::FitPlane(nn, n)) {
                 effect_pts[idx] = false;
@@ -285,7 +270,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
             }
 
             double dis = n.head<3>().dot(qs) + n[3];
-            if (fabs(dis) > 5) {
+            if (fabs(dis) > 0.05) {
                 effect_pts[idx] = false;
                 return;
             }
@@ -312,7 +297,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
     HTVH.setZero();
     HTVr.setZero();
 
-    const double info_ratio = 1000;  // 每个点反馈的info因子
+    const double R_inv = 100;  
 
     for (int idx = 0; idx < effect_pts.size(); ++idx) {
         if (!effect_pts[idx]) {
@@ -322,8 +307,8 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
         total_res += errors[idx] * errors[idx];
         effective_num++;
 
-        HTVH += jacobians[idx].transpose() * jacobians[idx] * info_ratio;
-        HTVr += -jacobians[idx].transpose() * errors[idx] * info_ratio;
+        HTVH += jacobians[idx].transpose() * jacobians[idx] * R_inv;
+        HTVr += -jacobians[idx].transpose() * errors[idx] * R_inv;
     }
 
     LOG(INFO) << "effective: " << effective_num;

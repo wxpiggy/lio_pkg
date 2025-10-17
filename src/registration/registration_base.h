@@ -10,9 +10,9 @@ namespace wxpiggy {
 class RegistrationBase {
 public:
     enum class RegistraionType {
-        VOXEL_POINT_TO_PLANE_ICP = 1,  // 大疆的固态雷达
-        NDT,    // Velodyne 32线
-        GICP,    // ouster 64线
+        VOXEL_POINT_TO_PLANE_ICP = 1, 
+        NDT,    
+        GICP,   
     };
     virtual ~RegistrationBase() = default;
 
