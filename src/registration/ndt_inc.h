@@ -67,12 +67,12 @@ class IncNdt3d :public RegistrationBase{
 
     IncNdt3d() {
         options_.inv_voxel_size_ = 1.0 / options_.voxel_size_;
-        GenerateNearbyGrids();
+        // GenerateNearbyGrids();
     }
 
     IncNdt3d(Options options) : options_(options) {
         options_.inv_voxel_size_ = 1.0 / options_.voxel_size_;
-        GenerateNearbyGrids();
+        // GenerateNearbyGrids();
     }
 
     /// 获取一些统计信息

@@ -97,12 +97,12 @@ class IncIcp3d  :public RegistrationBase {
 
     IncIcp3d() {
         options_.inv_voxel_size_ = 1.0 / options_.voxel_size_;
-        GenerateNearbyGrids();
+        // GenerateNearbyGrids();
     }
 
     explicit IncIcp3d(Options options) : options_(options) {
         options_.inv_voxel_size_ = 1.0 / options_.voxel_size_;
-        GenerateNearbyGrids();
+        // GenerateNearbyGrids();
     }
 
     /// 获取统计信息
@@ -131,9 +131,6 @@ class IncIcp3d  :public RegistrationBase {
     double computeConditionNumber(const Eigen::MatrixXd& H);
    private:
     void GenerateNearbyGrids();
-
-    /// 更新 voxel：用于计算法向量和局部平面
-    // void UpdateVoxel(voxelBlock& v);
 
     CloudPtr source_ = nullptr;
     Options options_;

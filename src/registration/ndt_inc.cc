@@ -22,6 +22,7 @@ void IncNdt3d::LoadFromYAML(const std::string& config_file){
 
     options_.max_iteration_ = reg["max_iteration"].as<int>();
     options_.voxel_size_ = reg["voxel_size"].as<double>();
+    options_.inv_voxel_size_ = 1 / options_.voxel_size_;
     options_.min_effective_pts_ = reg["min_effective_pts"].as<int>();
     options_.min_pts_in_voxel_ = reg["min_pts_in_voxel"].as<int>();
     options_.max_pts_in_voxel_ = reg["max_pts_in_voxel"].as<int>();
@@ -29,6 +30,7 @@ void IncNdt3d::LoadFromYAML(const std::string& config_file){
     options_.res_outlier_th_ = reg["res_outlier_th"].as<double>();
     options_.capacity_ = reg["capacity"].as<int>();
     options_.nearby_type_ = NearbyType(reg["nearby_type"].as<int>());
+    GenerateNearbyGrids();
 }
 void IncNdt3d::AddCloud(CloudPtr cloud_world) {
     std::set<KeyType, less_vec<3>> active_voxels;  // 记录哪些voxel被更新

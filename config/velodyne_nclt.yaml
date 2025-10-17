@@ -2,7 +2,7 @@ preprocess:
   lidar_type: 2                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
   scan_line: 32
   time_scale: 1e-3             # 兼容不同数据集的时间单位，仅对Velodyne LiDAR(lidar_type=2)生效
-  point_filter_num: 7
+  point_filter_num: 10
 mapping:
   extrinsic_T: [ 0, 0, 0.28 ]
   extrinsic_R: [ 1, 0, 0,
@@ -10,35 +10,35 @@ mapping:
                  0, 0, 1 ]
   registration_type: 1
 registration:
-  max_iteration: 5       # 最大迭代次数
+  max_iteration: 15       # 最大迭代次数
   voxel_size: 0.5    #体素大小
   min_effective_pts: 10   #最小有效点数
   min_pts_in_voxel: 5     #每个栅格中最小点数
-  max_pts_in_voxel: 40    #每个栅格中最大点数
-  eps: 1e-2            #收敛判定条件
+  max_pts_in_voxel: 20    #每个栅格中最大点数
+  eps: 1e-3            #收敛判定条件
   res_outlier_th: 5.0  #异常值拒绝阈值
   capacity: 5000000     #缓存的体素数量
-  nearby_type: 6              # 0      6     18 26
+  nearby_type: 26             # 0      6     18 26
 
 init:
-  init_time_seconds: 7              # 静止时间
-  init_imu_queue_max_size: 2000        # 初始化IMU队列最大长度
-  static_odom_pulse: 5                 # 静止时轮速计输出噪声
-  max_static_gyro_var: 0.5             # 静态下陀螺测量方差
-  max_static_acce_var: 0.05            # 静态下加计测量方差
-  gravity_norm: 9.81                    # 重力大小
-  use_speed_for_static_checking: false  # 是否使用odom判断车辆静止
+  init_time_seconds: 5              
+  init_imu_queue_max_size: 2000        
+  static_odom_pulse: 5                 
+  max_static_gyro_var: 0.5            
+  max_static_acce_var: 0.05           
+  gravity_norm: 9.81                    
+  use_speed_for_static_checking: false  #
 
 imu:
-  num_iterations: 3           # 迭代次数
-  quit_eps: 1e-3              # 终止迭代的dx大小
-  imu_dt: 0.01                # IMU测量间隔
-  gyro_var: 0.1             # 陀螺测量标准差
-  acce_var: 0.1             # 加计测量标准差
-  bias_gyro_var: 0.001         # 陀螺零偏游走标准差
-  bias_acce_var: 0.001        # 加计零偏游走标准差
+  num_iterations: 3           
+  quit_eps: 1e-3              
+  imu_dt: 0.01                
+  gyro_var: 0.1             
+  acce_var: 0.1             
+  bias_gyro_var: 0.001         
+  bias_acce_var: 0.001        
 
 gnss:
-  gnss_pos_noise: 0.1         # GNSS位置噪声
-  gnss_height_noise: 0.1      # GNSS高度噪声
-  gnss_ang_noise: 1.0         # GNSS旋转噪声（单位：度）
+  gnss_pos_noise: 0.1         
+  gnss_height_noise: 0.1      
+  gnss_ang_noise: 1.0         

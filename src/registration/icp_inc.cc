@@ -15,6 +15,7 @@ void IncIcp3d::LoadFromYAML(const std::string& config_file){
 
     options_.max_iteration_ = reg["max_iteration"].as<int>();
     options_.voxel_size_ = reg["voxel_size"].as<double>();
+    options_.inv_voxel_size_ = 1 / options_.voxel_size_;
     options_.min_effective_pts_ = reg["min_effective_pts"].as<int>();
     // options_.min_pts_in_voxel_ = reg["min_pts_in_voxel"].as<int>();
     options_.max_points_ = reg["max_pts_in_voxel"].as<int>();
@@ -22,6 +23,7 @@ void IncIcp3d::LoadFromYAML(const std::string& config_file){
     // options_.res_outlier_th_ = reg["res_outlier_th"].as<double>();
     options_.capacity_ = reg["capacity"].as<int>();
     options_.nearby_type_ = NearbyType(reg["nearby_type"].as<int>());
+    GenerateNearbyGrids();
 }
 void IncIcp3d::GenerateNearbyGrids() {
     nearby_grids_.clear();
@@ -29,36 +31,63 @@ void IncIcp3d::GenerateNearbyGrids() {
     auto addVoxelOffset = [&](int dx, int dy, int dz) { nearby_grids_.emplace_back(VoxelKeyType(dx, dy, dz)); };
 
     switch (options_.nearby_type_) {
-        case NearbyType::CENTER:
-            addVoxelOffset(0, 0, 0);
-            break;
+    case NearbyType::CENTER:
+        addVoxelOffset(0, 0, 0);
+        break;
 
-        case NearbyType::NEARBY6:
-            addVoxelOffset(0, 0, 0);
-            addVoxelOffset(-1, 0, 0);
-            addVoxelOffset(1, 0, 0);
-            addVoxelOffset(0, -1, 0);
-            addVoxelOffset(0, 1, 0);
-            addVoxelOffset(0, 0, -1);
-            addVoxelOffset(0, 0, 1);
-            break;
+    case NearbyType::NEARBY6:
+        addVoxelOffset(0, 0, 0);
+        addVoxelOffset(-1, 0, 0);
+        addVoxelOffset(1, 0, 0);
+        addVoxelOffset(0, -1, 0);
+        addVoxelOffset(0, 1, 0);
+        addVoxelOffset(0, 0, -1);
+        addVoxelOffset(0, 0, 1);
+        break;
 
-        case NearbyType::NEARBY18:
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                    for (int dz = -1; dz <= 1; dz++) {
-                        int sum = std::abs(dx) + std::abs(dy) + std::abs(dz);
-                        if (sum >= 1 && sum <= 2) addVoxelOffset(dx, dy, dz);
-                    }
-            break;
+    case NearbyType::NEARBY18:
+        // 6 个主方向 + 12 个边邻（不含角）
+        addVoxelOffset(0, 0, 0);
 
-        case NearbyType::NEARBY26:
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                    for (int dz = -1; dz <= 1; dz++)
-                        if (dx != 0 || dy != 0 || dz != 0) addVoxelOffset(dx, dy, dz);
-            break;
-    }
+        // --- 6 邻 ---
+        addVoxelOffset(-1, 0, 0);
+        addVoxelOffset(1, 0, 0);
+        addVoxelOffset(0, -1, 0);
+        addVoxelOffset(0, 1, 0);
+        addVoxelOffset(0, 0, -1);
+        addVoxelOffset(0, 0, 1);
+
+        // --- 12 条边邻 ---
+        addVoxelOffset(1, 1, 0);
+        addVoxelOffset(1, -1, 0);
+        addVoxelOffset(-1, 1, 0);
+        addVoxelOffset(-1, -1, 0);
+
+        addVoxelOffset(1, 0, 1);
+        addVoxelOffset(1, 0, -1);
+        addVoxelOffset(-1, 0, 1);
+        addVoxelOffset(-1, 0, -1);
+
+        addVoxelOffset(0, 1, 1);
+        addVoxelOffset(0, 1, -1);
+        addVoxelOffset(0, -1, 1);
+        addVoxelOffset(0, -1, -1);
+        break;
+
+    case NearbyType::NEARBY26:
+        // 所有 3x3x3 的相邻格子（包含对角线）
+        for (int dx = -1; dx <= 1; ++dx) {
+            for (int dy = -1; dy <= 1; ++dy) {
+                for (int dz = -1; dz <= 1; ++dz) {
+                    addVoxelOffset(dx, dy, dz);
+                }
+            }
+        }
+        break;
+
+    default:
+        break;
+}
 }
 
 // =======================================================
