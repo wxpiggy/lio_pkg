@@ -1,7 +1,12 @@
 <?xml version="1.0"?>
 <launch>
     <param name="config" type="string" value="$(find lio_pkg)/config/velodyne_nclt.yaml" />
-    <node pkg="lio_pkg" type="lio_eskf_online" name="lio_eskf_online" output="screen">
+    
+    <!-- 设置库路径 -->
+    <env name="LD_LIBRARY_PATH" value="$(find lio_pkg)/../../devel/.private/lio_pkg/lib:$(env LD_LIBRARY_PATH)" />
+    
+    <node pkg="lio_pkg" type="lio_eskf_online" name="lio_eskf_online" output="screen" required="true">
+        <!-- 确保使用正确的可执行文件路径 -->
     </node>
 
     <!-- 启动 Rviz -->

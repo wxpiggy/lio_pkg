@@ -133,9 +133,11 @@ bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::v
 
     voxel center_voxel = voxel::coordinates(point, options_.voxel_size_);
 
-    // 临时存储候选点和距离
+    // 临时存储候选点和距离，预分配内存
     std::vector<std::pair<double, Eigen::Vector3d>> candidate_pts;
+    candidate_pts.reserve(k * nearby_grids_.size());
 
+    // 搜索附近的所有体素网格
     for (const auto& offset : nearby_grids_) {
         voxel neighbor_voxel = center_voxel + offset;
         auto it = grids_.find(neighbor_voxel);
@@ -152,19 +154,25 @@ bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::v
 
     if (candidate_pts.size() < k) return false;
 
-    // 按距离排序
-    std::sort(candidate_pts.begin(), candidate_pts.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+    // 使用部分排序替代完全排序，提高性能
+    if (candidate_pts.size() > k) {
+        std::nth_element(candidate_pts.begin(), candidate_pts.begin() + k - 1, candidate_pts.end(),
+                        [](const auto& a, const auto& b) { return a.first < b.first; });
+        candidate_pts.resize(k);
+    }
+    
+    // 确保第一个元素是最小的（最近的点）
+    std::nth_element(candidate_pts.begin(), candidate_pts.begin(), candidate_pts.end(),
+                    [](const auto& a, const auto& b) { return a.first < b.first; });
 
     // 取前 k 个最近邻
-    int n = std::min(k, static_cast<int>(candidate_pts.size()));
-    neighbors.reserve(n);
-    for (int i = 0; i < n; ++i) {
+    neighbors.reserve(k);
+    for (int i = 0; i < k; ++i) {
         neighbors.push_back(candidate_pts[i].second);
     }
 
     return true;
 }
-
 // =======================================================
 // ICP 配准
 // =======================================================
@@ -326,7 +334,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
     HTVH.setZero();
     HTVr.setZero();
 
-    const double R_inv = 100;  
+    const double R_inv = 1000;  
 
     for (int idx = 0; idx < effect_pts.size(); ++idx) {
         if (!effect_pts[idx]) {

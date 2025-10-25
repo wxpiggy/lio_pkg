@@ -49,7 +49,10 @@ target_link_libraries(lio_core
    
 )
 
-
+set_target_properties(lio_core PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN OFF
+)
 # 创建可执行文件
 add_executable( lio_preinteg
     src/app/main_preinteg.cc
