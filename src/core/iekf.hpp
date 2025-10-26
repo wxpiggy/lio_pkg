@@ -77,8 +77,13 @@ class IESKF {
         ba_ = init_ba;
         g_ = gravity;
 
-        cov_ = 1e-4 * Mat18T::Identity();
-        cov_.template block<3, 3>(6, 6) = 0.1 * math::kDEG2RAD * Mat3T::Identity();
+        // cov_ = 1e-4 * Mat18T::Identity();
+        // cov_.template block<3, 3>(6, 6) = 0.1 * math::kDEG2RAD * Mat3T::Identity();
+        // bg 是 0.001 ba是 0.01 重力是 0.00001
+        cov_ = Mat18T::Identity();
+        cov_.template block<3,3>(9,9) = 0.001 * Mat3T::Identity(); //bg 
+        cov_.template block<3,3>(12,12) = 0.01 * Mat3T::Identity(); //ba
+        cov_.template block<3,3>(15,15) = 0.00001 * Mat3T::Identity(); //ba
     }
 
     /// 使用IMU递推

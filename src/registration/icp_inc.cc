@@ -297,9 +297,9 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
         Vec3d qs = pose * q;  // 转换之后的q
 
         std::vector<Eigen::Vector3d> nn;
-        FindKNearestNeighbors(qs, 8, nn);
+        FindKNearestNeighbors(qs, 5, nn);
 
-        if (nn.size() >= 8) {
+        if (nn.size() >= 5) {
             Vec4d n;
             if (!wxpiggy::math::FitPlane(nn, n)) {
                 effect_pts[idx] = false;
@@ -334,7 +334,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
     HTVH.setZero();
     HTVr.setZero();
 
-    const double R_inv = 1000;  
+    const double R_inv =1000;
 
     for (int idx = 0; idx < effect_pts.size(); ++idx) {
         if (!effect_pts[idx]) {

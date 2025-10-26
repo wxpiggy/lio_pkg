@@ -126,7 +126,7 @@ class IncIcp3d  :public RegistrationBase {
     bool FindKNearestNeighbors(const Eigen::Vector3d& point,
                                int k,
                                std::vector<Eigen::Vector3d>& neighbors,
-                               double max_distance = 2.0);
+                               double max_distance = 5.0);
     void LoadFromYAML(const std::string& config_file) override;    
     double computeConditionNumber(const Eigen::MatrixXd& H);
    private:

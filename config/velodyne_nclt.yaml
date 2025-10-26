@@ -2,7 +2,7 @@ preprocess:
   lidar_type: 2                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
   scan_line: 32
   time_scale: 1e-3             # 兼容不同数据集的时间单位，仅对Velodyne LiDAR(lidar_type=2)生效
-  point_filter_num: 10
+  point_filter_num: 5
 mapping:
   extrinsic_T: [ 0, 0, 0.28 ]
   extrinsic_R: [ 1, 0, 0,
@@ -11,17 +11,17 @@ mapping:
   registration_type: 1
 registration:
   max_iteration: 15       # 最大迭代次数
-  voxel_size: 1.0    #体素大小
+  voxel_size: 0.5   #体素大小
   min_effective_pts: 10   #最小有效点数
   min_pts_in_voxel: 5     #每个栅格中最小点数
   max_pts_in_voxel: 20    #每个栅格中最大点数
   eps: 1e-3            #收敛判定条件
   res_outlier_th: 5.0  #异常值拒绝阈值
   capacity: 5000000     #缓存的体素数量
-  nearby_type: 18             # 0      6     18 26
+  nearby_type: 6             # 0      6     18 26
 
 init:
-  init_time_seconds: 5              
+  init_time_seconds: 11              
   init_imu_queue_max_size: 2000        
   static_odom_pulse: 5                 
   max_static_gyro_var: 0.5            
