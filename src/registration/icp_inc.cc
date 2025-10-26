@@ -118,7 +118,18 @@ void IncIcp3d::AddCloud(CloudPtr cloud_world) {
             // voxel 已存在
             auto& voxel_block = iter.value()->second;
             if (voxel_block.NumPoints() < options_.max_points_) {
-                voxel_block.AddPoint(pt);  // 添加点
+                bool should_add = true;
+                for (auto& existing_pt : voxel_block.points) {
+                    float distance = (pt - existing_pt).norm(); 
+                    if (distance < 0.05f) {
+                        should_add = false;
+                        break;
+                    }
+                }
+                
+                if (should_add) {
+                    voxel_block.AddPoint(pt);
+                }
             }
             data_.splice(data_.begin(), data_, iter.value());
             iter.value() = data_.begin();   

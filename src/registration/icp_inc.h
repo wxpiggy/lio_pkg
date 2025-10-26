@@ -87,7 +87,7 @@ class IncIcp3d  :public RegistrationBase {
         int min_effective_pts_ = 10;   
         double eps_ = 1e-2;         // 收敛判定条件
         size_t capacity_ = 500000;  // LRU 最大容量
-        size_t max_points_ = 40;
+        size_t max_points_ = 20;
         NearbyType nearby_type_ = NearbyType::NEARBY6;
     };
 

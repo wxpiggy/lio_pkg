@@ -11,7 +11,7 @@ mapping:
   registration_type: 1
 registration:
   max_iteration: 15       # 最大迭代次数
-  voxel_size: 0.5   #体素大小
+  voxel_size: 1.0   #体素大小
   min_effective_pts: 10   #最小有效点数
   min_pts_in_voxel: 5     #每个栅格中最小点数
   max_pts_in_voxel: 20    #每个栅格中最大点数
@@ -21,7 +21,7 @@ registration:
   nearby_type: 6             # 0      6     18 26
 
 init:
-  init_time_seconds: 11              
+  init_time_seconds: 1              
   init_imu_queue_max_size: 2000        
   static_odom_pulse: 5                 
   max_static_gyro_var: 0.5            
