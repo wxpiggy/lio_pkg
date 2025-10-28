@@ -133,9 +133,9 @@ class IESKF {
         double et = options.gyro_var_;
         double eg = options.bias_gyro_var_;
         double ea = options.bias_acce_var_;
-
-        double ev2 = ev   * ev;
-        double et2 = et   * et;
+        //!!!!!!!!!!!!!!!!!!! cause of my struggle
+        double ev2 = ev * ev;
+        double et2 = et * et;
         double eg2 = eg * eg;
         double ea2 = ea * ea;
 
@@ -214,7 +214,7 @@ bool IESKF<S>::Predict(const IMU& imu) {
     F.template block<3, 3>(0, 3) = Mat3T::Identity() * dt;
     F.template block<3, 3>(3, 6) = -R_.matrix() * SO3::hat(imu.acce_ - ba_) * dt;
     F.template block<3, 3>(3, 12) = -R_.matrix() * dt;
-    F.template block<3, 3>(3, 15) = Mat3T::Identity() * dt;
+    F.template block<3, 3>(3, 15) = Mat3T::Identity() * dt; //速度对重力 todo,这里要改成S2对应的形式
     F.template block<3, 3>(6, 6) = SO3::exp(-(imu.gyro_ - bg_) * dt).matrix();
     F.template block<3, 3>(6, 9) = -Mat3T::Identity() * dt;
 
@@ -238,15 +238,13 @@ bool IESKF<S>::UpdateUsingCustomObserve(IESKF::CustomObsFunc obs) {
 
         // 投影P
         Mat18T J = Mat18T::Identity();
-        J.template block<3, 3>(6, 6) = Mat3T::Identity() - 0.5 * SO3::hat((R_.inverse() * start_R).log());
+        J.template block<3, 3>(6, 6) = Mat3T::Identity() - 0.5 * SO3::hat((R_.inverse() * start_R).log());// 这里
+        // todo 加上重力的S2 ，
         Pk = J * cov_ * J.transpose();
 
         // 卡尔曼更新
         Qk = (Pk.inverse() + HTVH).inverse();  // 这个记作中间变量，最后更新时可以用
         dx_ = Qk * HTVr;
-        // LOG(INFO) << "iter " << iter << " dx = " << dx_.transpose() << ", dxn: " << dx_.norm();
-
-        // dx合入名义变量
         Update();
 
         if (dx_.norm() < options_.quit_eps_) {

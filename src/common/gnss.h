@@ -42,7 +42,7 @@ struct GNSS {
 
     /// 从ros的NavSatFix进行转换
     /// NOTE 这个只有位置信息而没有朝向信息，UTM坐标请从ch3的代码进行转换
-    GNSS(sensor_msgs::NavSatFix::Ptr msg) {
+    GNSS(sensor_msgs::NavSatFix::ConstPtr msg) {
         unix_time_ = msg->header.stamp.toSec();
         // 状态位
         if (int(msg->status.status) >= int(sensor_msgs::NavSatStatus::STATUS_FIX)) {

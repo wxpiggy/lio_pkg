@@ -30,6 +30,8 @@ SET(LIB_FILE
 add_library(lio_core SHARED
     src/common/timer/timer.cc
     src/common/g2o_types.cc
+    src/common/keyframe.cc
+    
     src/core/static_imu_init.cc
     src/core/imu_preintegration.cc
     src/registration/ndt_inc.cc
@@ -40,9 +42,11 @@ add_library(lio_core SHARED
     src/slam/frontend/loosely_lio.cc
     src/slam/frontend/lio_iekf.cc
     src/slam/frontend/lio_preinteg.cc
-
     src/tools/point_cloud_utils.cc
-
+    src/tools/utm_convert.cc
+    src/app/frontend/frontend.cc
+            ${PROJECT_SOURCE_DIR}/thirdparty/utm_convert/utm.cc
+        ${PROJECT_SOURCE_DIR}/thirdparty/utm_convert/tranmerc.cc
 )
 target_link_libraries(lio_core
    ${third_party_libs}
@@ -71,6 +75,16 @@ target_link_libraries( lio_iekf lio_core)
 
 
 target_link_libraries(lio_eskf_online lio_core)
+
+
+add_executable(test_node 
+src/app/front.cc)
+
+target_link_libraries(test_node lio_core)
+add_executable(map_dumper 
+src/app/map_dumper.cc
+)
+target_link_libraries(map_dumper lio_core)
 # # 安装规则
 # install(TARGETS ${PROJECT_NAME}_node
 #     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
