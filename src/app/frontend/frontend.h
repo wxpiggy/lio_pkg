@@ -69,7 +69,7 @@ class Frontend {
     std::string bag_path_;         // 数据包路径
     std::string lio_yaml_;         // LIO 配置YAML
     double kf_dis_th_ = 1.0;       // 关键帧距离阈值
-    double kf_ang_th_deg_ = 10.0;  // 关键帧角度阈值（度）
+    double kf_ang_th_deg_ = 5.0;  // 关键帧角度阈值（度）
 };
 
 }  

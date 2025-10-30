@@ -184,8 +184,8 @@ bool Frontend::Init(ros::NodeHandle& nh) {
     // }
 
     // 清理数据目录
-    system("rm -rf ./data/ch9/*.pcd");
-    system("rm -rf ./data/ch9/keyframes.txt");
+    system("rm -rf /catkin_ws/src/lio_pkg/data/*.pcd");
+    system("rm -rf /catkin_ws/src/lio_pkg/data/keyframes.txt");
     
     // 初始化LIO
     lio_ = std::make_shared<LioIEKF>();
@@ -357,6 +357,5 @@ void Frontend::SaveKeyframes() {
     LOG(INFO) << "Saved " << keyframes_.size() << " keyframes";
 }
 
-// 移除原来的RemoveMapOrigin函数，因为现在是在线处理
 
 }  // namespace wxpiggy
