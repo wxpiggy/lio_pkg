@@ -36,9 +36,9 @@ class IESKF {
 
         /// IMU 测量与零偏参数
         double imu_dt_ = 0.01;         // IMU测量间隔
-        double gyro_var_ = 1e-5;       // 陀螺测量标准差
-        double acce_var_ = 1e-2;       // 加计测量标准差
-        double bias_gyro_var_ = 1e-6;  // 陀螺零偏游走标准差
+        double gyro_var_ = 0.1;       // 陀螺测量标准差
+        double acce_var_ = 0.1;       // 加计测量标准差
+        double bias_gyro_var_ = 1e-4;  // 陀螺零偏游走标准差
         double bias_acce_var_ = 1e-4;  // 加计零偏游走标准差
 
         /// RTK 观测参数
@@ -77,8 +77,13 @@ class IESKF {
         ba_ = init_ba;
         g_ = gravity;
 
-        cov_ = 1e-4 * Mat18T::Identity();
-        cov_.template block<3, 3>(6, 6) = 0.1 * math::kDEG2RAD * Mat3T::Identity();
+        // cov_ = 1e-4 * Mat18T::Identity();
+        // cov_.template block<3, 3>(6, 6) = 0.1 * math::kDEG2RAD * Mat3T::Identity();
+        // bg 是 0.001 ba是 0.01 重力是 0.00001
+        cov_ = Mat18T::Identity();
+        cov_.template block<3,3>(9,9) = 0.001 * Mat3T::Identity(); //bg 
+        cov_.template block<3,3>(12,12) = 0.01 * Mat3T::Identity(); //ba
+        cov_.template block<3,3>(15,15) = 0.00001 * Mat3T::Identity(); //ba
     }
 
     /// 使用IMU递推
@@ -128,11 +133,11 @@ class IESKF {
         double et = options.gyro_var_;
         double eg = options.bias_gyro_var_;
         double ea = options.bias_acce_var_;
-
-        double ev2 = ev;  // * ev;
-        double et2 = et;  // * et;
-        double eg2 = eg;  // * eg;
-        double ea2 = ea;  // * ea;
+        //!!!!!!!!!!!!!!!!!!! cause of my struggle
+        double ev2 = ev * ev;
+        double et2 = et * et;
+        double eg2 = eg * eg;
+        double ea2 = ea * ea;
 
         // set Q
         Q_.diagonal() << 0, 0, 0, ev2, ev2, ev2, et2, et2, et2, eg2, eg2, eg2, ea2, ea2, ea2, 0, 0, 0;
@@ -209,7 +214,7 @@ bool IESKF<S>::Predict(const IMU& imu) {
     F.template block<3, 3>(0, 3) = Mat3T::Identity() * dt;
     F.template block<3, 3>(3, 6) = -R_.matrix() * SO3::hat(imu.acce_ - ba_) * dt;
     F.template block<3, 3>(3, 12) = -R_.matrix() * dt;
-    F.template block<3, 3>(3, 15) = Mat3T::Identity() * dt;
+    F.template block<3, 3>(3, 15) = Mat3T::Identity() * dt; //速度对重力 todo,这里要改成S2对应的形式
     F.template block<3, 3>(6, 6) = SO3::exp(-(imu.gyro_ - bg_) * dt).matrix();
     F.template block<3, 3>(6, 9) = -Mat3T::Identity() * dt;
 
@@ -233,15 +238,13 @@ bool IESKF<S>::UpdateUsingCustomObserve(IESKF::CustomObsFunc obs) {
 
         // 投影P
         Mat18T J = Mat18T::Identity();
-        J.template block<3, 3>(6, 6) = Mat3T::Identity() - 0.5 * SO3::hat((R_.inverse() * start_R).log());
+        J.template block<3, 3>(6, 6) = Mat3T::Identity() - 0.5 * SO3::hat((R_.inverse() * start_R).log());// 这里
+        // todo 加上重力的S2 ，
         Pk = J * cov_ * J.transpose();
 
         // 卡尔曼更新
         Qk = (Pk.inverse() + HTVH).inverse();  // 这个记作中间变量，最后更新时可以用
         dx_ = Qk * HTVr;
-        // LOG(INFO) << "iter " << iter << " dx = " << dx_.transpose() << ", dxn: " << dx_.norm();
-
-        // dx合入名义变量
         Update();
 
         if (dx_.norm() < options_.quit_eps_) {

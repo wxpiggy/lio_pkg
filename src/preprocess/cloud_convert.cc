@@ -178,7 +178,7 @@ void CloudConvert::LoadFromYAML(const std::string &yaml_file) {
     time_scale_ = yaml["preprocess"]["time_scale"].as<double>();
     int lidar_type = yaml["preprocess"]["lidar_type"].as<int>();
     num_scans_ = yaml["preprocess"]["scan_line"].as<int>();
-    point_filter_num_ = yaml["point_filter_num"].as<int>();
+    point_filter_num_ = yaml["preprocess"]["point_filter_num"].as<int>();
 
     if (lidar_type == 1) {
         lidar_type_ = LidarType::AVIA;

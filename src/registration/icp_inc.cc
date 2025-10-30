@@ -5,45 +5,89 @@
 #include <algorithm>  // std::for_each
 #include <execution>  // std::execution::par, std::execution::par_unseq
 #include <set>
-
+#include <yaml-cpp/yaml.h>
 #include "common/math_utils.h"
 namespace wxpiggy {
+
+void IncIcp3d::LoadFromYAML(const std::string& config_file){
+    auto yaml = YAML::LoadFile(config_file);
+    auto reg = yaml["registration"];
+
+    options_.max_iteration_ = reg["max_iteration"].as<int>();
+    options_.voxel_size_ = reg["voxel_size"].as<double>();
+    options_.inv_voxel_size_ = 1 / options_.voxel_size_;
+    options_.min_effective_pts_ = reg["min_effective_pts"].as<int>();
+    // options_.min_pts_in_voxel_ = reg["min_pts_in_voxel"].as<int>();
+    options_.max_points_ = reg["max_pts_in_voxel"].as<int>();
+    options_.eps_ = reg["eps"].as<double>();
+    // options_.res_outlier_th_ = reg["res_outlier_th"].as<double>();
+    options_.capacity_ = reg["capacity"].as<int>();
+    options_.nearby_type_ = NearbyType(reg["nearby_type"].as<int>());
+    GenerateNearbyGrids();
+}
 void IncIcp3d::GenerateNearbyGrids() {
     nearby_grids_.clear();
 
     auto addVoxelOffset = [&](int dx, int dy, int dz) { nearby_grids_.emplace_back(VoxelKeyType(dx, dy, dz)); };
 
     switch (options_.nearby_type_) {
-        case NearbyType::CENTER:
-            addVoxelOffset(0, 0, 0);
-            break;
+    case NearbyType::CENTER:
+        addVoxelOffset(0, 0, 0);
+        break;
 
-        case NearbyType::NEARBY6:
-            addVoxelOffset(0, 0, 0);
-            addVoxelOffset(-1, 0, 0);
-            addVoxelOffset(1, 0, 0);
-            addVoxelOffset(0, -1, 0);
-            addVoxelOffset(0, 1, 0);
-            addVoxelOffset(0, 0, -1);
-            addVoxelOffset(0, 0, 1);
-            break;
+    case NearbyType::NEARBY6:
+        addVoxelOffset(0, 0, 0);
+        addVoxelOffset(-1, 0, 0);
+        addVoxelOffset(1, 0, 0);
+        addVoxelOffset(0, -1, 0);
+        addVoxelOffset(0, 1, 0);
+        addVoxelOffset(0, 0, -1);
+        addVoxelOffset(0, 0, 1);
+        break;
 
-        case NearbyType::NEARBY18:
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                    for (int dz = -1; dz <= 1; dz++) {
-                        int sum = std::abs(dx) + std::abs(dy) + std::abs(dz);
-                        if (sum >= 1 && sum <= 2) addVoxelOffset(dx, dy, dz);
-                    }
-            break;
+    case NearbyType::NEARBY18:
+        // 6 个主方向 + 12 个边邻（不含角）
+        addVoxelOffset(0, 0, 0);
 
-        case NearbyType::NEARBY26:
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                    for (int dz = -1; dz <= 1; dz++)
-                        if (dx != 0 || dy != 0 || dz != 0) addVoxelOffset(dx, dy, dz);
-            break;
-    }
+        // --- 6 邻 ---
+        addVoxelOffset(-1, 0, 0);
+        addVoxelOffset(1, 0, 0);
+        addVoxelOffset(0, -1, 0);
+        addVoxelOffset(0, 1, 0);
+        addVoxelOffset(0, 0, -1);
+        addVoxelOffset(0, 0, 1);
+
+        // --- 12 条边邻 ---
+        addVoxelOffset(1, 1, 0);
+        addVoxelOffset(1, -1, 0);
+        addVoxelOffset(-1, 1, 0);
+        addVoxelOffset(-1, -1, 0);
+
+        addVoxelOffset(1, 0, 1);
+        addVoxelOffset(1, 0, -1);
+        addVoxelOffset(-1, 0, 1);
+        addVoxelOffset(-1, 0, -1);
+
+        addVoxelOffset(0, 1, 1);
+        addVoxelOffset(0, 1, -1);
+        addVoxelOffset(0, -1, 1);
+        addVoxelOffset(0, -1, -1);
+        break;
+
+    case NearbyType::NEARBY26:
+        // 所有 3x3x3 的相邻格子（包含对角线）
+        for (int dx = -1; dx <= 1; ++dx) {
+            for (int dy = -1; dy <= 1; ++dy) {
+                for (int dz = -1; dz <= 1; ++dz) {
+                    addVoxelOffset(dx, dy, dz);
+                }
+            }
+        }
+        break;
+
+    default:
+        break;
+}
 }
 
 // =======================================================
@@ -74,7 +118,18 @@ void IncIcp3d::AddCloud(CloudPtr cloud_world) {
             // voxel 已存在
             auto& voxel_block = iter.value()->second;
             if (voxel_block.NumPoints() < options_.max_points_) {
-                voxel_block.AddPoint(pt);  // 添加点
+                bool should_add = true;
+                for (auto& existing_pt : voxel_block.points) {
+                    float distance = (pt - existing_pt).norm(); 
+                    if (distance < 0.05f) {
+                        should_add = false;
+                        break;
+                    }
+                }
+                
+                if (should_add) {
+                    voxel_block.AddPoint(pt);
+                }
             }
             data_.splice(data_.begin(), data_, iter.value());
             iter.value() = data_.begin();   
@@ -89,9 +144,11 @@ bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::v
 
     voxel center_voxel = voxel::coordinates(point, options_.voxel_size_);
 
-    // 临时存储候选点和距离
+    // 临时存储候选点和距离，预分配内存
     std::vector<std::pair<double, Eigen::Vector3d>> candidate_pts;
+    candidate_pts.reserve(k * nearby_grids_.size());
 
+    // 搜索附近的所有体素网格
     for (const auto& offset : nearby_grids_) {
         voxel neighbor_voxel = center_voxel + offset;
         auto it = grids_.find(neighbor_voxel);
@@ -108,33 +165,31 @@ bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::v
 
     if (candidate_pts.size() < k) return false;
 
-    // 按距离排序
-    std::sort(candidate_pts.begin(), candidate_pts.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+    // 使用部分排序替代完全排序，提高性能
+    if (candidate_pts.size() > k) {
+        std::nth_element(candidate_pts.begin(), candidate_pts.begin() + k - 1, candidate_pts.end(),
+                        [](const auto& a, const auto& b) { return a.first < b.first; });
+        candidate_pts.resize(k);
+    }
+    
+    // 确保第一个元素是最小的（最近的点）
+    std::nth_element(candidate_pts.begin(), candidate_pts.begin(), candidate_pts.end(),
+                    [](const auto& a, const auto& b) { return a.first < b.first; });
 
     // 取前 k 个最近邻
-    int n = std::min(k, static_cast<int>(candidate_pts.size()));
-    neighbors.reserve(n);
-    for (int i = 0; i < n; ++i) {
+    neighbors.reserve(k);
+    for (int i = 0; i < k; ++i) {
         neighbors.push_back(candidate_pts[i].second);
     }
 
     return true;
 }
-
 // =======================================================
 // ICP 配准
 // =======================================================
 
 bool IncIcp3d::Align(SE3& init_pose) {
-    LOG(INFO) << "aligning with point to plane";
-    // assert(target_ != nullptr && source_ != nullptr);
-    // 整体流程与p2p一致，读者请关注变化部分
-
     SE3 pose = init_pose;
-    // if (!options_.use_initial_translation_) {
-    //     pose.translation() = target_center_ - source_center_;  // 设置平移初始值
-    // }
-
     std::vector<int> index(source_->points.size());
     for (int i = 0; i < index.size(); ++i) {
         index[i] = i;
@@ -151,31 +206,21 @@ bool IncIcp3d::Align(SE3& init_pose) {
             auto q = ToVec3d(source_->points[idx]);
             Vec3d qs = pose * q;  // 转换之后的q
             std::vector<Eigen::Vector3d> nn;
-            FindKNearestNeighbors(qs, 8, nn);
-            // GetClosestPoint(ToPointType(qs), nn, 5);  // 这里取5个最近邻
-            if (nn.size() >= 8) {
-                // convert to eigen
-                // std::vector<Vec3d> nn_eigen;
-                // for (int i = 0; i < nn.size(); ++i) {
-                //     nn_eigen.emplace_back(ToVec3d(target_->points[nn[i]]));
-                // }
-
+            FindKNearestNeighbors(qs, 5, nn);
+            if (nn.size() >= 5) {
                 Vec4d n;
                 if (!wxpiggy::math::FitPlane(nn, n)) {
                     // 失败的不要
                     effect_pts[idx] = false;
                     return;
                 }
-
                 double dis = n.head<3>().dot(qs) + n[3];
                 if (fabs(dis) > 0.05) {
                     // 点离的太远了不要
                     effect_pts[idx] = false;
                     return;
                 }
-
                 effect_pts[idx] = true;
-
                 // build residual
                 Eigen::Matrix<double, 1, 6> J;
                 J.block<1, 3>(0, 0) = -n.head<3>().transpose() * pose.so3().matrix() * SO3::hat(q);
@@ -216,14 +261,10 @@ bool IncIcp3d::Align(SE3& init_pose) {
         Vec6d dx = H.inverse() * err;
         pose.so3() = pose.so3() * SO3::exp(dx.head<3>());
         pose.translation() += dx.tail<3>();
-
+        double contidtion = computeConditionNumber(H);
+        LOG(INFO) << "contionNumber " << contidtion;
         // 更新
-        LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
-
-        // if (gt_set_) {
-        //     double pose_error = (gt_pose_.inverse() * pose).log().norm();
-        //     LOG(INFO) << "iter " << iter << " pose error: " << pose_error;
-        // }
+        // LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
 
         if (dx.norm() < options_.eps_) {
             LOG(INFO) << "converged, dx = " << dx.transpose();
@@ -233,6 +274,13 @@ bool IncIcp3d::Align(SE3& init_pose) {
 
     init_pose = pose;
     return true;
+}
+double IncIcp3d::computeConditionNumber(const Eigen::MatrixXd& H) {
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(H);
+    auto eigvals = eig.eigenvalues();
+    double lambda_min = eigvals.minCoeff();
+    double lambda_max = eigvals.maxCoeff();
+    return lambda_max / lambda_min;
 }
 // =======================================================
 // 计算残差和雅可比
@@ -262,7 +310,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
         std::vector<Eigen::Vector3d> nn;
         FindKNearestNeighbors(qs, 5, nn);
 
-        if (nn.size() > 3) {
+        if (nn.size() >= 5) {
             Vec4d n;
             if (!wxpiggy::math::FitPlane(nn, n)) {
                 effect_pts[idx] = false;
@@ -270,7 +318,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
             }
 
             double dis = n.head<3>().dot(qs) + n[3];
-            if (fabs(dis) > 5) {
+            if (fabs(dis) > 0.05) {
                 effect_pts[idx] = false;
                 return;
             }
@@ -297,7 +345,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
     HTVH.setZero();
     HTVr.setZero();
 
-    const double info_ratio = 1000;  // 每个点反馈的info因子
+    const double R_inv =1000;
 
     for (int idx = 0; idx < effect_pts.size(); ++idx) {
         if (!effect_pts[idx]) {
@@ -307,8 +355,8 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
         total_res += errors[idx] * errors[idx];
         effective_num++;
 
-        HTVH += jacobians[idx].transpose() * jacobians[idx] * info_ratio;
-        HTVr += -jacobians[idx].transpose() * errors[idx] * info_ratio;
+        HTVH += jacobians[idx].transpose() * jacobians[idx] * R_inv;
+        HTVr += -jacobians[idx].transpose() * errors[idx] * R_inv;
     }
 
     LOG(INFO) << "effective: " << effective_num;

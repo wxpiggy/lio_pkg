@@ -5,6 +5,7 @@
 
 #include "common/eigen_types.h"
 #include "common/point_types.h"
+#include "registration/registration_base.h"
 namespace wxpiggy {
 
 
@@ -70,78 +71,74 @@ struct hash<wxpiggy::voxel> {
 };
 }  // namespace std
 namespace wxpiggy {
-class IncIcp3d   {
+class IncIcp3d  :public RegistrationBase {
    public:
     enum class NearbyType {
-        CENTER,    // 只考虑中心
-        NEARBY6,   // 上下左右前后 (6 邻居)
-        NEARBY18,  // 包含 6 邻居 + 12 条棱方向 (总18个)
-        NEARBY26,  // 包含 6 邻居 + 12 棱方向 + 8 个角方向 (26邻居)
+        CENTER = 0 ,    // 只考虑中心
+        NEARBY6 = 6 ,   
+        NEARBY18 = 18,   
+        NEARBY26 = 26,  
     };
 
     struct Options {
-        int max_iteration_ = 20;        // ICP 最大迭代次数
+        int max_iteration_ = 4;        // ICP 最大迭代次数
         double voxel_size_ = 0.5;      // 体素大小
         double inv_voxel_size_ = 2.0;  // 体素大小之逆
         int min_effective_pts_ = 10;   
-        double max_correspond = 10;
         double eps_ = 1e-2;         // 收敛判定条件
-        size_t capacity_ = 500000;  // 
-        size_t max_points_ = 40;
+        size_t capacity_ = 500000;  // LRU 最大容量
+        size_t max_points_ = 20;
         NearbyType nearby_type_ = NearbyType::NEARBY6;
     };
 
-    using VoxelKeyType = voxel;  // 使用你定义的 voxel 作为 key
+    using VoxelKeyType = voxel;  
     using ValueType = voxelBlock;
     using HashMapType = voxelHashMap;
 
     IncIcp3d() {
         options_.inv_voxel_size_ = 1.0 / options_.voxel_size_;
-        GenerateNearbyGrids();
+        // GenerateNearbyGrids();
     }
 
     explicit IncIcp3d(Options options) : options_(options) {
         options_.inv_voxel_size_ = 1.0 / options_.voxel_size_;
-        GenerateNearbyGrids();
+        // GenerateNearbyGrids();
     }
 
     /// 获取统计信息
     inline int NumGrids() const { return grids_.size(); }
 
-    /// 添加点云到 voxel hash map
-    void AddCloud(CloudPtr cloud_world);
+    /// 添加点云到local map
+    void AddCloud(CloudPtr cloud_world) override;
 
     /// 设置源点云
-    void SetSource(CloudPtr source) { source_ = source; }
+    void SetSource(CloudPtr source) override{ source_ = source; }
 
     /// 点到面 ICP 配准
-    bool Align(SE3& init_pose);
+    bool Align(SE3& init_pose)override;
     /**
      * 计算残差和雅可比
      * @param pose 当前位姿
      * @param HTVH 累积的 Hessian
      * @param HTVr 累积的梯度
      */
-    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr);
+    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) override ;
     bool FindKNearestNeighbors(const Eigen::Vector3d& point,
                                int k,
                                std::vector<Eigen::Vector3d>& neighbors,
-                               double max_distance = 2.0);
-
-
+                               double max_distance = 5.0);
+    void LoadFromYAML(const std::string& config_file) override;    
+    double computeConditionNumber(const Eigen::MatrixXd& H);
    private:
     void GenerateNearbyGrids();
-
-    /// 更新 voxel：用于计算法向量和局部平面
-    void UpdateVoxel(voxelBlock& v);
 
     CloudPtr source_ = nullptr;
     Options options_;
 
     using KeyAndData = std::pair<VoxelKeyType, voxelBlock>;
-    std::list<KeyAndData> data_;                                           // 缓存所有 voxel 数据，支持 LRU
+    std::list<KeyAndData> data_;                                           // 缓存所有 voxel 数据
     tsl::robin_map<VoxelKeyType, std::list<KeyAndData>::iterator> grids_;  // key -> list iterator
-    std::vector<VoxelKeyType> nearby_grids_;                               // 最近邻 voxel 偏移
+    std::vector<VoxelKeyType> nearby_grids_;                               // 最近邻
     bool flag_first_scan_ = true;
 };
 }  // namespace wxpiggy

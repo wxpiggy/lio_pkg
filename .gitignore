@@ -12,7 +12,7 @@ devel/
 # 忽略临时文件
 *.swp
 *.tmp
-
+data
 # # 忽略某些配置文件
 # config/local.yaml
 CATKIN_IGNORE

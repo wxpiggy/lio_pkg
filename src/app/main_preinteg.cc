@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <pcl/console/print.h>
 
-#include "slam/lio_preinteg.h"
+#include "slam/frontend/lio_preinteg.h"
 #include "common/timer/timer.h"
 #include "ros_publisher.h"
 
@@ -11,9 +11,7 @@
 #include <sensor_msgs/Imu.h>
 #include <livox_ros_driver/CustomMsg.h>
 
-DEFINE_string(dataset_type, "NCLT", "NCLT/ULHK/UTBM/AVIA");
-DEFINE_string(config, "/livox_ws/src/lio_pkg/config/velodyne_nclt.yaml", "path of config yaml");
-DEFINE_bool(display_map, true, "display map?");
+
 
 wxpiggy::LioPreinteg* lio = nullptr;
 
@@ -50,22 +48,23 @@ int main(int argc, char** argv) {
     wxpiggy::ROSPublisher ros_publisher(nh);
 
     // 初始化 LioPreinteg
+    std::string config_path;
     wxpiggy::LioPreinteg::Options options;
-    options.with_ui_ = FLAGS_display_map;
     lio = new wxpiggy::LioPreinteg(options);
-
+    
+    nh.param<std::string>("config", config_path, "/project/src/lio_pkg/config/velodyne_nclt.yaml");
     // 设置发布函数
     lio->setFunc(ros_publisher.GetCloudPublishFunc());
     lio->setFunc(ros_publisher.GetPosePublishFunc());
-    lio->Init(FLAGS_config);
+    lio->Init(config_path);
 
     // 根据数据集类型订阅点云
     ros::Subscriber subPointCloud;
-    if (FLAGS_dataset_type == "AVIA") {
-        subPointCloud = nh.subscribe<livox_ros_driver::CustomMsg>("/livox/lidar", 100, livoxCallback);
-    } else {
-        subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>("points_raw", 100, pointCloudCallback);
-    }
+    // if (FLAGS_dataset_type == "AVIA") {
+    //     subPointCloud = nh.subscribe<livox_ros_driver::CustomMsg>("/livox/lidar", 100, livoxCallback);
+    // } else {
+     subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>("points_raw", 100, pointCloudCallback);
+    // }
 
     // IMU 订阅
     ros::Subscriber subImu = nh.subscribe<sensor_msgs::Imu>("imu_raw", 500, imuCallback);

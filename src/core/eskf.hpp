@@ -4,6 +4,7 @@
 
 #pragma once
 
+
 #include "common/eigen_types.h"
 #include "common/gnss.h"
 #include "common/imu.h"
@@ -12,6 +13,7 @@
 #include "common/odom.h"
 
 #include <glog/logging.h>
+#include <yaml-cpp/yaml.h>
 
 namespace wxpiggy {
 
@@ -136,10 +138,10 @@ class ESKF {
         double eg = options.bias_gyro_var_;
         double ea = options.bias_acce_var_;
 
-        double ev2 = ev;  // * ev;
-        double et2 = et;  // * et;
-        double eg2 = eg;  // * eg;
-        double ea2 = ea;  // * ea;
+        double ev2 = ev * ev;
+        double et2 = et * et;
+        double eg2 = eg * eg;
+        double ea2 = ea * ea;
 
         // 设置过程噪声
         Q_.diagonal() << 0, 0, 0, ev2, ev2, ev2, et2, et2, et2, eg2, eg2, eg2, ea2, ea2, ea2, 0, 0, 0;

@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /TF1
         - /TF1/Tree1
         - /Odometry1
         - /Odometry1/Shape1
@@ -118,7 +119,7 @@ Visualization Manager:
         map:
           Value: true
       Marker Alpha: 1
-      Marker Scale: 5
+      Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -146,7 +147,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: true
+      Enabled: false
       Keep: 3
       Name: Odometry
       Position Tolerance: 1
@@ -163,7 +164,7 @@ Visualization Manager:
         Value: Axes
       Topic: /odom
       Unreliable: false
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -192,7 +193,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 56.90311813354492
+      Distance: 4.142916679382324
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -208,9 +209,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9747970104217529
+      Pitch: 0.7697970867156982
       Target Frame: base_link
-      Yaw: 0.6172370910644531
+      Yaw: 1.117226004600525
     Saved: ~
 Window Geometry:
   Displays:
@@ -228,5 +229,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 1024
-  Y: 235
+  X: 720
+  Y: 160

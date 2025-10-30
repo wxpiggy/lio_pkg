@@ -8,6 +8,7 @@
 // #include "common/g2o_types.h"
 #include "common/g2o_types.h"
 #include "common/point_types.h"
+#include "registration/registration_base.h"
 
 
 #include <list>
@@ -17,18 +18,18 @@ namespace wxpiggy {
  * 增量版本的NDT
  * 内部会维护增量式的voxels，自动删除较旧的voxel，往voxel里添加点云时，更新其均值和协方差估计
  */
-class IncNdt3d {
+class IncNdt3d :public RegistrationBase{
    public:
     enum class NearbyType {
-        CENTER,   // 只考虑中心
-        NEARBY6,  // 上下左右前后
+        CENTER = 0 ,   // 只考虑中心
+        NEARBY6 = 6,  // 上下左右前后
     };
 
     struct Options {
         int max_iteration_ = 4;        // 最大迭代次数
         double voxel_size_ = 1.0;      // 体素大小
         double inv_voxel_size_ = 1.0;  // 体素大小之逆
-        int min_effective_pts_ = 10;   // 最近邻点数阈值
+        int min_effective_pts_ = 10;   // 有效点数
         int min_pts_in_voxel_ = 5;     // 每个栅格中最小点数
         int max_pts_in_voxel_ = 50;    // 每个栅格中最大点数
         double eps_ = 1e-3;            // 收敛判定条件
@@ -66,25 +67,25 @@ class IncNdt3d {
 
     IncNdt3d() {
         options_.inv_voxel_size_ = 1.0 / options_.voxel_size_;
-        GenerateNearbyGrids();
+        // GenerateNearbyGrids();
     }
 
     IncNdt3d(Options options) : options_(options) {
         options_.inv_voxel_size_ = 1.0 / options_.voxel_size_;
-        GenerateNearbyGrids();
+        // GenerateNearbyGrids();
     }
 
     /// 获取一些统计信息
     int NumGrids() const { return grids_.size(); }
 
     /// 在voxel里添加点云，
-    void AddCloud(CloudPtr cloud_world);
+    void AddCloud(CloudPtr cloud_world) override;
 
     /// 设置被配准的Scan
-    void SetSource(CloudPtr source) { source_ = source; }
+    void SetSource(CloudPtr source) override{ source_ = source; }
 
     /// 使用gauss-newton方法进行ndt配准
-    bool Align(SE3& init_pose);
+    bool Align(SE3& init_pose) override;
 
     /**
      * 计算给定Pose下的雅可比和残差矩阵，符合IEKF中符号（8.17, 8.19）
@@ -92,7 +93,7 @@ class IncNdt3d {
      * @param HTVH
      * @param HTVr
      */
-    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr);
+    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) override;
 
     /**
      * 根据估计的NDT建立edges
@@ -100,7 +101,7 @@ class IncNdt3d {
      * @param edges
      */
     void BuildNDTEdges(VertexPose* v, std::vector<EdgeNDT*>& edges);
-
+    void LoadFromYAML(const std::string& config_file) override;
    private:
     /// 根据最近邻的类型，生成附近网格
     void GenerateNearbyGrids();

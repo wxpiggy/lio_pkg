@@ -1,15 +1,43 @@
 preprocess:
-  lidar_type: 2                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
+  lidar_type: 2
   scan_line: 32
-  time_scale: 1e-3             # 兼容不同数据集的时间单位，仅对Velodyne LiDAR(lidar_type=2)生效
-
+  time_scale: 1e-3
+  point_filter_num: 5
 mapping:
-  extrinsic_T: [ 0, 0, 0.28 ]
-  extrinsic_R: [ 1, 0, 0,
-                 0, 1, 0,
-                 0, 0, 1 ]
-
-point_filter_num: 10
-max_iteration: 3
-imu_has_gravity: true
-with_ui: false
+  extrinsic_T: [0, 0, 0.28]
+  extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+  registration_type: 1
+registration:
+  max_iteration: 15
+  voxel_size: 1.0
+  min_effective_pts: 10
+  min_pts_in_voxel: 5
+  max_pts_in_voxel: 20
+  eps: 1e-3
+  res_outlier_th: 5.0
+  capacity: 5000000
+  nearby_type: 6
+init:
+  init_time_seconds: 1
+  init_imu_queue_max_size: 2000
+  static_odom_pulse: 5
+  max_static_gyro_var: 0.5
+  max_static_acce_var: 0.05
+  gravity_norm: 9.81
+  use_speed_for_static_checking: false
+imu:
+  num_iterations: 3
+  quit_eps: 1e-3
+  imu_dt: 0.01
+  gyro_var: 0.1
+  acce_var: 0.1
+  bias_gyro_var: 0.001
+  bias_acce_var: 0.001
+gnss:
+  gnss_pos_noise: 0.1
+  gnss_height_noise: 0.1
+  gnss_ang_noise: 1.0
+origin:
+  - 276726.5626579862
+  - 4685961.4821172
+  - 272.809
