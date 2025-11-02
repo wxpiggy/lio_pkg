@@ -313,7 +313,7 @@ void IncNdt3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
     HTVH.setZero();
     HTVr.setZero();
 
-    const double info_ratio = 0.01;  // 每个点反馈的info因子
+    const double info_ratio = 0.1;  // 每个点反馈的info因子
 
     for (int idx = 0; idx < effect_pts.size(); ++idx) {
         if (!effect_pts[idx]) {

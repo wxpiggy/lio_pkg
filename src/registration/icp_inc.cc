@@ -121,7 +121,7 @@ void IncIcp3d::AddCloud(CloudPtr cloud_world) {
                 bool should_add = true;
                 for (auto& existing_pt : voxel_block.points) {
                     float distance = (pt - existing_pt).norm(); 
-                    if (distance < 0.05f) {
+                    if (distance < 0.5f) {
                         should_add = false;
                         break;
                     }
@@ -163,7 +163,7 @@ bool IncIcp3d::FindKNearestNeighbors(const Eigen::Vector3d& point, int k, std::v
         }
     }
 
-    if (candidate_pts.size() < k) return false;
+    if (candidate_pts.size() < 3) return false;
 
     // 使用部分排序替代完全排序，提高性能
     if (candidate_pts.size() > k) {
@@ -207,7 +207,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
             Vec3d qs = pose * q;  // 转换之后的q
             std::vector<Eigen::Vector3d> nn;
             FindKNearestNeighbors(qs, 5, nn);
-            if (nn.size() >= 5) {
+            if (nn.size() > 3) {
                 Vec4d n;
                 if (!wxpiggy::math::FitPlane(nn, n)) {
                     // 失败的不要
@@ -215,7 +215,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
                     return;
                 }
                 double dis = n.head<3>().dot(qs) + n[3];
-                if (fabs(dis) > 0.05) {
+                if (fabs(dis) > 0.1) {
                     // 点离的太远了不要
                     effect_pts[idx] = false;
                     return;
@@ -261,10 +261,10 @@ bool IncIcp3d::Align(SE3& init_pose) {
         Vec6d dx = H.inverse() * err;
         pose.so3() = pose.so3() * SO3::exp(dx.head<3>());
         pose.translation() += dx.tail<3>();
-        double contidtion = computeConditionNumber(H);
-        LOG(INFO) << "contionNumber " << contidtion;
+        // double contidtion = computeConditionNumber(H);
+        // LOG(INFO) << "contionNumber " << contidtion;
         // 更新
-        // LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
+        LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
 
         if (dx.norm() < options_.eps_) {
             LOG(INFO) << "converged, dx = " << dx.transpose();
@@ -310,7 +310,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
         std::vector<Eigen::Vector3d> nn;
         FindKNearestNeighbors(qs, 5, nn);
 
-        if (nn.size() >= 5) {
+        if (nn.size() > 3) {
             Vec4d n;
             if (!wxpiggy::math::FitPlane(nn, n)) {
                 effect_pts[idx] = false;
@@ -318,7 +318,7 @@ void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, 
             }
 
             double dis = n.head<3>().dot(qs) + n[3];
-            if (fabs(dis) > 0.05) {
+            if (fabs(dis) > 0.01) {
                 effect_pts[idx] = false;
                 return;
             }

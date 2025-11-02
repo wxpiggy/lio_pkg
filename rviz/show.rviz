@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /PointCloud21
         - /TF1
         - /TF1/Tree1
         - /Odometry1
@@ -193,7 +194,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.142916679382324
+      Distance: 34.14170837402344
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -209,9 +210,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7697970867156982
+      Pitch: 0.9947964549064636
       Target Frame: base_link
-      Yaw: 1.117226004600525
+      Yaw: 3.2703988552093506
     Saved: ~
 Window Geometry:
   Displays:
@@ -230,4 +231,4 @@ Window Geometry:
     collapsed: false
   Width: 1200
   X: 720
-  Y: 160
+  Y: 86
