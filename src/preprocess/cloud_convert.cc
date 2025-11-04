@@ -3,7 +3,7 @@
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 #include <execution>
-
+#include "tools/config.h"
 namespace wxpiggy {
 
 void CloudConvert::Process(const livox_ros_driver::CustomMsg::ConstPtr &msg, FullCloudPtr &pcl_out) {
@@ -133,7 +133,7 @@ void CloudConvert::VelodyneHandler(const sensor_msgs::PointCloud2::ConstPtr &msg
         added_pt.z = pl_orig.points[i].z;
         added_pt.intensity = pl_orig.points[i].intensity;
         added_pt.time = pl_orig.points[i].time * time_scale_;  // curvature unit: ms
-
+        added_pt.ring = pl_orig.points[i].ring;
         /// 略掉过近的点
         if (added_pt.getVector3fMap().norm() < 4.0) {
             continue;
@@ -173,13 +173,14 @@ void CloudConvert::VelodyneHandler(const sensor_msgs::PointCloud2::ConstPtr &msg
     }
 }
 
-void CloudConvert::LoadFromYAML(const std::string &yaml_file) {
-    auto yaml = YAML::LoadFile(yaml_file);
-    time_scale_ = yaml["preprocess"]["time_scale"].as<double>();
-    int lidar_type = yaml["preprocess"]["lidar_type"].as<int>();
-    num_scans_ = yaml["preprocess"]["scan_line"].as<int>();
-    point_filter_num_ = yaml["preprocess"]["point_filter_num"].as<int>();
+void CloudConvert::Init() {
+    auto preprocess_config = Config::GetInstance().GetPreprocessConfig();
+    time_scale_ = preprocess_config.time_scale;
 
+   
+    num_scans_ = preprocess_config.scan_line;
+    point_filter_num_ = preprocess_config.point_filter_num;
+    int lidar_type = preprocess_config.lidar_type;
     if (lidar_type == 1) {
         lidar_type_ = LidarType::AVIA;
         LOG(INFO) << "Using AVIA Lidar";

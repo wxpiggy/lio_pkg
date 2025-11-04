@@ -16,7 +16,7 @@
 // #include "ch4/imu_preintegration.h"
 #include <glog/logging.h>
 
-#include "core/imu_preintegration.h"
+#include "core/optimization/imu_preintegration.h"
 #include "g2o/core/robust_kernel_impl.h"
 
 

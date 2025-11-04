@@ -8,10 +8,10 @@
 #include "common/eigen_types.h"
 #include "common/gnss.h"
 #include "common/imu.h"
-#include "common/math_utils.h"
+
 #include "common/nav_state.h"
 #include "common/odom.h"
-
+#include "tools/math_utils.h"
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 

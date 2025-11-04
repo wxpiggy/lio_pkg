@@ -11,25 +11,24 @@
 #include <yaml-cpp/yaml.h>
 
 // #include "common/g2o_types.h"
-#include "common/lidar_utils.h"
-#include "common/math_utils.h"
+#include "tools/lidar_utils.h"
+#include "tools/math_utils.h"
 #include "common/timer/timer.h"
-
+#include "tools/config.h"
 namespace wxpiggy {
-void IncNdt3d::LoadFromYAML(const std::string& config_file){
-    auto yaml = YAML::LoadFile(config_file);
-    auto reg = yaml["registration"];
+void IncNdt3d::Init(){
 
-    options_.max_iteration_ = reg["max_iteration"].as<int>();
-    options_.voxel_size_ = reg["voxel_size"].as<double>();
+    auto config = Config::GetInstance().GetRegistrationConfig();
+    options_.max_iteration_ = config.max_iteration;
+    options_.voxel_size_ = config.voxel_size;
     options_.inv_voxel_size_ = 1 / options_.voxel_size_;
-    options_.min_effective_pts_ = reg["min_effective_pts"].as<int>();
-    options_.min_pts_in_voxel_ = reg["min_pts_in_voxel"].as<int>();
-    options_.max_pts_in_voxel_ = reg["max_pts_in_voxel"].as<int>();
-    options_.eps_ = reg["eps"].as<double>();
-    options_.res_outlier_th_ = reg["res_outlier_th"].as<double>();
-    options_.capacity_ = reg["capacity"].as<int>();
-    options_.nearby_type_ = NearbyType(reg["nearby_type"].as<int>());
+    options_.min_effective_pts_ = config.min_effective_pts;
+    options_.min_pts_in_voxel_ = config.min_pts_in_voxel;
+    options_.max_pts_in_voxel_ = config.max_pts_in_voxel;
+    options_.eps_ = config.eps;
+    options_.res_outlier_th_ = config.res_outlier_th;
+    options_.capacity_ = config.capacity;
+    options_.nearby_type_ = NearbyType(config.nearby_type);
     GenerateNearbyGrids();
 }
 void IncNdt3d::AddCloud(CloudPtr cloud_world) {

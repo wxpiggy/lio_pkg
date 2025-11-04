@@ -1,3 +1,6 @@
+system:
+  lidar_topic: points_raw
+  imu_topic: imu_raw
 preprocess:
   lidar_type: 2
   scan_line: 32
@@ -6,7 +9,7 @@ preprocess:
 mapping:
   extrinsic_T: [0, 0, 0.28]
   extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-  registration_type: 1
+  registration_type: 0
 registration:
   max_iteration: 15
   voxel_size: 1.0
@@ -26,7 +29,6 @@ init:
   gravity_norm: 9.81
   use_speed_for_static_checking: false
 imu:
-  num_iterations: 3
   quit_eps: 1e-3
   imu_dt: 0.01
   gyro_var: 0.1

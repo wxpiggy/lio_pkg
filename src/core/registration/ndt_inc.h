@@ -5,10 +5,10 @@
 #pragma once
 
 #include "common/eigen_types.h"
-// #include "common/g2o_types.h"
-#include "common/g2o_types.h"
 #include "common/point_types.h"
-#include "registration/registration_base.h"
+#include "core/optimization/g2o_types.h"
+
+#include "core/registration/registration_base.h"
 
 
 #include <list>
@@ -101,7 +101,7 @@ class IncNdt3d :public RegistrationBase{
      * @param edges
      */
     void BuildNDTEdges(VertexPose* v, std::vector<EdgeNDT*>& edges);
-    void LoadFromYAML(const std::string& config_file) override;
+    void Init() override;
    private:
     /// 根据最近邻的类型，生成附近网格
     void GenerateNearbyGrids();

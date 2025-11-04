@@ -44,7 +44,7 @@ class CloudConvert {
     void Process(const sensor_msgs::PointCloud2::ConstPtr &msg, FullCloudPtr &pcl_out);
 
     /// 从YAML中读取参数
-    void LoadFromYAML(const std::string &yaml);
+    void Init();
 
    private:
     void AviaHandler(const livox_ros_driver::CustomMsg::ConstPtr &msg);

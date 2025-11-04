@@ -5,13 +5,13 @@
 #include <sensor_msgs/PointCloud2.h>
 
 /// 部分类直接使用ch7的结果
-#include "core/static_imu_init.h"
-#include "core/imu_preintegration.h"
+#include "core/init/static_imu_init.h"
+#include "core/optimization/imu_preintegration.h"
 #include "preprocess/cloud_convert.h"
 #include "preprocess/measure_sync.h"
-#include "registration//ndt_inc.h"
+#include "core/registration//ndt_inc.h"
 
-#include "common/math_utils.h"
+#include "tools/math_utils.h"
 // #include "tools/ui/pangolin_window.h"
 
 namespace wxpiggy {
@@ -33,19 +33,19 @@ class LioPreinteg {
         Mat3d bg_rw_info_ = Mat3d::Identity();  // 陀螺随机游走信息阵
         Mat3d ba_rw_info_ = Mat3d::Identity();  // 加计随机游走信息阵
 
-        double ndt_pos_noise_ = 0.1;                   // NDT位置方差
-        double ndt_ang_noise_ = 2.0 * math::kDEG2RAD;  // NDT角度方差
+        double ndt_pos_noise_ = 0.5;                   // NDT位置方差
+        double ndt_ang_noise_ = 1.0 * math::kDEG2RAD;  // NDT角度方差
         Mat6d ndt_info_ = Mat6d::Identity();           // 6D NDT 信息矩阵
 
         wxpiggy::IMUPreintegration::Options preinteg_options_;  // 预积分参数
         IncNdt3d::Options ndt_options_;                     // NDT 参数
     };
 
-    LioPreinteg(Options options = Options());
+    LioPreinteg();
     ~LioPreinteg() = default;
 
     /// init without ros
-    bool Init(const std::string& config_yaml);
+    bool Init();
 
     /// 点云回调函数
     void PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr& msg);
@@ -122,11 +122,9 @@ class LioPreinteg {
     bool imu_need_init_ = true;
     bool flg_first_scan_ = true;
     int frame_num_ = 0;
-
     MeasureGroup measures_;  // sync IMU and lidar scan
     std::vector<NavStated> imu_states_;
     SE3 TIL_;  // Lidar与IMU之间外参
-
     Options options_;
 };
 

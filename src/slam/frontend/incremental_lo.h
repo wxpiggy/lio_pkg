@@ -4,12 +4,11 @@
 
 #pragma once
 
-#include "registration/icp_inc.h"
-#include "registration/ndt_inc.h"
+#include "core/registration/ndt_inc.h"
 // #include "map/icp_inc.h"
 #include "common/eigen_types.h"
 #include "common/point_types.h"
-
+#include "core/feature_extractor/feature_extraction.h"
 
 namespace wxpiggy {
 class PCLMapViewer;
@@ -23,12 +22,11 @@ class incrementalLO {
     struct Options {
         Options() {}
         double kf_distance_ = 0.5;            // 关键帧距离
-        double kf_angle_deg_ = 30;            // 旋转角度
+        double kf_angle_deg_ = 10;            // 旋转角度
         int registration_type_;
     };
 
-    incrementalLO(Options options = Options(),const std::string& yaml = "");
-
+    void Init();
     /**
      * 往LO中增加一个点云
      * @param scan  当前帧点云
@@ -52,6 +50,8 @@ class incrementalLO {
     // IncNdt3d ndt_;
     // IncIcp3d icp_;
     std::unique_ptr<RegistrationBase> registration_;
+    FeatureExtraction feature_extractor_;
+    int registration_type_;
     // std::shared_ptr<PCLMapViewer> viewer_ = nullptr;
 };
 

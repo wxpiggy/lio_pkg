@@ -34,7 +34,7 @@ class StaticIMUInit {
     };
 
     /// 构造函数
-    StaticIMUInit(Options options = Options()) : options_(options) {}
+
 
     /// 添加IMU数据
     bool AddIMU(const IMU& imu);
@@ -50,10 +50,10 @@ class StaticIMUInit {
     Vec3d GetInitBg() const { return init_bg_; }
     Vec3d GetInitBa() const { return init_ba_; }
     Vec3d GetGravity() const { return gravity_; }
-    void LoadFromYaml(const std::string& config_file); 
+    void Init(); 
    private:
     /// 尝试对系统初始化
-    bool TryInit();
+    bool TryStaticInit();
 
     Options options_;                 // 选项信息
     bool init_success_ = false;       // 初始化是否成功

@@ -10,7 +10,7 @@ namespace wxpiggy {
 class RegistrationBase {
 public:
     enum class RegistraionType {
-        VOXEL_POINT_TO_PLANE_ICP = 1, 
+        LOAM = 1, 
         NDT,    
         GICP,   
     };
@@ -27,7 +27,7 @@ public:
 
 
     virtual void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) = 0;
-    virtual void LoadFromYAML(const std::string& config_file) = 0;
+    virtual void Init() = 0;
 };
 
 }  // namespace wxpiggy

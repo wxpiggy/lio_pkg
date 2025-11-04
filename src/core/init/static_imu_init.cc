@@ -3,11 +3,11 @@
 //
 
 #include "static_imu_init.h"
-#include "common/math_utils.h"
+#include "tools/math_utils.h"
 
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
-
+#include "tools/config.h"
 namespace wxpiggy {
 
 bool StaticIMUInit::AddIMU(const IMU& imu) {
@@ -32,7 +32,7 @@ bool StaticIMUInit::AddIMU(const IMU& imu) {
     double init_time = imu.timestamp_ - init_start_time_;  // 初始化经过时间
     if (init_time > options_.init_time_seconds_) {
         // 尝试初始化逻辑
-        TryInit();
+        TryStaticInit();
     }
 
     // 维持初始化队列长度
@@ -60,7 +60,7 @@ bool StaticIMUInit::AddOdom(const Odom& odom) {
     return true;
 }
 
-bool StaticIMUInit::TryInit() {
+bool StaticIMUInit::TryStaticInit() {
     if (init_imu_deque_.size() < 10) {
         return false;
     }
@@ -101,35 +101,24 @@ bool StaticIMUInit::TryInit() {
     init_success_ = true;
     return true;
 }
-void StaticIMUInit::LoadFromYaml(const std::string& config_file){
-    auto yaml = YAML::LoadFile(config_file);
-    double init_time_seconds_ = 2.0;                // 静止时间
-    int init_imu_queue_max_size_ = 2000;            // 初始化IMU队列最大长度
-    int static_odom_pulse_ = 5;                     // 静止时轮速计输出噪声
-    double max_static_gyro_var = 0.5;               // 静态下陀螺测量方差
-    double max_static_acce_var = 0.05;              // 静态下加计测量方差
-    double gravity_norm_ = 9.81;                    // 重力大小
-    bool use_speed_for_static_checking_ = true;     // 是否使用odom判断静止
+void StaticIMUInit::Init(){
+    auto init_config = Config::GetInstance().GetInitConfig();
+    // auto yaml = YAML::LoadFile(config_file);
+    // double init_time_seconds_ = 2.0;                // 静止时间
+    // int init_imu_queue_max_size_ = 2000;            // 初始化IMU队列最大长度
+    // int static_odom_pulse_ = 5;                     // 静止时轮速计输出噪声
+    // double max_static_gyro_var = 0.5;               // 静态下陀螺测量方差
+    // double max_static_acce_var = 0.05;              // 静态下加计测量方差
+    // double gravity_norm_ = 9.81;                    // 重力大小
+    // bool use_speed_for_static_checking_ = true;     // 是否使用odom判断静止
 
-    // 如果yaml中存在对应字段，就覆盖默认值
-    if (yaml["init"]) {
-        auto node = yaml["init"];
-        if (node["init_time_seconds"]) init_time_seconds_ = node["init_time_seconds"].as<double>();
-        if (node["init_imu_queue_max_size"]) init_imu_queue_max_size_ = node["init_imu_queue_max_size"].as<int>();
-        if (node["static_odom_pulse"]) static_odom_pulse_ = node["static_odom_pulse"].as<int>();
-        if (node["max_static_gyro_var"]) max_static_gyro_var = node["max_static_gyro_var"].as<double>();
-        if (node["max_static_acce_var"]) max_static_acce_var = node["max_static_acce_var"].as<double>();
-        if (node["gravity_norm"]) gravity_norm_ = node["gravity_norm"].as<double>();
-        if (node["use_speed_for_static_checking"]) use_speed_for_static_checking_ = node["use_speed_for_static_checking"].as<bool>();
-    }
+    options_.init_time_seconds_ = init_config.init_time_seconds;
+    options_.init_imu_queue_max_size_ = init_config.init_imu_queue_max_size;
+    options_.static_odom_pulse_ = init_config.static_odom_pulse;
+    options_.max_static_acce_var = init_config.max_static_acce_var;
+    options_.max_static_gyro_var = init_config.max_static_gyro_var;
+    options_.gravity_norm_ = init_config.gravity_norm;
+    options_.use_speed_for_static_checking_ = init_config.use_speed_for_static_checking;
 
-    // 保存到成员变量
-    options_.init_time_seconds_ = init_time_seconds_;
-    options_.init_imu_queue_max_size_ = init_imu_queue_max_size_;
-    options_.static_odom_pulse_ = static_odom_pulse_;
-    options_.max_static_gyro_var = max_static_gyro_var;
-    options_.max_static_acce_var = max_static_acce_var;
-    options_.gravity_norm_ = gravity_norm_;
-    options_.use_speed_for_static_checking_ = use_speed_for_static_checking_;
 }
 }  // namespace sad

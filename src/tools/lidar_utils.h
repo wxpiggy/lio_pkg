@@ -13,48 +13,10 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include "point_types.h"
-// #include "velodyne_msgs/VelodyneScan.h"
-
-// /// 雷达扫描的一些消息定义和工具函数
-// using Scan2d = sensor_msgs::LaserScan;
-// using MultiScan2d = sensor_msgs::MultiEchoLaserScan;
-// using PacketsMsg = velodyne_msgs::VelodyneScan;
-// using PacketsMsgPtr = boost::shared_ptr<PacketsMsg>;
+#include "common/point_types.h"
 
 namespace wxpiggy {
 
-// inline Scan2d::Ptr MultiToScan2d(MultiScan2d::Ptr mscan) {
-//     Scan2d::Ptr scan(new Scan2d);
-//     scan->header = mscan->header;
-//     scan->range_max = mscan->range_max;
-//     scan->range_min = mscan->range_min;
-//     scan->angle_increment = mscan->angle_increment;
-//     scan->angle_max = mscan->angle_max;
-//     scan->angle_min = mscan->angle_min;
-//     for (auto r : mscan->ranges) {
-//         if (r.echoes.empty()) {
-//             scan->ranges.emplace_back(scan->range_max + 1.0);
-//         } else {
-//             scan->ranges.emplace_back(r.echoes[0]);
-//         }
-//     }
-//     for (auto i : mscan->intensities) {
-//         if (i.echoes.empty()) {
-//             scan->intensities.emplace_back(0);
-//         } else {
-//             scan->intensities.emplace_back(i.echoes[0]);
-//         }
-//     }
-//     scan->scan_time = mscan->scan_time;
-//     scan->time_increment = mscan->time_increment;
-
-//     // limit range max
-//     scan->range_max = 20.0;
-//     return scan;
-// }
-
-/// ROS PointCloud2 转通常的pcl PointCloud
 inline CloudPtr PointCloud2ToCloudPtr(sensor_msgs::PointCloud2::Ptr msg) {
     CloudPtr cloud(new PointCloudType);
     pcl::fromROSMsg(*msg, *cloud);
@@ -77,7 +39,8 @@ CloudPtr ConvertToCloud(typename pcl::PointCloud<PointT>::Ptr input) {
         p.y = pt.y;
         p.z = pt.z;
         p.intensity = pt.intensity;
-        cloud->points.template emplace_back(p);
+        p.ring = pt.ring;
+        cloud->points.emplace_back(p);
     }
     cloud->width = input->width;
     return cloud;
@@ -96,7 +59,7 @@ inline CloudPtr VoxelCloud(CloudPtr cloud, float voxel_size = 0.1) {
 
 template <typename S, int n>
 inline Eigen::Matrix<int, n, 1> CastToInt(const Eigen::Matrix<S, n, 1>& value) {
-    return value.array().template round().template cast<int>();
+    return value.array().round().template cast<int>();
 }
 
 }  // namespace wxpiggy

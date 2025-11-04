@@ -34,7 +34,7 @@ class MessageSync {
     MessageSync(Callback cb) : callback_(cb), conv_(new CloudConvert) {}
 
     /// 初始化
-    void Init(const std::string &yaml);
+    void Init();
 
     /// 处理IMU数据
     void ProcessIMU(IMUPtr imu) {

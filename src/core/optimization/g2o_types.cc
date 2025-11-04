@@ -2,7 +2,7 @@
 // Created by xiang on 23-1-11.
 //
 
-#include "common/g2o_types.h"
+#include "core/optimization/g2o_types.h"
 
 namespace wxpiggy {
 

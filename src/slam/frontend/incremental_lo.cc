@@ -6,45 +6,43 @@
 
 #include <pcl/common/transforms.h>
 
-#include "common/math_utils.h"
+#include "core/registration/loam_icp.h"
+#include "tools/math_utils.h"
 #include "common/timer/timer.h"
-#include "registration/ndt_inc.h"
+#include "core/registration/ndt_inc.h"
+#include "tools/config.h"
+
 // #include "tools/pcl_map_viewer.h"
 namespace wxpiggy {
-incrementalLO::incrementalLO(Options options,const std::string& yaml) : options_(options) {
-    if(options_.registration_type_ == 1){
-        LOG(INFO) << "using hase voxel POINT-TO-PLANE-ICP";
-        registration_ = std::make_unique<IncIcp3d>();
-        registration_->LoadFromYAML(yaml);
-    }else{
+void incrementalLO::Init(){
+    auto config = Config::GetInstance().GetMappingConfig();
+    registration_type_ = config.registration_type;
+    if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::LOAM)){
+        LOG(INFO) << "using LOAM";
+        registration_ = std::make_unique<LoamICP>();
+        registration_->Init();
+    }
+    else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::NDT)){
         LOG(INFO) << "using Incremental NDT";
         registration_ = std::make_unique<IncNdt3d>();
-        registration_->LoadFromYAML(yaml);
+        registration_->Init();
     }
-    
+
 }
 void incrementalLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
+    
     if (first_frame_) {
         // 第一个帧，直接加入local map
         pose = SE3();
         last_kf_pose_ = pose;
-        // ndt_.AddCloud(scan);
-        // icp_.AddCloud(scan);
         registration_->AddCloud(scan);
         first_frame_ = false;
         return;
     }
-
-    // 此时local map位于NDT内部，直接配准即可
     SE3 guess;
-    // ndt_.SetSource(scan);
-    // icp_.SetSource(scan);
     registration_->SetSource(scan);
     if (estimated_poses_.size() < 2) {
-        // ndt_.Align(guess);
-        // icp_.Align(guess);
         registration_->Align(guess);
-        //  ndt_.AlignICP(guess);
     } else {
         if (!use_guess) {
             // 从最近两个pose来推断
@@ -54,31 +52,20 @@ void incrementalLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
         } else {
             guess = pose;
         }
-
-        // ndt_.Align(guess);
-        // icp_.Align(guess);
-        // ndt_.AlignICP(guess);
         registration_->Align(guess);
     }
-
     pose = guess;
     estimated_poses_.emplace_back(pose);
-
     CloudPtr scan_world(new PointCloudType);
     pcl::transformPointCloud(*scan, *scan_world, guess.matrix().cast<float>());
-
-    // if (IsKeyframe(pose)) {
+    if (IsKeyframe(pose)) {
         last_kf_pose_ = pose;
         cnt_frame_ = 0;
         // 放入ndt内部的local map
         // ndt_.AddCloud(scan_world);
         // icp_.AddCloud(scan_world);
         registration_->AddCloud(scan_world);
-    // }
-
-    // if (viewer_ != nullptr) {
-    //     viewer_->SetPoseAndCloud(pose, scan_world);
-    // }
+    }
     cnt_frame_++;
 }
 

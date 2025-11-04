@@ -3,8 +3,8 @@
 
 #include <sensor_msgs/PointCloud2.h>
 
-#include "core/eskf.hpp"
-#include "core/static_imu_init.h"
+#include "core/filter/eskf.hpp"
+#include "core/init/static_imu_init.h"
 #include "slam/frontend/incremental_lo.h"
 
 #include "preprocess/measure_sync.h"
@@ -36,7 +36,7 @@ class LooselyLIO {
     ~LooselyLIO() = default;
 
     /// 从配置文件初始化
-    bool Init(const std::string &config_yaml);
+    bool Init();
 
     /// 点云回调函数
     void PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr &msg);

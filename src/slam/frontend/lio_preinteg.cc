@@ -11,15 +11,16 @@
 #include <execution>
 #include <fstream>
 
-#include "common/g2o_types.h"
-#include "common/lidar_utils.h"
-#include "common/math_utils.h"
+#include "core/optimization/g2o_types.h"
+#include "tools/lidar_utils.h"
+#include "tools/math_utils.h"
+#include "tools/config.h"
 #include "common/timer/timer.h"
-#include "registration/icp_inc.h"
+
 
 namespace wxpiggy {
 
-LioPreinteg::LioPreinteg(Options options) : options_(options), preinteg_(new IMUPreintegration()) {
+LioPreinteg::LioPreinteg() :  preinteg_(new IMUPreintegration()) {
 
     double bg_rw2 = 1.0 / (options_.bias_gyro_var_ * options_.bias_gyro_var_);
     options_.bg_rw_info_.diagonal() << bg_rw2, bg_rw2, bg_rw2;
@@ -35,19 +36,7 @@ LioPreinteg::LioPreinteg(Options options) : options_(options), preinteg_(new IMU
     // ndt_ = IncNdt3d(options_.ndt_options_);
 }
 
-bool LioPreinteg::Init(const std::string &config_yaml) {
-    if (!LoadFromYAML(config_yaml)) {
-        LOG(INFO) << "init failed.";
-        return false;
-    }
 
-    // if (options_.with_ui_) {
-    //     ui_ = std::make_shared<ui::PangolinWindow>();
-    //     ui_->Init();
-    // }
-
-    return true;
-}
 
 void LioPreinteg::ProcessMeasurements(const MeasureGroup &meas) {
     LOG(INFO) << "call meas, imu: " << meas.imu_.size() << ", lidar pts: " << meas.lidar_->size();
@@ -69,24 +58,23 @@ void LioPreinteg::ProcessMeasurements(const MeasureGroup &meas) {
     Align();
 }
 
-bool LioPreinteg::LoadFromYAML(const std::string &yaml_file) {
+bool LioPreinteg::Init() {
     // get params from yaml
-    std::cout << yaml_file << std::endl;
+  
     imu_init_ = StaticIMUInit();
-    imu_init_.LoadFromYaml(yaml_file);
+    imu_init_.Init();
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
-    sync_->Init(yaml_file);
+    sync_->Init();
     registration_ = std::make_shared<IncNdt3d>();
-    registration_->LoadFromYAML(yaml_file);
+    registration_->Init();
     cloud_pub_topic_ = "/cloud";
     pose_pub_topic_ = "/pose";
     /// 自身参数主要是雷达与IMU外参
-    auto yaml = YAML::LoadFile(yaml_file);
-    std::vector<double> ext_t = yaml["mapping"]["extrinsic_T"].as<std::vector<double>>();
-    std::vector<double> ext_r = yaml["mapping"]["extrinsic_R"].as<std::vector<double>>();
+    auto mapping_config = Config::GetInstance().GetMappingConfig();
 
-    Vec3d lidar_T_wrt_IMU = math::VecFromArray(ext_t);
-    Mat3d lidar_R_wrt_IMU = math::MatFromArray(ext_r);
+
+    Vec3d lidar_T_wrt_IMU = mapping_config.GetExtrinsicTranslation();
+    Mat3d lidar_R_wrt_IMU = mapping_config.GetExtrinsicRotation();
     TIL_ = SE3(lidar_R_wrt_IMU, lidar_T_wrt_IMU);
     return true;
 }
@@ -135,18 +123,15 @@ void LioPreinteg::Align() {
         pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
         registration_->AddCloud(current_scan_world);
         last_ndt_pose_ = current_pose;
+
     }
 
-    // if (options_.with_ui_) {
-    //     ui_->UpdateScan(current_scan, pose_updated);  // 转成Lidar Pose传给UI
-    //     ui_->UpdateNavState(eskf_.GetNominalState());
-    // }else{
+
     FullCloudPtr scan_pub(new FullPointCloudType);        // 放入UI
     pcl::transformPointCloud(*scan_undistort_,*scan_pub,current_pose.matrix());
     cloud_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_);
-        // 放入UI
+            // 放入UI
     pose_pub_func_(pose_pub_topic_,current_pose,measures_.lidar_end_time_);
-
     frame_num_++;
 }
 

@@ -11,6 +11,7 @@
 #include <limits>
 #include <map>
 #include <numeric>
+#include "common/eigen_types.h"
 // #include <opencv2/core.hpp>
 
 /// 常用的数学函数
@@ -20,10 +21,8 @@ namespace wxpiggy::math {
 constexpr double kDEG2RAD = M_PI / 180.0;  // deg->rad
 constexpr double kRAD2DEG = 180.0 / M_PI;  // rad -> deg
 constexpr double G_m_s2 = 9.81;            // 重力大小
-
 // 非法定义
 constexpr size_t kINVALID_ID = std::numeric_limits<size_t>::max();
-
 /**
  * 计算一个容器内数据的均值与对角形式协方差
  * @tparam C    容器类型
@@ -91,8 +90,8 @@ void UpdateMeanAndCov(int hist_m, int curr_n, const Eigen::Matrix<S, D, 1>& hist
     assert(hist_m > 0);
     assert(curr_n > 0);
     new_mean = (hist_m * hist_mean + curr_n * curr_mean) / (hist_m + curr_n);
-    new_var = (hist_m * (hist_var + (hist_mean - new_mean) * (hist_mean - new_mean).template transpose()) +
-               curr_n * (curr_var + (curr_mean - new_mean) * (curr_mean - new_mean).template transpose())) /
+    new_var = (hist_m * (hist_var + (hist_mean - new_mean) * (hist_mean - new_mean).transpose()) +
+               curr_n * (curr_var + (curr_mean - new_mean) * (curr_mean - new_mean).transpose())) /
               (hist_m + curr_n);
 }
 
@@ -153,7 +152,7 @@ bool FitLine(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 3, 1>& 
 
     // check eps
     for (const auto& d : data) {
-        if (dir.template cross(d - origin).template squaredNorm() > eps) {
+        if (dir.cross(d - origin).squaredNorm() > eps) {
             return false;
         }
     }

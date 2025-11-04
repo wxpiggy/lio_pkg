@@ -50,8 +50,8 @@ bool MessageSync::Sync() {
     return true;
 }
 
-void MessageSync::Init(const std::string& yaml) {
-    conv_->LoadFromYAML(yaml);
+void MessageSync::Init() {
+    conv_->Init();
 }
 
 }  // namespace wxpiggy

@@ -10,7 +10,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Imu.h>
 #include <livox_ros_driver/CustomMsg.h>
-
+#include "tools/config.h"
 
 
 wxpiggy::LioPreinteg* lio = nullptr;
@@ -49,21 +49,22 @@ int main(int argc, char** argv) {
 
     // 初始化 LioPreinteg
     std::string config_path;
-    wxpiggy::LioPreinteg::Options options;
-    lio = new wxpiggy::LioPreinteg(options);
+    
+    lio = new wxpiggy::LioPreinteg();
     
     nh.param<std::string>("config", config_path, "/project/src/lio_pkg/config/velodyne_nclt.yaml");
+    Config::GetInstance().LoadConfig(config_path);
     // 设置发布函数
     lio->setFunc(ros_publisher.GetCloudPublishFunc());
     lio->setFunc(ros_publisher.GetPosePublishFunc());
-    lio->Init(config_path);
+    lio->Init();
 
     // 根据数据集类型订阅点云
     ros::Subscriber subPointCloud;
     // if (FLAGS_dataset_type == "AVIA") {
     //     subPointCloud = nh.subscribe<livox_ros_driver::CustomMsg>("/livox/lidar", 100, livoxCallback);
     // } else {
-     subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>("points_raw", 100, pointCloudCallback);
+    subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>("points_raw", 100, pointCloudCallback);
     // }
 
     // IMU 订阅
