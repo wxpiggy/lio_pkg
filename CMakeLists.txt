@@ -36,6 +36,7 @@ add_library(lio_core SHARED
     src/core/optimization/g2o_types.cc
     src/core/optimization/imu_preintegration.cc
     src/core/registration/ndt_inc.cc
+    src/core/registration/loam_icp.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
     src/slam/frontend/incremental_lo.cc

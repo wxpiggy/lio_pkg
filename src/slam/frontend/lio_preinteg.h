@@ -33,8 +33,8 @@ class LioPreinteg {
         Mat3d bg_rw_info_ = Mat3d::Identity();  // 陀螺随机游走信息阵
         Mat3d ba_rw_info_ = Mat3d::Identity();  // 加计随机游走信息阵
 
-        double ndt_pos_noise_ = 0.5;                   // NDT位置方差
-        double ndt_ang_noise_ = 1.0 * math::kDEG2RAD;  // NDT角度方差
+        double ndt_pos_noise_ = 0.01;                   // NDT位置方差
+        double ndt_ang_noise_ = 0.01 * math::kDEG2RAD;  // NDT角度方差
         Mat6d ndt_info_ = Mat6d::Identity();           // 6D NDT 信息矩阵
 
         wxpiggy::IMUPreintegration::Options preinteg_options_;  // 预积分参数

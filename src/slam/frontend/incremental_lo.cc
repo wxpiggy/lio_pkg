@@ -19,8 +19,8 @@ void incrementalLO::Init(){
     registration_type_ = config.registration_type;
     if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::LOAM)){
         LOG(INFO) << "using LOAM";
-        registration_ = std::make_unique<LoamICP>();
-        registration_->Init();
+        // registration_ = std::make_unique<LoamICP>();
+        // registration_->Init();
     }
     else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::NDT)){
         LOG(INFO) << "using Incremental NDT";

@@ -14,5 +14,7 @@ bool LoamICP::Align(SE3& init_pose){
 
 }
 
-
+void LoamICP::Init(){
+    
+}
 }

@@ -117,7 +117,7 @@ void LioPreinteg::Align() {
     SE3 current_pose = current_nav_state_.GetSE3();
     SE3 delta_pose = last_ndt_pose_.inverse() * current_pose;
 
-    if (delta_pose.translation().norm() > 0.3 || delta_pose.so3().log().norm() > math::deg2rad(5.0)) {
+    if (delta_pose.translation().norm() > 0.5 || delta_pose.so3().log().norm() > math::deg2rad(10.0)) {
         // 将地图合入NDT中
         CloudPtr current_scan_world(new PointCloudType);
         pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
