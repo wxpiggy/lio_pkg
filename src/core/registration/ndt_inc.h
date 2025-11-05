@@ -79,10 +79,10 @@ class IncNdt3d :public RegistrationBase{
     int NumGrids() const { return grids_.size(); }
 
     /// 在voxel里添加点云，
-    void AddCloud(CloudPtr cloud_world) override;
+    void AddCloud(const std::initializer_list<CloudPtr>& cloud_world) override;
 
     /// 设置被配准的Scan
-    void SetSource(CloudPtr source) override{ source_ = source; }
+    void SetSource(const std::initializer_list<CloudPtr>& source) override{ source_ = *source.begin();; }
 
     /// 使用gauss-newton方法进行ndt配准
     bool Align(SE3& init_pose) override;

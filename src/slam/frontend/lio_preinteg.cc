@@ -96,7 +96,7 @@ void LioPreinteg::Align() {
 
     /// the first scan
     if (flg_first_scan_) {
-        registration_->AddCloud(current_scan_);
+        registration_->AddCloud({current_scan_});
         preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
         flg_first_scan_ = false;
         return;
@@ -104,7 +104,7 @@ void LioPreinteg::Align() {
 
     // 后续的scan，使用NDT配合pose进行更新
     LOG(INFO) << "=== frame " << frame_num_;
-    registration_->SetSource(current_scan_filter);
+    registration_->SetSource({current_scan_filter});
 
     current_nav_state_ = preinteg_->Predict(last_nav_state_, imu_init_.GetGravity());//重力一直是fixed？
     ndt_pose_ = current_nav_state_.GetSE3();
@@ -121,7 +121,7 @@ void LioPreinteg::Align() {
         // 将地图合入NDT中
         CloudPtr current_scan_world(new PointCloudType);
         pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
-        registration_->AddCloud(current_scan_world);
+        registration_->AddCloud({current_scan_world});
         last_ndt_pose_ = current_pose;
 
     }

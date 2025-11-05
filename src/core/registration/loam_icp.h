@@ -10,20 +10,21 @@
 namespace wxpiggy {
     class LoamICP : public RegistrationBase{
         public:
-        void AddCloud(CloudPtr cloud_world);
+        void AddCloud(const std::initializer_list<CloudPtr>& cloud_world) override;
 
 
-        void SetSource(CloudPtr source);
+        void SetSource(const std::initializer_list<CloudPtr>& source) override;
 
 
-        bool Align(SE3& init_pose);
+        bool Align(SE3& init_pose) override;
 
 
-        void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr){
+        void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) override{
 
         };
         void Init();
         private:
-        CloudPtr source_;
+        CloudPtr source_surf_;
+        CloudPtr source_line_;
     };
 }

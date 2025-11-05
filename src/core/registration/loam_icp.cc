@@ -1,12 +1,13 @@
 #include "core/registration/loam_icp.h"
 namespace wxpiggy {
-void LoamICP::AddCloud(CloudPtr cloud_world){// param not used , only here because registration_base
+void LoamICP::AddCloud(const std::initializer_list<CloudPtr>& cloud_world){// param not used , only here because registration_base
 
 }
 
 
-void LoamICP::SetSource(CloudPtr source){
-    source_ = source;
+void LoamICP::SetSource(const std::initializer_list<CloudPtr>& source){
+    source_surf_ = *source.begin();
+    source_line_ = *(source.begin() + 1);
 }
 
 

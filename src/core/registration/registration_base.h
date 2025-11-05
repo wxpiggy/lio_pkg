@@ -17,10 +17,10 @@ public:
     virtual ~RegistrationBase() = default;
 
 
-    virtual void AddCloud(CloudPtr cloud_world) = 0;
+    virtual void AddCloud(const std::initializer_list<CloudPtr>& cloud_world) = 0;
 
 
-    virtual void SetSource(CloudPtr source) = 0;
+    virtual void SetSource(const std::initializer_list<CloudPtr>& source) = 0;
 
 
     virtual bool Align(SE3& init_pose) = 0;

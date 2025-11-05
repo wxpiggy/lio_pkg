@@ -31,7 +31,8 @@ void IncNdt3d::Init(){
     options_.nearby_type_ = NearbyType(config.nearby_type);
     GenerateNearbyGrids();
 }
-void IncNdt3d::AddCloud(CloudPtr cloud_world) {
+void IncNdt3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
+    auto cloud_world = *cloud.begin();
     std::set<KeyType, less_vec<3>> active_voxels;  // 记录哪些voxel被更新
     for (const auto& p : cloud_world->points) {
         auto pt = ToVec3d(p);

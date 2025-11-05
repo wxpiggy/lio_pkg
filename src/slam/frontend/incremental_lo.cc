@@ -35,12 +35,12 @@ void incrementalLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
         // 第一个帧，直接加入local map
         pose = SE3();
         last_kf_pose_ = pose;
-        registration_->AddCloud(scan);
+        registration_->AddCloud({scan});
         first_frame_ = false;
         return;
     }
     SE3 guess;
-    registration_->SetSource(scan);
+    registration_->SetSource({scan});
     if (estimated_poses_.size() < 2) {
         registration_->Align(guess);
     } else {
@@ -64,7 +64,7 @@ void incrementalLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
         // 放入ndt内部的local map
         // ndt_.AddCloud(scan_world);
         // icp_.AddCloud(scan_world);
-        registration_->AddCloud(scan_world);
+        registration_->AddCloud({scan_world});
     }
     cnt_frame_++;
 }
