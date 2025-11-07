@@ -15,7 +15,7 @@ void IncIcp3d::Init(){
     IVoxType::Options options;
     // options.nearby_type_ = IVoxType::NearbyType::NEARBY18;
     // options.capacity_ = 100000;
-    options.resolution_ = 0.;
+    options.resolution_ = 0.5;
     // options.inv_resolution_ = 2.0; 
     ivox_ = std::make_shared<IVoxType>(options);
     std::cout << "ivox init" << std::endl;
@@ -48,7 +48,7 @@ void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
         auto point_world = cloud_world->points[i];
         if(!nearest_points_[i].empty()){
             
-            const IVoxType::PointVector points_near = nearest_points_[i];
+            const IVoxType::PointVector &points_near = nearest_points_[i];
             Eigen::Matrix<float, 3, 1> center =
                     ((point_world.getVector3fMap() / filter_size_map_min_).array().floor() +
                         0.5) * filter_size_map_min_;
@@ -75,6 +75,7 @@ void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
             points_to_add.emplace_back(point_world);
         }
     });
+
     ivox_->AddPoints(points_to_add);
     ivox_->AddPoints(point_no_need_downsample);
     
@@ -82,6 +83,7 @@ void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
 // =======================================================
 // ICP 配准
 // =======================================================
+
 
 bool IncIcp3d::Align(SE3& init_pose) {
     std::cout << ivox_->NumValidGrids()<< std::endl;
@@ -110,7 +112,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
             auto &points_near = nearest_points_[idx];
             
             ivox_->GetClosestPoint(p,points_near,5);
-            if (points_near.size() >= 3) {
+            if (points_near.size() >= 4) {
                 std::vector<Eigen::Vector3d> nn;
                 nn.reserve(points_near.size());
                 for(auto it = points_near.begin();it != points_near.end(); it++){
@@ -123,11 +125,11 @@ bool IncIcp3d::Align(SE3& init_pose) {
                     return;
                 }
                 double dis = n.head<3>().dot(qs) + n[3];
-                double dis_sq = dis * dis;  // 距离的平方
+                // double dis_sq = dis * dis;  // 距离的平方
 
                 // 使用类似您参考代码的判断条件
-                bool valid_corr = qs.norm() > 81 * dis_sq;  // 81 * 距离平方
-                if (qs.norm() < 81.0 * dis * dis) {
+                // bool valid_corr = qs.norm() > 81 * dis_sq;  // 81 * 距离平方
+                if (std::fabs(dis) > 0.05) {
                     effect_pts[idx] = false;
                     return;
                 }

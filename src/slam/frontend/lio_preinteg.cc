@@ -117,20 +117,21 @@ void LioPreinteg::Align() {
     SE3 current_pose = current_nav_state_.GetSE3();
     SE3 delta_pose = last_ndt_pose_.inverse() * current_pose;
 
-    if (delta_pose.translation().norm() > 0.5 || delta_pose.so3().log().norm() > math::deg2rad(10.0)) {
+    // if (delta_pose.translation().norm() > 0.5 || delta_pose.so3().log().norm() > math::deg2rad(10.0)) {
         // 将地图合入NDT中
         CloudPtr current_scan_world(new PointCloudType);
         pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
         registration_->AddCloud({current_scan_world});
         last_ndt_pose_ = current_pose;
 
-    }
+    // }
 
 
     FullCloudPtr scan_pub(new FullPointCloudType);        // 放入UI
-    pcl::transformPointCloud(*scan_undistort_,*scan_pub,current_pose.matrix());
-    cloud_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_);
+    // pcl::transformPointCloud(*scan_undistort_,*scan_pub,current_pose.matrix());
+    // cloud_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_);
             // 放入UI
+    cloud_down_pub_func_(cloud_pub_topic_,current_scan_world,measures_.lidar_end_time_);
     pose_pub_func_(pose_pub_topic_,current_pose,measures_.lidar_end_time_);
     frame_num_++;
 }

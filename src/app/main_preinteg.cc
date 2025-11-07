@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
     // 设置发布函数
     lio->setFunc(ros_publisher.GetCloudPublishFunc());
     lio->setFunc(ros_publisher.GetPosePublishFunc());
+    lio->setFunc(ros_publisher.GetDownCloudPublishFunc());
     lio->Init();
 
     // 根据数据集类型订阅点云

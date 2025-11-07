@@ -6,7 +6,7 @@
 #include "common/eigen_types.h"
 #include "common/point_types.h"
 #include "core/registration/registration_base.h"
-#include "core/local_map/ivox.h"
+#include "core/local_map/ivox/ivox3d.h"
 namespace wxpiggy {
 class IncIcp3d  :public RegistrationBase {
     using IVoxType = IVox<3, IVoxNodeType::DEFAULT, PointType>;
@@ -19,16 +19,16 @@ class IncIcp3d  :public RegistrationBase {
     };
 
     struct Options {
-        int max_iteration_ = 15;        // ICP 最大迭代次数
+        int max_iteration_ = 10;        // ICP 最大迭代次数
         double voxel_size_ = 0.5;      // 体素大小
         double inv_voxel_size_ = 2.0;  // 体素大小之逆
         int min_effective_pts_ = 10;   
         double eps_ = 1e-2;         // 收敛判定条件
         size_t capacity_ = 500000;  // LRU 最大容量
         size_t max_points_ = 20;
+
         NearbyType nearby_type_ = NearbyType::NEARBY6;
     };
-
     /// 获取统计信息
     inline int NumGrids() const { 
          return ivox_->NumValidGrids();

@@ -48,6 +48,13 @@ public:
             return this->PublishCloud(cloud, time);
         };
     }
+    
+
+    std::function<bool(const std::string&, const CloudPtr&, double)> GetDownCloudPublishFunc(){
+        return [this](const std::string& topic_name, const CloudPtr& cloud, double time) {
+            return this->PublishCloud(cloud, time);
+        };
+    }
 
     /**
      * @brief 获取位姿发布函数
@@ -71,7 +78,15 @@ public:
         
         return true;
     }
-
+    bool PublishCloud(const CloudPtr& cloud, double time) {
+        sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
+        pcl::toROSMsg(*cloud, *cloud_msg);
+        cloud_msg->header.stamp = ros::Time().fromSec(time);
+        cloud_msg->header.frame_id = "map";
+        pub_cloud_.publish(*cloud_msg);
+        
+        return true;
+    }
     /**
      * @brief 发布位姿（包括 TF、里程计、路径）
      */

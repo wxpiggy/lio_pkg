@@ -34,7 +34,7 @@ class LioPreinteg {
         Mat3d ba_rw_info_ = Mat3d::Identity();  // 加计随机游走信息阵
 
         double ndt_pos_noise_ = 0.01;                   // NDT位置方差
-        double ndt_ang_noise_ = 0.01 * math::kDEG2RAD;  // NDT角度方差
+        double ndt_ang_noise_ = 0.01;  // NDT角度方差
         Mat6d ndt_info_ = Mat6d::Identity();           // 6D NDT 信息矩阵
 
         wxpiggy::IMUPreintegration::Options preinteg_options_;  // 预积分参数
@@ -56,7 +56,8 @@ class LioPreinteg {
 
     /// 结束程序，退出UI
     void Finish();
-        using CloudPublishFunc = std::function<bool(const std::string&, const FullCloudPtr&, double)>;
+    using CloudPublishFunc = std::function<bool(const std::string&, const FullCloudPtr&, double)>;
+    using CloudDownPublishFunc = std::function<bool(const std::string&, const CloudPtr&, double)>;
     // 位姿发布函数类型
     using PosePublishFunc = std::function<bool(const std::string&, const SE3&, double)>;
     
@@ -67,6 +68,9 @@ class LioPreinteg {
     
     void setFunc(PosePublishFunc func) {
         pose_pub_func_ = func;
+    }
+    void setFunc(CloudDownPublishFunc func){
+        cloud_down_pub_func_ = func;
     }
    private:
     bool LoadFromYAML(const std::string& yaml_file);
@@ -95,6 +99,7 @@ class LioPreinteg {
 
     CloudPublishFunc cloud_pub_func_;
     PosePublishFunc pose_pub_func_;
+    CloudDownPublishFunc cloud_down_pub_func_;
     std::string cloud_pub_topic_;   
     std::string pose_pub_topic_; 
     /// modules

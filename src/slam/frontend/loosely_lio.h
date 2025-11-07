@@ -53,7 +53,7 @@ class LooselyLIO {
     using CloudPublishFunc = std::function<bool(const std::string&, const FullCloudPtr&, double)>;
     // 位姿发布函数类型
     using PosePublishFunc = std::function<bool(const std::string&, const SE3&, double)>;
-    
+    using CloudDownPublishFunc = std::function<bool(const std::string&, const CloudPtr&, double)>;
     // 重载 setFunc
     void setFunc(CloudPublishFunc func) {
         cloud_pub_func_ = func;
@@ -62,9 +62,12 @@ class LooselyLIO {
     void setFunc(PosePublishFunc func) {
         pose_pub_func_ = func;
     }
+    void setFunc(CloudDownPublishFunc func){
+        cloud_down_pub_func_ = func;
+    }
    private:
 
-
+    CloudDownPublishFunc cloud_down_pub_func_;
     CloudPublishFunc cloud_pub_func_;
     PosePublishFunc pose_pub_func_;
 

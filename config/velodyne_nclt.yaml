@@ -5,7 +5,7 @@ preprocess:
   lidar_type: 2
   scan_line: 32
   time_scale: 1e-3
-  point_filter_num: 3
+  point_filter_num: 5
 mapping:
   extrinsic_T: [0, 0, 0.28]
   extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
@@ -21,7 +21,7 @@ registration:
   capacity: 5000000
   nearby_type: 6
 init:
-  init_time_seconds: 7
+  init_time_seconds: 5
   init_imu_queue_max_size: 2000
   static_odom_pulse: 5
   max_static_gyro_var: 0.5

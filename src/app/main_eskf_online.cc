@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     lm = new wxpiggy::LooselyLIO();
     lm->setFunc(ros_publisher.GetCloudPublishFunc());
     lm->setFunc(ros_publisher.GetPosePublishFunc());
+    lm->setFunc(ros_publisher.GetDownCloudPublishFunc());
     lm->Init();
     ros::Subscriber subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>(system_config.lidar_topic, 1000, pointCloudCallback);
     ros::Subscriber subImu = nh.subscribe<sensor_msgs::Imu>(system_config.imu_topic, 5000, imuCallback);
