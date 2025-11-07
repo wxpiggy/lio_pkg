@@ -162,7 +162,7 @@ class IVox {
 };
 
 // Explicit instantiation declarations
-extern template class IVox<3, IVoxNodeType::DEFAULT, PointType>;
+// extern template class IVox<3, IVoxNodeType::DEFAULT, PointType>;
 // extern template class IVox<3, IVoxNodeType::DEFAULT, pcl::PointXYZI>;
 // extern template class IVox<3, IVoxNodeType::DEFAULT, pcl::PointXYZINormal>;
 

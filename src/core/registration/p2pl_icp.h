@@ -19,7 +19,7 @@ class IncIcp3d  :public RegistrationBase {
     };
 
     struct Options {
-        int max_iteration_ = 4;        // ICP 最大迭代次数
+        int max_iteration_ = 15;        // ICP 最大迭代次数
         double voxel_size_ = 0.5;      // 体素大小
         double inv_voxel_size_ = 2.0;  // 体素大小之逆
         int min_effective_pts_ = 10;   
@@ -39,7 +39,7 @@ class IncIcp3d  :public RegistrationBase {
 
     /// 设置源点云
     void SetSource(const std::initializer_list<CloudPtr>& source) override{ 
-        // source_ = source;
+        source_ = *source.begin();
      }
 
     /// 点到面 ICP 配准
@@ -62,9 +62,11 @@ class IncIcp3d  :public RegistrationBase {
 
     CloudPtr source_ = nullptr;
     Options options_;
-
+    
     IVoxType::Options ivox_options_;
     std::shared_ptr<IVoxType> ivox_ = nullptr;
-    bool flag_first_scan_ = true;
+    bool flag_first_scan_ = false;
+    std::vector<std::vector<Point, Eigen::aligned_allocator<Point>>> nearest_points_;
+    float filter_size_map_min_ =0.5;
 };
 }  // namespace wxpiggy

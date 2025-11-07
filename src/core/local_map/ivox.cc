@@ -6,7 +6,7 @@
 
 namespace wxpiggy {
 
-
+template class IVox<3, IVoxNodeType::DEFAULT, PointType>;
 
 // IVoxNode implementation
 template <typename PointT, int dim>

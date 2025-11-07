@@ -10,7 +10,7 @@
 
 #include <execution>
 #include <fstream>
-
+#include "core/registration/p2pl_icp.h"
 #include "core/optimization/g2o_types.h"
 #include "tools/lidar_utils.h"
 #include "tools/math_utils.h"
@@ -65,7 +65,7 @@ bool LioPreinteg::Init() {
     imu_init_.Init();
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
     sync_->Init();
-    registration_ = std::make_shared<IncNdt3d>();
+    registration_ = std::make_shared<IncIcp3d>();
     registration_->Init();
     cloud_pub_topic_ = "/cloud";
     pose_pub_topic_ = "/pose";

@@ -150,7 +150,7 @@ void LooselyLIO::Align() {
     SE3 pose_predict = eskf_->GetNominalSE3();
     inc_lo_->AddCloud(current_scan_filter, pose_predict, true);
     pose_of_lo_ = pose_predict;
-    eskf_->ObserveSE3(pose_of_lo_, 1e-2, 1e-2);
+    eskf_->ObserveSE3(pose_of_lo_, 1e-1, 1e-1);
     SE3 pose_updated = eskf_->GetNominalSE3();
     FullCloudPtr scan_pub(new FullPointCloudType);        // 放入UI
     pcl::transformPointCloud(*scan_undistort_,*scan_pub,pose_updated.matrix());

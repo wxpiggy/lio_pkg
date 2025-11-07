@@ -108,7 +108,7 @@ void ComputeMedian(const C& data, D& median, Getter&& getter) {
 }
 
 template <typename S>
-bool FitPlane(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 4, 1>& plane_coeffs, double eps = 1e-2) {
+bool FitPlane(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 4, 1>& plane_coeffs, double eps = 1e-1) {
     if (data.size() < 3) {
         return false;
     }
