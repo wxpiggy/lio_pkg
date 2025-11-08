@@ -27,6 +27,7 @@ void IncIcp3d::Init(){
 // =======================================================
 
 void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
+
     auto cloud_world = *cloud.begin();
     
     if(!flag_first_scan_){
@@ -34,7 +35,10 @@ void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
         flag_first_scan_ = true;
         return;
     }
-    
+    // if(!is_converged_){
+    //     LOG(INFO) << " not converged, cant add local map";
+    //     return;
+    // }
     IVoxType::PointVector points_to_add;
     IVoxType::PointVector point_no_need_downsample;
     int size = cloud_world->size();
@@ -97,11 +101,13 @@ bool IncIcp3d::Align(SE3& init_pose) {
     std::vector<double> errors(index.size());
     nearest_points_.clear();
     nearest_points_.resize(index.size());
+    is_converged_ = false;
     for (int iter = 0; iter < options_.max_iteration_; ++iter) {
         // gauss-newton 迭代
         // 最近邻，可以并发
         
         std::for_each(std::execution::par_unseq, index.begin(), index.end(), [&](int idx) {
+            
             auto q = ToVec3d(source_->points[idx]);
             Vec3d qs = pose * q;  // 转换之后的q
             Point p;
@@ -112,24 +118,28 @@ bool IncIcp3d::Align(SE3& init_pose) {
             auto &points_near = nearest_points_[idx];
             
             ivox_->GetClosestPoint(p,points_near,5);
-            if (points_near.size() >= 4) {
+            if (points_near.size() >= 5) {
                 std::vector<Eigen::Vector3d> nn;
                 nn.reserve(points_near.size());
                 for(auto it = points_near.begin();it != points_near.end(); it++){
                     nn.push_back(ToVec3d(*it));
                 }
                 Vec4d n;
-                if (!wxpiggy::math::FitPlane(nn, n)) {
+                if (!wxpiggy::math::FitPlane(nn, n,0.1)) {
                     // 失败的不要
                     effect_pts[idx] = false;
                     return;
                 }
                 double dis = n.head<3>().dot(qs) + n[3];
-                // double dis_sq = dis * dis;  // 距离的平方
+                double dis_sq = dis * dis;  // 距离的平方
 
                 // 使用类似您参考代码的判断条件
                 // bool valid_corr = qs.norm() > 81 * dis_sq;  // 81 * 距离平方
-                if (std::fabs(dis) > 0.05) {
+                // if( q.norm() < 81 * dis_sq){
+                // float s = 1 - 0.9 * fabs(dis) / sqrt(sqrt(q.x() * q.x()
+                //             + q.y() * q.y() + q.z() * q.z()));
+                // if(s < 0.1){
+                if (std::fabs(dis) > 0.03) {
                     effect_pts[idx] = false;
                     return;
                 }
@@ -170,7 +180,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
         Mat6d H = H_and_err.first;
         Vec6d err = H_and_err.second;
 
-        Vec6d dx = H.ldlt().solve(err);
+        Vec6d dx = H.colPivHouseholderQr().solve(err);
         pose.so3() = pose.so3() * SO3::exp(dx.head<3>());
         pose.translation() += dx.tail<3>();
         // double contidtion = computeConditionNumber(H);
@@ -179,9 +189,11 @@ bool IncIcp3d::Align(SE3& init_pose) {
         LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
 
         if (dx.norm() < options_.eps_) {
+            is_converged_ = true;
             LOG(INFO) << "converged, dx = " << dx.transpose();
             break;
         }
+
     }
 
     init_pose = pose;

@@ -146,8 +146,8 @@ void LioPreinteg::TryInitIMU() {
         // 噪声由初始化器估计
         options_.preinteg_options_.noise_gyro_ = sqrt(imu_init_.GetCovGyro()[0]);
         options_.preinteg_options_.noise_acce_ = sqrt(imu_init_.GetCovAcce()[0]);
-        options_.preinteg_options_.init_ba_ = imu_init_.GetInitBa();
-        options_.preinteg_options_.init_bg_ = imu_init_.GetInitBg();
+        // options_.preinteg_options_.init_ba_ = imu_init_.GetInitBa();
+        // options_.preinteg_options_.init_bg_ = imu_init_.GetInitBg();
 
         preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
         imu_need_init_ = false;
@@ -200,6 +200,7 @@ void LioPreinteg::Predict() {
 
         last_imu_ = imu;
         imu_states_.emplace_back(preinteg_->Predict(last_nav_state_, imu_init_.GetGravity()));
+        // imu_pose_pub_func_("/imu_pose",imu_states_.back().GetSE3(),imu_states_.back().timestamp_);
     }
 }
 

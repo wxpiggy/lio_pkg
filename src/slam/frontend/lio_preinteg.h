@@ -72,6 +72,9 @@ class LioPreinteg {
     void setFunc(CloudDownPublishFunc func){
         cloud_down_pub_func_ = func;
     }
+    void setIMUfunc(PosePublishFunc func){
+        imu_pose_pub_func_ = func;
+    }
    private:
     bool LoadFromYAML(const std::string& yaml_file);
 
@@ -98,7 +101,7 @@ class LioPreinteg {
     void NormalizeVelocity();
 
     CloudPublishFunc cloud_pub_func_;
-    PosePublishFunc pose_pub_func_;
+    PosePublishFunc pose_pub_func_, imu_pose_pub_func_;
     CloudDownPublishFunc cloud_down_pub_func_;
     std::string cloud_pub_topic_;   
     std::string pose_pub_topic_; 

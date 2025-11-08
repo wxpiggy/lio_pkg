@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
     lio->setFunc(ros_publisher.GetCloudPublishFunc());
     lio->setFunc(ros_publisher.GetPosePublishFunc());
     lio->setFunc(ros_publisher.GetDownCloudPublishFunc());
+    lio->setIMUfunc(ros_publisher.GetPosePublishFunc());
     lio->Init();
 
     // 根据数据集类型订阅点云

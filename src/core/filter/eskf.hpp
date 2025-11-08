@@ -46,8 +46,8 @@ class ESKF {
         // NOTE IMU噪声项都为离散时间，不需要再乘dt，可以由初始化器指定IMU噪声
         double gyro_var_ = 1e-5;       // 陀螺测量标准差
         double acce_var_ = 1e-2;       // 加计测量标准差
-        double bias_gyro_var_ = 1e-6;  // 陀螺零偏游走标准差
-        double bias_acce_var_ = 1e-4;  // 加计零偏游走标准差
+        double bias_gyro_var_ = 1e-2;  // 陀螺零偏游走标准差
+        double bias_acce_var_ = 1e-1;  // 加计零偏游走标准差
 
         /// 里程计参数
         double odom_var_ = 0.5;

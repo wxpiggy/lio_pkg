@@ -56,11 +56,18 @@ void incrementalLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     }
     pose = guess;
     estimated_poses_.emplace_back(pose);
-    CloudPtr scan_world(new PointCloudType);
-    pcl::transformPointCloud(*scan, *scan_world, pose.matrix().cast<float>());
-    last_kf_pose_ = pose;
-    cnt_frame_ = 0;
-    registration_->AddCloud({scan_world});
+    // if(IsKeyframe(pose)){
+        CloudPtr scan_world(new PointCloudType);
+        pcl::transformPointCloud(*scan, *scan_world, pose.matrix().cast<float>());
+        last_kf_pose_ = pose;
+        registration_->AddCloud({scan_world});
+    // }
+    // CloudPtr scan_world(new PointCloudType);
+    // pcl::transformPointCloud(*scan, *scan_world, pose.matrix().cast<float>());
+    // last_kf_pose_ = pose;
+
+    // cnt_frame_ = 0;
+    
 
     cnt_frame_++;
 }

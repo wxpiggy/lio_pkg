@@ -21,7 +21,7 @@ class incrementalLO {
    public:
     struct Options {
         Options() {}
-        double kf_distance_ = 0.5;            // 关键帧距离
+        double kf_distance_ = 0.2;            // 关键帧距离
         double kf_angle_deg_ = 10;            // 旋转角度
         int registration_type_;
     };

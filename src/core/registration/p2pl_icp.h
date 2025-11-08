@@ -23,7 +23,7 @@ class IncIcp3d  :public RegistrationBase {
         double voxel_size_ = 0.5;      // 体素大小
         double inv_voxel_size_ = 2.0;  // 体素大小之逆
         int min_effective_pts_ = 10;   
-        double eps_ = 1e-2;         // 收敛判定条件
+        double eps_ = 0.01;         // 收敛判定条件
         size_t capacity_ = 500000;  // LRU 最大容量
         size_t max_points_ = 20;
 
@@ -68,5 +68,6 @@ class IncIcp3d  :public RegistrationBase {
     bool flag_first_scan_ = false;
     std::vector<std::vector<Point, Eigen::aligned_allocator<Point>>> nearest_points_;
     float filter_size_map_min_ =0.5;
+    bool is_converged_ = true;;
 };
 }  // namespace wxpiggy

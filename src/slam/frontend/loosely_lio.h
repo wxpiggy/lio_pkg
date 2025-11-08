@@ -65,12 +65,13 @@ class LooselyLIO {
     void setFunc(CloudDownPublishFunc func){
         cloud_down_pub_func_ = func;
     }
+
    private:
 
     CloudDownPublishFunc cloud_down_pub_func_;
     CloudPublishFunc cloud_pub_func_;
-    PosePublishFunc pose_pub_func_;
-
+    PosePublishFunc pose_pub_func_, imu_pose_pub_func_;
+    
     /// 处理同步之后的IMU和雷达数据
     void ProcessMeasurements(const MeasureGroup &meas);
 

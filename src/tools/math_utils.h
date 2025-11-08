@@ -169,7 +169,7 @@ bool FitPlane(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 4, 1>&
     // 检查拟合误差
     for (int i = 0; i < data.size(); ++i) {
         double err = plane_coeffs.template head<3>().dot(data[i]) + plane_coeffs[3];
-        if (err * err > eps) {
+        if (err  > eps) {
             return false;
         }
     }
