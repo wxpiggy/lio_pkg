@@ -106,76 +106,72 @@ void ComputeMedian(const C& data, D& median, Getter&& getter) {
     std::nth_element(d.begin(), d.begin() + n, d.end());
     median = d[n];
 }
-// template <typename S>
-// bool FitPlane(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 4, 1>& plane_coeffs, double eps = 1e-1) {
-//     if (data.size() < 3) {
-//         return false;
-//     }
-
-//     const unsigned int num_points = data.size();
-    
-//     Eigen::Matrix<S, Eigen::Dynamic, 3> A(num_points, 3); // save target planar point
-//     Eigen::Matrix<S, Eigen::Dynamic, 1> b = Eigen::Matrix<S, Eigen::Dynamic, 1>::Ones(num_points) * S(-1.0);
-    
-//     for (unsigned int j = 0; j < num_points; ++j) {
-//         A.row(j) << static_cast<S>(data[j].x()),
-//                     static_cast<S>(data[j].y()),
-//                     static_cast<S>(data[j].z());
-//     }
-
-//     const Eigen::Matrix<S, 3, 1>&& plane_coeff = A.colPivHouseholderQr().solve(b);
-//     const S plane_coeff_norm = plane_coeff.norm();
-
-//     bool is_valid_plane = true;
-//     for (unsigned int j = 0; j < num_points; ++j) {
-//         if (std::abs(A.row(j) * plane_coeff + static_cast<S>(1.0)) / plane_coeff_norm > static_cast<S>(eps)) {
-//             is_valid_plane = false;
-//             break;
-//         }
-//     }
-
-//     if (is_valid_plane) {
-//         plane_coeffs.template head<3>() = plane_coeff;
-//         plane_coeffs[3] = static_cast<S>(1.0);
-//         return true;
-//     }
-    
-//     return false;
-// }
 template <typename S>
 bool FitPlane(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 4, 1>& plane_coeffs, double eps = 1e-1) {
     if (data.size() < 3) {
         return false;
     }
 
-    Eigen::MatrixXd A(data.size(), 4);
-    for (int i = 0; i < data.size(); ++i) {
-        A.row(i).head<3>() = data[i].transpose();
-        A.row(i)[3] = 1.0;
+    const unsigned int num_points = data.size();
+    
+    Eigen::Matrix<S, Eigen::Dynamic, 3> A(num_points, 3); // save target planar point
+    Eigen::Matrix<S, Eigen::Dynamic, 1> b = Eigen::Matrix<S, Eigen::Dynamic, 1>::Ones(num_points) * S(-1.0);
+    
+    for (unsigned int j = 0; j < num_points; ++j) {
+        A.row(j) << static_cast<S>(data[j].x()),
+                    static_cast<S>(data[j].y()),
+                    static_cast<S>(data[j].z());
     }
 
-    // 使用正规方程 + SelfAdjointEigenSolver
-    Eigen::MatrixXd ATA = A.transpose() * A;   // 计算 A^T A
-    
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(ATA);
-    
-    if (solver.info() != Eigen::Success) {
-        return false;
-    }
+    Eigen::Matrix<S, 3, 1> normvec = A.colPivHouseholderQr().solve(b);
 
-    // 取最小特征值对应的特征向量
-    plane_coeffs = solver.eigenvectors().col(0);
+    S n = normvec.norm();
+    plane_coeffs(0) = normvec(0) / n;
+    plane_coeffs(1) = normvec(1) / n;
+    plane_coeffs(2) = normvec(2) / n;
+    plane_coeffs(3) = 1.0 / n;
 
-    // 检查拟合误差
-    for (int i = 0; i < data.size(); ++i) {
-        double err = plane_coeffs.template head<3>().dot(data[i]) + plane_coeffs[3];
-        if (err  > eps) {
+    for (unsigned int j = 0; j < num_points; ++j) {
+        if (fabs(plane_coeffs(0) * data[j].x() + plane_coeffs(1) * data[j].y() + plane_coeffs(2) * data[j].z() + plane_coeffs(3)) > eps) {
             return false;
         }
     }
-
     return true;
 }
+// template <typename S>
+// bool FitPlane(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 4, 1>& plane_coeffs, double eps = 1e-1) {
+//     if (data.size() < 3) {
+//         return false;
+//     }
+
+//     Eigen::MatrixXd A(data.size(), 4);
+//     for (int i = 0; i < data.size(); ++i) {
+//         A.row(i).head<3>() = data[i].transpose();
+//         A.row(i)[3] = 1.0;
+//     }
+
+//     // 使用正规方程 + SelfAdjointEigenSolver
+//     Eigen::MatrixXd ATA = A.transpose() * A;   // 计算 A^T A
+    
+//     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(ATA);
+    
+//     if (solver.info() != Eigen::Success) {
+//         return false;
+//     }
+
+//     // 取最小特征值对应的特征向量
+//     plane_coeffs = solver.eigenvectors().col(0);
+
+//     // 检查拟合误差
+//     for (int i = 0; i < data.size(); ++i) {
+//         double err = plane_coeffs.template head<3>().dot(data[i]) + plane_coeffs[3];
+//         if (err  > eps) {
+//             return false;
+//         }
+//     }
+
+//     return true;
+// }
 
 template <typename S>
 bool FitLine(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 3, 1>& origin, Eigen::Matrix<S, 3, 1>& dir,

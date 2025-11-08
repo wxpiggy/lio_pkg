@@ -135,11 +135,11 @@ bool IncIcp3d::Align(SE3& init_pose) {
 
                 // 使用类似您参考代码的判断条件
                 // bool valid_corr = qs.norm() > 81 * dis_sq;  // 81 * 距离平方
-                // if( q.norm() < 81 * dis_sq){
+                if( q.norm() < 81 * dis_sq){
                 // float s = 1 - 0.9 * fabs(dis) / sqrt(sqrt(q.x() * q.x()
                 //             + q.y() * q.y() + q.z() * q.z()));
                 // if(s < 0.1){
-                if (std::fabs(dis) > 0.03) {
+                // if (std::fabs(dis) > 0.03) {
                     effect_pts[idx] = false;
                     return;
                 }

@@ -337,7 +337,7 @@ void LioPreinteg::Optimize() {
     // go
     optimizer.setVerbose(options_.verbose_);
     optimizer.initializeOptimization();
-    optimizer.optimize(20);
+    optimizer.optimize(30);
 
     // get results
     last_nav_state_.R_ = v0_pose->estimate().so3();
