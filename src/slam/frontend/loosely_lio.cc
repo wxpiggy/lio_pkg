@@ -37,23 +37,6 @@ bool LooselyLIO::Init() {
     return true;
 }
 
-// bool LooselyLIO::LoadFromYAML(const std::string &yaml_file) {
-//     // get params from yaml
-//     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
-//     sync_->Init(yaml_file);
-
-//     /// 自身参数主要是雷达与IMU外参
-//     auto yaml = YAML::LoadFile(yaml_file);
-//     std::vector<double> ext_t = yaml["mapping"]["extrinsic_T"].as<std::vector<double>>();
-//     std::vector<double> ext_r = yaml["mapping"]["extrinsic_R"].as<std::vector<double>>();
-//     cloud_pub_topic_ = "/cloud";
-//     pose_pub_topic_ = "/pose";
-//     Vec3d lidar_T_wrt_IMU = math::VecFromArray(ext_t);
-//     Mat3d lidar_R_wrt_IMU = math::MatFromArray(ext_r);
-//     TIL_ = SE3(lidar_R_wrt_IMU, lidar_T_wrt_IMU);
-//     return true;
-// }
-
 void LooselyLIO::ProcessMeasurements(const MeasureGroup &meas) {
     // LOG(INFO) << "call meas, imu: " << meas.imu_.size() << ", lidar pts: " << meas.lidar_->size();
     measures_ = meas;
@@ -94,8 +77,8 @@ void LooselyLIO::TryInitIMU() {
         // 读取初始零偏，设置ESKF
         wxpiggy::ESKFD::Options options;
         // 噪声由初始化器估计
-        options.gyro_var_ = sqrt(imu_init_.GetCovGyro()[0]);
-        options.acce_var_ = sqrt(imu_init_.GetCovAcce()[0]);
+        options.gyro_var_ = imu_init_.GetCovGyro()[0];
+        options.acce_var_ = imu_init_.GetCovAcce()[0];
         eskf_->SetInitialConditions(options, imu_init_.GetInitBg(), imu_init_.GetInitBa(), imu_init_.GetGravity());
         LOG(INFO) << "gyro_var: " << options.gyro_var_;
         LOG(INFO) << "acce_var_: " << options.acce_var_;

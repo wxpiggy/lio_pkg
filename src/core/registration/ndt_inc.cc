@@ -243,7 +243,7 @@ bool IncNdt3d::Align(SE3& init_pose) {
     return true;
 }
 
-void IncNdt3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, Vec18d& HTVr) {
+void IncNdt3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, Vec18d& HTVr, bool nearest_search) {
     assert(grids_.empty() == false);
     SE3 pose = input_pose;
 

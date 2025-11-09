@@ -19,7 +19,7 @@ namespace wxpiggy {
         bool Align(SE3& init_pose) override;
 
 
-        void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) override{
+        void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr, bool nearest_search) override{
 
         };
         void Init();

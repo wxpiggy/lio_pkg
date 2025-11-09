@@ -6,8 +6,8 @@ namespace wxpiggy {
 IMUPreintegration::IMUPreintegration(Options options) {
     bg_ = options.init_bg_;
     ba_ = options.init_ba_;
-    const float ng2 = options.noise_gyro_ * options.noise_gyro_;
-    const float na2 = options.noise_acce_ * options.noise_acce_;
+    const float ng2 = options.noise_gyro_ ;
+    const float na2 = options.noise_acce_ ;
     noise_gyro_acce_.diagonal() << ng2, ng2, ng2, na2, na2, na2;
 }
 

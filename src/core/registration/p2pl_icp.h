@@ -50,11 +50,8 @@ class IncIcp3d  :public RegistrationBase {
      * @param HTVH 累积的 Hessian
      * @param HTVr 累积的梯度
      */
-    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) override ;
-    bool FindKNearestNeighbors(const Eigen::Vector3d& point,
-                               int k,
-                               std::vector<Eigen::Vector3d>& neighbors,
-                               double max_distance = 5.0);
+    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr, bool nearest_search) override ;
+
     void Init() override;    
     double computeConditionNumber(const Eigen::MatrixXd& H);
    private:

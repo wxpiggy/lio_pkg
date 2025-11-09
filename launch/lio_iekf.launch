@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <param name="config" type="string" value="/catkin_ws/src/lio_pkg/config/velodyne_nclt.yaml" />
+    <param name="config" type="string" value="$(find lio_pkg)/config/velodyne_nclt.yaml" />
     <env name="LD_LIBRARY_PATH" value="$(find lio_pkg)/../../devel/.private/lio_pkg/lib:$(env LD_LIBRARY_PATH)" />
     <node pkg="lio_pkg" type="lio_iekf" name="lio_iekf" output="screen">
     </node>

@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /PointCloud21
         - /TF1/Tree1
         - /Odometry1/Shape1
       Splitter Ratio: 0.5
@@ -77,7 +78,7 @@ Visualization Manager:
       Topic: /odometry_path
       Unreliable: false
       Value: true
-    - Alpha: 0.10000000149011612
+    - Alpha: 0.30000001192092896
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
         Max Value: 15
@@ -219,7 +220,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 179.99522399902344
+      Distance: 299.0421142578125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -227,17 +228,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 10.397607803344727
+        Y: 3.003601551055908
+        Z: 0.00243340409360826
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.0247968435287476
       Target Frame: base_link
-      Yaw: 4.475392818450928
+      Yaw: 5.687216281890869
     Saved: ~
 Window Geometry:
   Displays:

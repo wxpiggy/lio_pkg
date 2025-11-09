@@ -93,7 +93,7 @@ class IncNdt3d :public RegistrationBase{
      * @param HTVH
      * @param HTVr
      */
-    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) override;
+    void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr, bool nearest_search) override;
 
     /**
      * 根据估计的NDT建立edges

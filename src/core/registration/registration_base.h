@@ -26,7 +26,7 @@ public:
     virtual bool Align(SE3& init_pose) = 0;
 
 
-    virtual void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr) = 0;
+    virtual void ComputeResidualAndJacobians(const SE3& pose, Mat18d& HTVH, Vec18d& HTVr, bool nearest_search ) = 0;
     virtual void Init() = 0;
 };
 

@@ -44,6 +44,7 @@ add_library(lio_core SHARED
     src/slam/frontend/incremental_lo.cc
     src/slam/frontend/loosely_lio.cc
     src/slam/frontend/lio_preinteg.cc
+    # src/slam/frontend/lio_iekf.cc
     src/tools/point_cloud_utils.cc
     src/tools/utm_convert.cc
     src/tools/config.cc
@@ -64,19 +65,16 @@ set_target_properties(lio_core PROPERTIES
 add_executable( lio_preinteg
     src/app/main_preinteg.cc
 )
-
-
 add_executable(lio_eskf_online
     src/app/main_eskf_online.cc
 )
-
+# add_executable(lio_iekf
+#     src/app/main_iekf.cc
+# )
 
 target_link_libraries( lio_preinteg lio_core)
-
-
-
 target_link_libraries(lio_eskf_online lio_core)
-
+# target_link_libraries(lio_iekf lio_core)
 
 # add_executable(test_node 
 # src/app/front.cc)

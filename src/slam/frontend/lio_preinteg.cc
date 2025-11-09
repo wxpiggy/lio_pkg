@@ -22,13 +22,13 @@ namespace wxpiggy {
 
 LioPreinteg::LioPreinteg() :  preinteg_(new IMUPreintegration()) {
 
-    double bg_rw2 = 1.0 / (options_.bias_gyro_var_ * options_.bias_gyro_var_);
+    double bg_rw2 = 1.0 / options_.bias_gyro_var_ ;
     options_.bg_rw_info_.diagonal() << bg_rw2, bg_rw2, bg_rw2;
-    double ba_rw2 = 1.0 / (options_.bias_acce_var_ * options_.bias_acce_var_);
+    double ba_rw2 = 1.0 / options_.bias_acce_var_ ;
     options_.ba_rw_info_.diagonal() << ba_rw2, ba_rw2, ba_rw2;
 
-    double gp2 = options_.ndt_pos_noise_ * options_.ndt_pos_noise_;
-    double ga2 = options_.ndt_ang_noise_ * options_.ndt_ang_noise_;
+    double gp2 = options_.ndt_pos_noise_;
+    double ga2 = options_.ndt_ang_noise_;
 
     options_.ndt_info_.diagonal() << 1.0 / ga2, 1.0 / ga2, 1.0 / ga2, 1.0 / gp2, 1.0 / gp2, 1.0 / gp2;
 
@@ -96,7 +96,7 @@ void LioPreinteg::Align() {
 
     /// the first scan
     if (flg_first_scan_) {
-        registration_->AddCloud({current_scan_});
+        registration_->AddCloud({current_scan_filter});
         preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
         flg_first_scan_ = false;
         return;
@@ -143,11 +143,13 @@ void LioPreinteg::TryInitIMU() {
 
     if (imu_init_.InitSuccess()) {
         // 读取初始零偏，设置ESKF
-        // 噪声由初始化器估计
-        options_.preinteg_options_.noise_gyro_ = sqrt(imu_init_.GetCovGyro()[0]);
-        options_.preinteg_options_.noise_acce_ = sqrt(imu_init_.GetCovAcce()[0]);
-        // options_.preinteg_options_.init_ba_ = imu_init_.GetInitBa();
-        // options_.preinteg_options_.init_bg_ = imu_init_.GetInitBg();
+        // // 噪声由初始化器估计
+        options_.preinteg_options_.noise_gyro_ = imu_init_.GetCovGyro()[0];
+        options_.preinteg_options_.noise_acce_ = imu_init_.GetCovAcce()[0];
+        // options_.preinteg_options_.noise_gyro_ = sqrt(0.01);
+        // options_.preinteg_options_.noise_acce_ = sqrt(0.1);
+        options_.preinteg_options_.init_ba_ = imu_init_.GetInitBa();
+        options_.preinteg_options_.init_bg_ = imu_init_.GetInitBg();
 
         preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
         imu_need_init_ = false;
@@ -326,9 +328,9 @@ void LioPreinteg::Optimize() {
     //     optimizer.addEdge(*it);
     // }
     if (options_.verbose_) {
-    //     LOG(INFO) << "last: " << last_nav_state_;
-    //     LOG(INFO) << "pred: " << current_nav_state_;
-    //     LOG(INFO) << "NDT: " << ndt_pose_.translation().transpose() << "," << ndt_pose_.so3().unit_quaternion().coeffs().transpose();
+        LOG(INFO) << "last: " << last_nav_state_;
+        LOG(INFO) << "pred: " << current_nav_state_;
+        LOG(INFO) << "NDT: " << ndt_pose_.translation().transpose() << "," << ndt_pose_.so3().unit_quaternion().coeffs().transpose();
     }
 
     v0_bg->setFixed(true);
@@ -353,11 +355,11 @@ void LioPreinteg::Optimize() {
     current_nav_state_.ba_ = v1_ba->estimate();
 
     if (options_.verbose_) {
-        // LOG(INFO) << "last changed to: " << last_nav_state_;
-        // LOG(INFO) << "curr changed to: " << current_nav_state_;
-        // LOG(INFO) << "preinteg chi2: " << edge_inertial->chi2() << ", err: " << edge_inertial->error().transpose();
-        // LOG(INFO) << "prior chi2: " << edge_prior->chi2() << ", err: " << edge_prior->error().transpose();
-        // LOG(INFO) << "ndt: " << edge_ndt->chi2() << "/" << edge_ndt->error().transpose();
+        LOG(INFO) << "last changed to: " << last_nav_state_;
+        LOG(INFO) << "curr changed to: " << current_nav_state_;
+        LOG(INFO) << "preinteg chi2: " << edge_inertial->chi2() << ", err: " << edge_inertial->error().transpose();
+        LOG(INFO) << "prior chi2: " << edge_prior->chi2() << ", err: " << edge_prior->error().transpose();
+        LOG(INFO) << "ndt: " << edge_ndt->chi2() << "/" << edge_ndt->error().transpose();
     }
 
     /// 重置预积分

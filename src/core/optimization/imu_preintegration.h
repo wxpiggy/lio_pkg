@@ -27,7 +27,7 @@ class IMUPreintegration {
         Options() {}
         Vec3d init_bg_ = Vec3d::Zero();  // 初始零偏
         Vec3d init_ba_ = Vec3d::Zero();  // 初始零偏
-        double noise_gyro_ = 1e-2;       // 陀螺噪声，标准差
+        double noise_gyro_ = 1e-2;       // 陀螺噪声，标准差, 改为了方差
         double noise_acce_ = 1e-1;       // 加计噪声，标准差
     };
 

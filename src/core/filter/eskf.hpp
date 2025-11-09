@@ -44,10 +44,10 @@ class ESKF {
         /// IMU 测量与零偏参数
         double imu_dt_ = 0.01;  // IMU测量间隔
         // NOTE IMU噪声项都为离散时间，不需要再乘dt，可以由初始化器指定IMU噪声
-        double gyro_var_ = 1e-5;       // 陀螺测量标准差
-        double acce_var_ = 1e-2;       // 加计测量标准差
-        double bias_gyro_var_ = 1e-2;  // 陀螺零偏游走标准差
-        double bias_acce_var_ = 1e-1;  // 加计零偏游走标准差
+        double gyro_var_ = 1e-1;       // 陀螺测量标准差
+        double acce_var_ = 1e-1;       // 加计测量标准差
+        double bias_gyro_var_ = 1e-4;  // 陀螺零偏游走标准差
+        double bias_acce_var_ = 1e-4;  // 加计零偏游走标准差
 
         /// 里程计参数
         double odom_var_ = 0.5;
@@ -138,10 +138,10 @@ class ESKF {
         double eg = options.bias_gyro_var_;
         double ea = options.bias_acce_var_;
 
-        double ev2 = ev * ev;
-        double et2 = et * et;
-        double eg2 = eg * eg;
-        double ea2 = ea * ea;
+        double ev2 = ev;
+        double et2 = et;
+        double eg2 = eg;
+        double ea2 = ea;
 
         // 设置过程噪声
         Q_.diagonal() << 0, 0, 0, ev2, ev2, ev2, et2, et2, et2, eg2, eg2, eg2, ea2, ea2, ea2, 0, 0, 0;
