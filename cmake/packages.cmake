@@ -9,7 +9,7 @@ include_directories(${CMAKE_BINARY_DIR}/../../devel/include) # 引用ros生成�
 # eigen 3
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})
-
+find_package(GTSAM  REQUIRED)
 # sophus
 # include_directories(${PROJECT_SOURCE_DIR}/thirdparty/sophus)
 
@@ -77,6 +77,7 @@ include_directories(${PROJECT_SOURCE_DIR}/thirdparty/robin-map/include)
         #     ${OpenCV_LIBS}
             ${PCL_LIBRARIES}
         #     ${Pangolin_LIBRARIES}
+        gtsam
             glog gflags
             yaml-cpp
             tbb

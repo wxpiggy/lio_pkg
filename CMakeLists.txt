@@ -33,8 +33,8 @@ add_library(lio_core SHARED
     src/common/keyframe.cc
     
     src/core/init/static_imu_init.cc
-    src/core/optimization/g2o_types.cc
-    src/core/optimization/imu_preintegration.cc
+    # src/core/optimization/g2o_types.cc
+    # src/core/optimization/imu_preintegration.cc
     src/core/registration/ndt_inc.cc
     src/core/registration/loam_icp.cc
     src/core/registration/p2pl_icp.cc

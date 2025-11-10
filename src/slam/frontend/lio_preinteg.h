@@ -1,19 +1,27 @@
 #pragma once
 
+#include <gtsam/navigation/ImuFactor.h>
+#include <gtsam/nonlinear/Marginals.h>
 #include <livox_ros_driver/CustomMsg.h>
 #include <pcl/filters/voxel_grid.h>
 #include <sensor_msgs/PointCloud2.h>
 
 /// 部分类直接使用ch7的结果
+#include "common/nav_state.h"
 #include "core/init/static_imu_init.h"
-#include "core/optimization/imu_preintegration.h"
+// #include "core/optimization/imu_preintegration.h"
 #include "preprocess/cloud_convert.h"
 #include "preprocess/measure_sync.h"
-#include "core/registration//ndt_inc.h"
+#include "core/registration/ndt_inc.h"
 
 #include "tools/math_utils.h"
 // #include "tools/ui/pangolin_window.h"
-
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/navigation/CombinedImuFactor.h>
+#include <gtsam/navigation/ImuBias.h>
+#include <gtsam/nonlinear/ISAM2.h>
+#include <gtsam/slam/BetweenFactor.h>
+#include <gtsam/slam/PriorFactor.h>
 namespace wxpiggy {
 
 /**
@@ -33,11 +41,11 @@ class LioPreinteg {
         Mat3d bg_rw_info_ = Mat3d::Identity();  // 陀螺随机游走信息阵
         Mat3d ba_rw_info_ = Mat3d::Identity();  // 加计随机游走信息阵
 
-        double ndt_pos_noise_ = 0.0001;                   // NDT位置方差
-        double ndt_ang_noise_ = 0.0001 ;  // NDT角度方差
-        Mat6d ndt_info_ = Mat6d::Identity();           // 6D NDT 信息矩阵
+        double ndt_pos_noise_ = 0.01;                   // NDT位置方差
+        double ndt_ang_noise_ = 0.01 ;  // NDT角度方差
+        Mat6d lidar_pose_info_ = Mat6d::Identity();           // 6D NDT 信息矩阵
 
-        wxpiggy::IMUPreintegration::Options preinteg_options_;  // 预积分参数
+        // wxpiggy::IMUPreintegration::Options preinteg_options_;  // 预积分参数
         IncNdt3d::Options ndt_options_;                     // NDT 参数
     };
 
@@ -75,6 +83,7 @@ class LioPreinteg {
     void setIMUfunc(PosePublishFunc func){
         imu_pose_pub_func_ = func;
     }
+    void AddDefaultPriors(gtsam::NonlinearFactorGraph& graph, int i);
    private:
     bool LoadFromYAML(const std::string& yaml_file);
 
@@ -116,8 +125,8 @@ class LioPreinteg {
     // optimize相关
     NavStated last_nav_state_, current_nav_state_;  // 上一时刻状态与本时刻状态
     Mat15d prior_info_ = Mat15d::Identity();        // 先验约束
-    std::shared_ptr<IMUPreintegration> preinteg_ = nullptr;
-
+    // std::shared_ptr<IMUPreintegration> preinteg_ = nullptr;
+    std::shared_ptr<gtsam::PreintegratedImuMeasurements> imu_preintegration_;
     IMUPtr last_imu_ = nullptr;
 
     /// NDT数据
@@ -134,6 +143,18 @@ class LioPreinteg {
     std::vector<NavStated> imu_states_;
     SE3 TIL_;  // Lidar与IMU之间外参
     Options options_;
+
+
+    gtsam::ISAM2 isam2_;
+    gtsam::NonlinearFactorGraph graph_ ;
+    gtsam::Values initial_values_; 
+    gtsam::Marginals* marginals_ = nullptr;
+        // 导航状态
+    gtsam::NavState this_frame_;              // 当前时刻状态
+    gtsam::NavState last_frame_;              // 上一个时刻状态
+    gtsam::imuBias::ConstantBias this_bias_;  // 当前零偏
+    gtsam::imuBias::ConstantBias last_bias_;  // 上一零偏
+    int frame_count; 
 };
 
 }  // namespace sad

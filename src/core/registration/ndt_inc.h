@@ -6,7 +6,7 @@
 
 #include "common/eigen_types.h"
 #include "common/point_types.h"
-#include "core/optimization/g2o_types.h"
+// #include "core/optimization/g2o_types.h"
 
 #include "core/registration/registration_base.h"
 
@@ -100,7 +100,7 @@ class IncNdt3d :public RegistrationBase{
      * @param v
      * @param edges
      */
-    void BuildNDTEdges(VertexPose* v, std::vector<EdgeNDT*>& edges);
+    // void BuildNDTEdges(VertexPose* v, std::vector<EdgeNDT*>& edges);
     void Init() override;
    private:
     /// 根据最近邻的类型，生成附近网格

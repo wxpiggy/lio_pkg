@@ -1,27 +1,37 @@
 #include "lio_preinteg.h"
 
-#include <g2o/core/block_solver.h>
-#include <g2o/core/optimization_algorithm_levenberg.h>
-#include <g2o/core/robust_kernel.h>
-#include <g2o/core/sparse_block_matrix.h>
-#include <g2o/solvers/eigen/linear_solver_eigen.h>
+// #include <g2o/core/block_solver.h>
+// #include <g2o/core/optimization_algorithm_levenberg.h>
+// #include <g2o/core/robust_kernel.h>
+// #include <g2o/core/sparse_block_matrix.h>
+// #include <g2o/solvers/eigen/linear_solver_eigen.h>
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/nonlinear/Marginals.h>
 #include <pcl/common/transforms.h>
 #include <yaml-cpp/yaml.h>
 
 #include <execution>
 #include <fstream>
+#include "core/optimization/gtsam/navstate_utils.h"
 #include "core/registration/p2pl_icp.h"
-#include "core/optimization/g2o_types.h"
+// #include "core/optimization/g2o_types.h"
 #include "tools/lidar_utils.h"
 #include "tools/math_utils.h"
 #include "tools/config.h"
 #include "common/timer/timer.h"
-
-
+#include <gtsam/inference/Symbol.h>
+using gtsam::symbol_shorthand::B;  // Bias  (ax,ay,az,gx,gy,gz)
+using gtsam::symbol_shorthand::V;  // Vel   (xdot,ydot,zdot)
+using gtsam::symbol_shorthand::X;  // Pose3 (x,y,z,r,p,y)
 namespace wxpiggy {
 
-LioPreinteg::LioPreinteg() :  preinteg_(new IMUPreintegration()) {
-
+LioPreinteg::LioPreinteg()  {
+    
+    gtsam::ISAM2Params isam_params;
+isam_params.relinearizeThreshold = 0.01;
+isam_params.relinearizeSkip = 1;
+isam_params.findUnusedFactorSlots = true;
+isam2_ = gtsam::ISAM2(isam_params);
     double bg_rw2 = 1.0 / options_.bias_gyro_var_ * options_.bias_gyro_var_;
     options_.bg_rw_info_.diagonal() << bg_rw2, bg_rw2, bg_rw2;
     double ba_rw2 = 1.0 / options_.bias_acce_var_ * options_.bias_acce_var_;
@@ -30,7 +40,7 @@ LioPreinteg::LioPreinteg() :  preinteg_(new IMUPreintegration()) {
     double gp2 = options_.ndt_pos_noise_ * options_.ndt_pos_noise_;
     double ga2 = options_.ndt_ang_noise_ * options_.ndt_ang_noise_;
 
-    options_.ndt_info_.diagonal() << 1.0 / ga2, 1.0 / ga2, 1.0 / ga2, 1.0 / gp2, 1.0 / gp2, 1.0 / gp2;
+    options_.lidar_pose_info_.diagonal() << 1.0 / ga2, 1.0 / ga2, 1.0 / ga2, 1.0 / gp2, 1.0 / gp2, 1.0 / gp2;
 
     // options_.ndt_options_.nearby_type_ = IncNdt3d::NearbyType::CENTER;
     // ndt_ = IncNdt3d(options_.ndt_options_);
@@ -65,8 +75,8 @@ bool LioPreinteg::Init() {
     imu_init_.Init();
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
     sync_->Init();
-    // registration_ = std::make_shared<IncIcp3d>();
-    registration_ = std::make_shared<IncNdt3d>();
+    registration_ = std::make_shared<IncIcp3d>();
+    // registration_ = std::make_shared<IncNdt3d>();
     registration_->Init();
     cloud_pub_topic_ = "/cloud";
     pose_pub_topic_ = "/pose";
@@ -98,7 +108,7 @@ void LioPreinteg::Align() {
     /// the first scan
     if (flg_first_scan_) {
         registration_->AddCloud({current_scan_filter});
-        preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
+        // preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
         flg_first_scan_ = false;
         return;
     }
@@ -106,8 +116,8 @@ void LioPreinteg::Align() {
     // 后续的scan，使用NDT配合pose进行更新
     LOG(INFO) << "=== frame " << frame_num_;
     registration_->SetSource({current_scan_filter});
-
-    current_nav_state_ = preinteg_->Predict(last_nav_state_, imu_init_.GetGravity());//重力一直是fixed？
+    auto state =  FromGTSAM(imu_preintegration_->predict(last_frame_, last_bias_));
+    // current_nav_state_ = preinteg_->Predict(last_nav_state_, imu_init_.GetGravity());//重力一直是fixed？
     ndt_pose_ = current_nav_state_.GetSE3();
 
     registration_->Align(ndt_pose_);
@@ -143,16 +153,24 @@ void LioPreinteg::TryInitIMU() {
     }
 
     if (imu_init_.InitSuccess()) {
-        // 读取初始零偏，设置ESKF
-        // // 噪声由初始化器估计
-        options_.preinteg_options_.noise_gyro_ = sqrt(imu_init_.GetCovGyro()[0]);
-        options_.preinteg_options_.noise_acce_ = sqrt(imu_init_.GetCovAcce()[0]);
-        // options_.preinteg_options_.noise_gyro_ = 0.01;
-        // options_.preinteg_options_.noise_acce_ = 0.1;
-        options_.preinteg_options_.init_ba_ = imu_init_.GetInitBa();
-        options_.preinteg_options_.init_bg_ = imu_init_.GetInitBg();
 
-        preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
+        auto p = gtsam::PreintegratedCombinedMeasurements::Params::MakeSharedU(9.81);
+
+        // p->n_gravity = imu_init_.GetGravity();
+        
+        p->integrationCovariance = 1e-8 * Eigen::Matrix3d::Identity(); // integration uncertainty continuous
+        // should be using 2nd order integration
+        // PreintegratedRotation params:
+         p->accelerometerCovariance = 0.01 * Eigen::Matrix3d::Identity();  // acc white noise in continuous
+        p->gyroscopeCovariance = 0.0001 * Eigen::Matrix3d::Identity();// gyro white noise in continuous
+        // p->accelerometerCovariance = imu_init_.GetCovAcce().asDiagonal();  // acc white noise in continuous
+        // p->gyroscopeCovariance = imu_init_.GetCovGyro().asDiagonal();// gyro white noise in continuous
+        p->biasAccCovariance = options_.bias_acce_var_ * options_.bias_acce_var_ * Eigen::Matrix3d::Identity();      // acc bias in continuous
+        p->biasOmegaCovariance = options_.bias_gyro_var_ * options_.bias_gyro_var_ * Eigen::Matrix3d::Identity();  // gyro bias in continuous
+        gtsam::imuBias::ConstantBias prior_imu_bias(imu_init_.GetInitBa(), imu_init_.GetInitBg()); 
+        imu_preintegration_ = std::make_shared<gtsam::PreintegratedImuMeasurements>(p,prior_imu_bias);
+        last_bias_ = prior_imu_bias;
+        // preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
         imu_need_init_ = false;
 
         current_nav_state_.v_.setZero();
@@ -162,7 +180,25 @@ void LioPreinteg::TryInitIMU() {
 
         last_nav_state_ = current_nav_state_;
         last_imu_ = measures_.imu_.back();
-
+             gtsam::NonlinearFactorGraph init_factors;
+    gtsam::Values init_values;
+    
+    auto pose_noise = gtsam::noiseModel::Diagonal::Sigmas(
+        (gtsam::Vector(6) << 0.01, 0.01, 0.01, 0.01, 0.01, 0.01).finished());
+    auto velocity_noise = gtsam::noiseModel::Isotropic::Sigma(3, 1e2);
+    auto bias_noise = gtsam::noiseModel::Isotropic::Sigma(6, 1e-3);
+    
+    init_factors.addPrior(X(0), ToGTSAMPose(last_nav_state_), pose_noise);
+    init_factors.addPrior(V(0), last_nav_state_.v_, velocity_noise);
+    init_factors.addPrior(B(0), ToGTSAMBias(last_nav_state_), bias_noise);
+    
+    init_values.insert(X(0), ToGTSAMPose(last_nav_state_));
+    init_values.insert(V(0), last_nav_state_.v_);
+    init_values.insert(B(0), ToGTSAMBias(last_nav_state_));
+    
+    isam2_.update(init_factors, init_values);
+    
+    frame_count = 1;  // 重置帧计数
         LOG(INFO) << "IMU初始化成功";
     }
 }
@@ -198,11 +234,14 @@ void LioPreinteg::Predict() {
     /// 对IMU状态进行预测
     for (auto &imu : measures_.imu_) {
         if (last_imu_ != nullptr) {
-            preinteg_->Integrate(*imu, imu->timestamp_ - last_imu_->timestamp_);
+            imu_preintegration_->integrateMeasurement(imu->acce_, imu->gyro_, imu->timestamp_ - last_imu_->timestamp_);
+            // preinteg_->Integrate(*imu, imu->timestamp_ - last_imu_->timestamp_);
         }
 
         last_imu_ = imu;
-        imu_states_.emplace_back(preinteg_->Predict(last_nav_state_, imu_init_.GetGravity()));
+        // imu_preintegration_->predict(last_frame_, last_bias_);
+        auto state = FromGTSAM(imu_preintegration_->predict(last_frame_, last_bias_));
+        imu_states_.emplace_back(state);
         // imu_pose_pub_func_("/imu_pose",imu_states_.back().GetSE3(),imu_states_.back().timestamp_);
     }
 }
@@ -227,187 +266,75 @@ void LioPreinteg::Finish() {
 }
 
 void LioPreinteg::Optimize() {
-    // 调用g2o求解优化问题
-    // 上一个state到本时刻state的预积分因子，本时刻的NDT因子
-    LOG(INFO) << " === optimizing frame " << frame_num_ << " === "
-              << ", dt: " << preinteg_->dt_;
-
-    /// NOTE 这些东西是对参数非常敏感的。相差几个数量级的话，容易出现优化不动的情况
-
-    using BlockSolverType = g2o::BlockSolverX;
-    using LinearSolverType = g2o::LinearSolverEigen<BlockSolverType::PoseMatrixType>;
-
-    auto *solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
-    g2o::SparseOptimizer optimizer;
-    optimizer.setAlgorithm(solver);
-
-    // 上时刻顶点， pose, v, bg, ba
-    auto v0_pose = new VertexPose();
-    v0_pose->setId(0);
-    v0_pose->setEstimate(last_nav_state_.GetSE3());
-    optimizer.addVertex(v0_pose);
-
-    auto v0_vel = new VertexVelocity();
-    v0_vel->setId(1);
-    v0_vel->setEstimate(last_nav_state_.v_);
-    optimizer.addVertex(v0_vel);
-
-    auto v0_bg = new VertexGyroBias();
-    v0_bg->setId(2);
-    v0_bg->setEstimate(last_nav_state_.bg_);
-    optimizer.addVertex(v0_bg);
-
-    auto v0_ba = new VertexAccBias();
-    v0_ba->setId(3);
-    v0_ba->setEstimate(last_nav_state_.ba_);
-    optimizer.addVertex(v0_ba);
-
-    // 本时刻顶点，pose, v, bg, ba
-    auto v1_pose = new VertexPose();
-    v1_pose->setId(4);
-    v1_pose->setEstimate(ndt_pose_);  // NDT pose作为初值
-    // v1_pose->setEstimate(current_nav_state_.GetSE3());  // 预测的pose作为初值
-    optimizer.addVertex(v1_pose);
-
-    auto v1_vel = new VertexVelocity();
-    v1_vel->setId(5);
-    v1_vel->setEstimate(current_nav_state_.v_);
-    optimizer.addVertex(v1_vel);
-
-    auto v1_bg = new VertexGyroBias();
-    v1_bg->setId(6);
-    v1_bg->setEstimate(current_nav_state_.bg_);
-    optimizer.addVertex(v1_bg);
-
-    auto v1_ba = new VertexAccBias();
-    v1_ba->setId(7);
-    v1_ba->setEstimate(current_nav_state_.ba_);
-    optimizer.addVertex(v1_ba);
-
-    // imu factor
-    auto edge_inertial = new EdgeInertial(preinteg_, imu_init_.GetGravity());
-    edge_inertial->setVertex(0, v0_pose);
-    edge_inertial->setVertex(1, v0_vel);
-    edge_inertial->setVertex(2, v0_bg);
-    edge_inertial->setVertex(3, v0_ba);
-    edge_inertial->setVertex(4, v1_pose);
-    edge_inertial->setVertex(5, v1_vel);
-    auto *rk = new g2o::RobustKernelHuber();
-    rk->setDelta(200.0);
-    edge_inertial->setRobustKernel(rk);
-    optimizer.addEdge(edge_inertial);
-
-    // 零偏随机游走
-    auto *edge_gyro_rw = new EdgeGyroRW();
-    edge_gyro_rw->setVertex(0, v0_bg);
-    edge_gyro_rw->setVertex(1, v1_bg);
-    edge_gyro_rw->setInformation(options_.bg_rw_info_);
-    optimizer.addEdge(edge_gyro_rw);
-
-    auto *edge_acc_rw = new EdgeAccRW();
-    edge_acc_rw->setVertex(0, v0_ba);
-    edge_acc_rw->setVertex(1, v1_ba);
-    edge_acc_rw->setInformation(options_.ba_rw_info_);
-    optimizer.addEdge(edge_acc_rw);
-
-    // 上一帧pose, vel, bg, ba的先验
-    auto *edge_prior = new EdgePriorPoseNavState(last_nav_state_, prior_info_);
-    edge_prior->setVertex(0, v0_pose);
-    edge_prior->setVertex(1, v0_vel);
-    edge_prior->setVertex(2, v0_bg);
-    edge_prior->setVertex(3, v0_ba);
-    optimizer.addEdge(edge_prior);
-
-    // /// 使用NDT的pose进行观测
-    auto *edge_ndt = new EdgeGNSS(v1_pose, ndt_pose_);
-    edge_ndt->setInformation(options_.ndt_info_);
-    optimizer.addEdge(edge_ndt);
-    //这里用更加紧密的耦合，每一步迭代都重新寻找最近邻，耗时从2.5ms涨到了12ms左右
-    // std::vector<EdgeNDT*> edges_ndt;
-    // ndt_.BuildNDTEdges(v1_pose, edges_ndt);
-    // for(auto it = edges_ndt.begin(); it != edges_ndt.end(); it++){
-    //     optimizer.addEdge(*it);
-    // }
-    if (options_.verbose_) {
-        LOG(INFO) << "last: " << last_nav_state_;
-        LOG(INFO) << "pred: " << current_nav_state_;
-        LOG(INFO) << "NDT: " << ndt_pose_.translation().transpose() << "," << ndt_pose_.so3().unit_quaternion().coeffs().transpose();
-    }
-
-    v0_bg->setFixed(true);
-    v0_ba->setFixed(true);
-
-    // go
-    optimizer.setVerbose(options_.verbose_);
-    optimizer.initializeOptimization();
-    optimizer.optimize(30);
-
-    // get results
-    last_nav_state_.R_ = v0_pose->estimate().so3();
-    last_nav_state_.p_ = v0_pose->estimate().translation();
-    last_nav_state_.v_ = v0_vel->estimate();
-    last_nav_state_.bg_ = v0_bg->estimate();
-    last_nav_state_.ba_ = v0_ba->estimate();
-
-    current_nav_state_.R_ = v1_pose->estimate().so3();
-    current_nav_state_.p_ = v1_pose->estimate().translation();
-    current_nav_state_.v_ = v1_vel->estimate();
-    current_nav_state_.bg_ = v1_bg->estimate();
-    current_nav_state_.ba_ = v1_ba->estimate();
-
-    if (options_.verbose_) {
-        LOG(INFO) << "last changed to: " << last_nav_state_;
-        LOG(INFO) << "curr changed to: " << current_nav_state_;
-        LOG(INFO) << "preinteg chi2: " << edge_inertial->chi2() << ", err: " << edge_inertial->error().transpose();
-        LOG(INFO) << "prior chi2: " << edge_prior->chi2() << ", err: " << edge_prior->error().transpose();
-        LOG(INFO) << "ndt: " << edge_ndt->chi2() << "/" << edge_ndt->error().transpose();
-    }
-
-    /// 重置预积分
-
-    options_.preinteg_options_.init_bg_ = current_nav_state_.bg_;
-    options_.preinteg_options_.init_ba_ = current_nav_state_.ba_;
-    preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
-
-    // 计算当前时刻先验
-    // 构建hessian
-    // 15x2，顺序：v0_pose, v0_vel, v0_bg, v0_ba, v1_pose, v1_vel, v1_bg, v1_ba
-    //            0       6        9     12     15        21      24     27
-    Eigen::Matrix<double, 30, 30> H;
-    H.setZero();
-
-    H.block<24, 24>(0, 0) += edge_inertial->GetHessian();
-
-    Eigen::Matrix<double, 6, 6> Hgr = edge_gyro_rw->GetHessian();
-    H.block<3, 3>(9, 9) += Hgr.block<3, 3>(0, 0);
-    H.block<3, 3>(9, 24) += Hgr.block<3, 3>(0, 3);
-    H.block<3, 3>(24, 9) += Hgr.block<3, 3>(3, 0);
-    H.block<3, 3>(24, 24) += Hgr.block<3, 3>(3, 3);
-
-    Eigen::Matrix<double, 6, 6> Har = edge_acc_rw->GetHessian();
-    H.block<3, 3>(12, 12) += Har.block<3, 3>(0, 0);
-    H.block<3, 3>(12, 27) += Har.block<3, 3>(0, 3);
-    H.block<3, 3>(27, 12) += Har.block<3, 3>(3, 0);
-    H.block<3, 3>(27, 27) += Har.block<3, 3>(3, 3);
-
-    H.block<15, 15>(0, 0) += edge_prior->GetHessian();
-    H.block<6, 6>(15, 15) += edge_ndt->GetHessian();
-    // for(auto it = edges_ndt.begin(); it != edges_ndt.end(); it++){
-    //     H.block<6, 6>(15, 15) += (*it)->GetHessian();
-
-    // }
+    using namespace gtsam;
     
-    H = math::Marginalize(H, 0, 14);
-    prior_info_ = H.block<15, 15>(15, 15);
+    static int frame_count = 0;
+    frame_count++;
+    
+    int i = frame_count - 1;  // 上一帧
+    int j = frame_count;      // 当前帧
+    
+    NonlinearFactorGraph new_factors;
+    Values new_values;
 
-    if (options_.verbose_) {
-        LOG(INFO) << "info trace: " << prior_info_.trace();
-        LOG(INFO) << "optimization done.";
-    }
+    // 1. 添加 IMU 因子
+    ImuFactor imu_factor(X(i), V(i), X(j), V(j), B(i), *imu_preintegration_);
+    new_factors.add(imu_factor);
 
-    NormalizeVelocity();
-    last_nav_state_ = current_nav_state_;
+    // 2. 添加 bias 随机游走因子
+    auto bias_noise_model = noiseModel::Diagonal::Sigmas(
+        (Vector(6) << options_.bias_acce_var_, options_.bias_acce_var_, options_.bias_acce_var_,
+         options_.bias_gyro_var_, options_.bias_gyro_var_, options_.bias_gyro_var_).finished());
+
+    new_factors.add(BetweenFactor<imuBias::ConstantBias>(
+        B(i), B(j), imuBias::ConstantBias(), bias_noise_model));
+
+    // 3. 添加 LiDAR 观测因子（NDT结果）
+    Pose3 ndt_pose_gtsam(Rot3(ndt_pose_.so3().matrix()), Point3(ndt_pose_.translation()));
+    new_factors.add(PriorFactor<Pose3>(
+        X(j), ndt_pose_gtsam, noiseModel::Gaussian::Information(options_.lidar_pose_info_)));
+
+    // 4. 添加新状态的初始值
+    new_values.insert(X(j), ToGTSAMPose(current_nav_state_));
+    new_values.insert(V(j), current_nav_state_.v_);
+    new_values.insert(B(j), ToGTSAMBias(current_nav_state_));
+
+    // 5. 更新 ISAM2
+    isam2_.update(new_factors, new_values);
+    
+    // 6. 获取优化结果
+    Values result = isam2_.calculateEstimate();
+
+    // 7. 更新状态
+    last_nav_state_ = FromGTSAM(
+        result.at<Pose3>(X(i)), 
+        result.at<Vector3>(V(i)), 
+        result.at<imuBias::ConstantBias>(B(i)),
+        last_nav_state_.timestamp_
+    );
+
+    current_nav_state_ = FromGTSAM(
+        result.at<Pose3>(X(j)), 
+        result.at<Vector3>(V(j)), 
+        result.at<imuBias::ConstantBias>(B(j)),
+        measures_.lidar_end_time_
+    );
+
+    // 8. 重置预积分器
+    imuBias::ConstantBias current_bias = result.at<imuBias::ConstantBias>(B(j));
+    imu_preintegration_->resetIntegrationAndSetBias(current_bias);
+
+    // 9. 限制速度
+    // NormalizeVelocity();
+
+    // 10. 打印结果
+    LOG(INFO) << "=== ISAM2 Frame " << frame_num_ << " ===";
+    LOG(INFO) << "Position: " << current_nav_state_.p_.transpose();
+    LOG(INFO) << "Velocity: " << current_nav_state_.v_.transpose();
+    LOG(INFO) << "Bias - bg: " << current_nav_state_.bg_.transpose() 
+              << ", ba: " << current_nav_state_.ba_.transpose();
 }
+
 
 void LioPreinteg::NormalizeVelocity() {
     /// 限制v的变化
