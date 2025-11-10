@@ -21,7 +21,7 @@ registration:
   capacity: 5000000
   nearby_type: 6
 init:
-  init_time_seconds: 11
+  init_time_seconds: 0.1
   init_imu_queue_max_size: 2000
   static_odom_pulse: 5
   max_static_gyro_var: 0.5

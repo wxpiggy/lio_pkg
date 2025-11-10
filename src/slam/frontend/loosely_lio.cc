@@ -77,8 +77,8 @@ void LooselyLIO::TryInitIMU() {
         // 读取初始零偏，设置ESKF
         wxpiggy::ESKFD::Options options;
         // 噪声由初始化器估计
-        options.gyro_var_ = imu_init_.GetCovGyro()[0];
-        options.acce_var_ = imu_init_.GetCovAcce()[0];
+        options.gyro_var_ = sqrt(imu_init_.GetCovGyro()[0]);
+        options.acce_var_ = sqrt(imu_init_.GetCovAcce()[0]);
         eskf_->SetInitialConditions(options, imu_init_.GetInitBg(), imu_init_.GetInitBa(), imu_init_.GetGravity());
         LOG(INFO) << "gyro_var: " << options.gyro_var_;
         LOG(INFO) << "acce_var_: " << options.acce_var_;

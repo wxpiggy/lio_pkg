@@ -6,8 +6,8 @@ namespace wxpiggy {
 IMUPreintegration::IMUPreintegration(Options options) {
     bg_ = options.init_bg_;
     ba_ = options.init_ba_;
-    const float ng2 = options.noise_gyro_ ;
-    const float na2 = options.noise_acce_ ;
+    const float ng2 = options.noise_gyro_ * options.noise_gyro_  ;
+    const float na2 = options.noise_acce_ * options.noise_acce_;
     noise_gyro_acce_.diagonal() << ng2, ng2, ng2, na2, na2, na2;
 }
 
@@ -56,11 +56,12 @@ void IMUPreintegration::Integrate(const IMU &imu, double dt) {
     B.block<3, 3>(0, 0) = rightJ * dt;
 
     // 更新噪声项
-    cov_ = A * cov_ * A.transpose() + B * noise_gyro_acce_ * B.transpose();
+    cov_ = A * cov_ * A.transpose() + B * (noise_gyro_acce_ / dt) * B.transpose();
 
     // 更新dR_dbg
     dR_dbg_ = deltaR.matrix().transpose() * dR_dbg_ - rightJ * dt;  // (4.39a)
-
+    Mat3d i_cov = Mat3d::Identity() * 1e-8 * dt;
+    cov_.block<3, 3>(6, 6) += i_cov;
     // 增量积分时间
     dt_ += dt;
 }

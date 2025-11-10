@@ -22,13 +22,13 @@ namespace wxpiggy {
 
 LioPreinteg::LioPreinteg() :  preinteg_(new IMUPreintegration()) {
 
-    double bg_rw2 = 1.0 / options_.bias_gyro_var_ ;
+    double bg_rw2 = 1.0 / options_.bias_gyro_var_ * options_.bias_gyro_var_;
     options_.bg_rw_info_.diagonal() << bg_rw2, bg_rw2, bg_rw2;
-    double ba_rw2 = 1.0 / options_.bias_acce_var_ ;
+    double ba_rw2 = 1.0 / options_.bias_acce_var_ * options_.bias_acce_var_;
     options_.ba_rw_info_.diagonal() << ba_rw2, ba_rw2, ba_rw2;
 
-    double gp2 = options_.ndt_pos_noise_;
-    double ga2 = options_.ndt_ang_noise_;
+    double gp2 = options_.ndt_pos_noise_ * options_.ndt_pos_noise_;
+    double ga2 = options_.ndt_ang_noise_ * options_.ndt_ang_noise_;
 
     options_.ndt_info_.diagonal() << 1.0 / ga2, 1.0 / ga2, 1.0 / ga2, 1.0 / gp2, 1.0 / gp2, 1.0 / gp2;
 
@@ -65,7 +65,8 @@ bool LioPreinteg::Init() {
     imu_init_.Init();
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
     sync_->Init();
-    registration_ = std::make_shared<IncIcp3d>();
+    // registration_ = std::make_shared<IncIcp3d>();
+    registration_ = std::make_shared<IncNdt3d>();
     registration_->Init();
     cloud_pub_topic_ = "/cloud";
     pose_pub_topic_ = "/pose";
@@ -144,10 +145,10 @@ void LioPreinteg::TryInitIMU() {
     if (imu_init_.InitSuccess()) {
         // 读取初始零偏，设置ESKF
         // // 噪声由初始化器估计
-        options_.preinteg_options_.noise_gyro_ = imu_init_.GetCovGyro()[0];
-        options_.preinteg_options_.noise_acce_ = imu_init_.GetCovAcce()[0];
-        // options_.preinteg_options_.noise_gyro_ = sqrt(0.01);
-        // options_.preinteg_options_.noise_acce_ = sqrt(0.1);
+        options_.preinteg_options_.noise_gyro_ = sqrt(imu_init_.GetCovGyro()[0]);
+        options_.preinteg_options_.noise_acce_ = sqrt(imu_init_.GetCovAcce()[0]);
+        // options_.preinteg_options_.noise_gyro_ = 0.01;
+        // options_.preinteg_options_.noise_acce_ = 0.1;
         options_.preinteg_options_.init_ba_ = imu_init_.GetInitBa();
         options_.preinteg_options_.init_bg_ = imu_init_.GetInitBg();
 
