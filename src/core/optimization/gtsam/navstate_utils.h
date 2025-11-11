@@ -7,7 +7,7 @@ namespace wxpiggy {
     inline wxpiggy::NavStated FromGTSAM(const gtsam::NavState& gtsam_state, double timestamp = 0) {
     wxpiggy::NavStated state;
     state.timestamp_ = timestamp;
-    state.R_ = Sophus::SO3d(gtsam_state.pose().rotation().matrix());
+    state.R_ = Sophus::SO3d(gtsam_state.pose().rotation().toQuaternion());
     state.p_ = gtsam_state.pose().translation();
     state.v_ = gtsam_state.velocity();
     // GTSAM NavState 不包含 bias，需要单独设置
@@ -21,7 +21,7 @@ inline wxpiggy::NavStated FromGTSAM(const gtsam::Pose3& pose, const gtsam::Vecto
                                    double timestamp = 0) {
     wxpiggy::NavStated state;
     state.timestamp_ = timestamp;
-    state.R_ = Sophus::SO3d(pose.rotation().matrix());
+    state.R_ = Sophus::SO3d(pose.rotation().toQuaternion());
     state.p_ = pose.translation();
     state.v_ = velocity;
     state.bg_ = Eigen::Vector3d::Zero();
@@ -34,7 +34,7 @@ inline wxpiggy::NavStated FromGTSAM(const gtsam::Pose3& pose, const gtsam::Vecto
                                    const gtsam::imuBias::ConstantBias& bias, double timestamp = 0) {
     wxpiggy::NavStated state;
     state.timestamp_ = timestamp;
-    state.R_ = Sophus::SO3d(pose.rotation().matrix());
+    state.R_ = Sophus::SO3d(pose.rotation().toQuaternion());
     state.p_ = pose.translation();
     state.v_ = velocity;
     state.bg_ = bias.gyroscope();

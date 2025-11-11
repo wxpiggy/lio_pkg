@@ -1,160 +1,109 @@
 #pragma once
 
 #include <gtsam/navigation/ImuFactor.h>
+#include <gtsam/nonlinear/IncrementalFixedLagSmoother.h>
 #include <gtsam/nonlinear/Marginals.h>
 #include <livox_ros_driver/CustomMsg.h>
 #include <pcl/filters/voxel_grid.h>
 #include <sensor_msgs/PointCloud2.h>
 
-/// 部分类直接使用ch7的结果
 #include "common/nav_state.h"
 #include "core/init/static_imu_init.h"
-// #include "core/optimization/imu_preintegration.h"
 #include "preprocess/cloud_convert.h"
 #include "preprocess/measure_sync.h"
 #include "core/registration/ndt_inc.h"
-
 #include "tools/math_utils.h"
-// #include "tools/ui/pangolin_window.h"
+
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <gtsam/navigation/ImuBias.h>
-#include <gtsam/nonlinear/ISAM2.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
+
 namespace wxpiggy {
 
-/**
- * 第8章 基于预积分系统的LIO
- * 框架与前文一致，但之前由IEKF处理的部分变为预积分优化
- */
 class LioPreinteg {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     struct Options {
         Options() {}
-        bool verbose_ = true;  // 打印调试信息
+        bool verbose_ = true;
 
-        double bias_gyro_var_ = 1e-4;           // 陀螺零偏游走标准差
-        double bias_acce_var_ = 1e-4;           // 加计零偏游走标准差
-        Mat3d bg_rw_info_ = Mat3d::Identity();  // 陀螺随机游走信息阵
-        Mat3d ba_rw_info_ = Mat3d::Identity();  // 加计随机游走信息阵
+        double bias_gyro_var_ = 1e-4;
+        double bias_acce_var_ = 1e-4;
+        Mat3d bg_rw_info_ = Mat3d::Identity();
+        Mat3d ba_rw_info_ = Mat3d::Identity();
 
-        double ndt_pos_noise_ = 0.01;                   // NDT位置方差
-        double ndt_ang_noise_ = 0.01 ;  // NDT角度方差
-        Mat6d lidar_pose_info_ = Mat6d::Identity();           // 6D NDT 信息矩阵
+        double ndt_pos_noise_ = 0.01;
+        double ndt_ang_noise_ = 0.005;
+        Mat6d lidar_pose_info_ = Mat6d::Identity();
 
-        // wxpiggy::IMUPreintegration::Options preinteg_options_;  // 预积分参数
-        IncNdt3d::Options ndt_options_;                     // NDT 参数
+        IncNdt3d::Options ndt_options_;
     };
 
     LioPreinteg();
     ~LioPreinteg() = default;
 
-    /// init without ros
     bool Init();
 
-    /// 点云回调函数
     void PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr& msg);
     void LivoxPCLCallBack(const livox_ros_driver::CustomMsg::ConstPtr& msg);
-
-    /// IMU回调函数
     void IMUCallBack(IMUPtr msg_in);
-
-    /// 结束程序，退出UI
     void Finish();
+
     using CloudPublishFunc = std::function<bool(const std::string&, const FullCloudPtr&, double)>;
     using CloudDownPublishFunc = std::function<bool(const std::string&, const CloudPtr&, double)>;
-    // 位姿发布函数类型
     using PosePublishFunc = std::function<bool(const std::string&, const SE3&, double)>;
     
-    // 重载 setFunc
-    void setFunc(CloudPublishFunc func) {
-        cloud_pub_func_ = func;
-    }
-    
-    void setFunc(PosePublishFunc func) {
-        pose_pub_func_ = func;
-    }
-    void setFunc(CloudDownPublishFunc func){
-        cloud_down_pub_func_ = func;
-    }
-    void setIMUfunc(PosePublishFunc func){
-        imu_pose_pub_func_ = func;
-    }
-    void AddDefaultPriors(gtsam::NonlinearFactorGraph& graph, int i);
+    void setFunc(CloudPublishFunc func) { cloud_pub_func_ = func; }
+    void setFunc(PosePublishFunc func) { pose_pub_func_ = func; }
+    void setFunc(CloudDownPublishFunc func) { cloud_down_pub_func_ = func; }
+    void setIMUfunc(PosePublishFunc func) { imu_pose_pub_func_ = func; }
+
    private:
-    bool LoadFromYAML(const std::string& yaml_file);
-
-    /// 处理同步之后的IMU和雷达数据
     void ProcessMeasurements(const MeasureGroup& meas);
-
-    /// 尝试让IMU初始化
     void TryInitIMU();
-
-    /// 利用IMU预测状态信息
-    /// 这段时间的预测数据会放入imu_states_里
     void Predict();
-
-    /// 对measures_中的点云去畸变
     void Undistort();
-
-    /// 执行一次配准和观测
     void Align();
-
-    /// 执行预积分+NDT pose优化
     void Optimize();
-
-    /// 将速度限制在正常区间
-    void NormalizeVelocity();
+    void InitializeFixedLagSmoother();
 
     CloudPublishFunc cloud_pub_func_;
     PosePublishFunc pose_pub_func_, imu_pose_pub_func_;
     CloudDownPublishFunc cloud_down_pub_func_;
     std::string cloud_pub_topic_;   
     std::string pose_pub_topic_; 
-    /// modules
+
     std::shared_ptr<MessageSync> sync_ = nullptr;
     StaticIMUInit imu_init_;
 
-    /// point clouds data
-    wxpiggy::FullCloudPtr scan_undistort_{new FullPointCloudType()};  // scan after undistortion
+    wxpiggy::FullCloudPtr scan_undistort_{new FullPointCloudType()};
     CloudPtr current_scan_ = nullptr;
 
-    // optimize相关
-    NavStated last_nav_state_, current_nav_state_;  // 上一时刻状态与本时刻状态
-    Mat15d prior_info_ = Mat15d::Identity();        // 先验约束
-    // std::shared_ptr<IMUPreintegration> preinteg_ = nullptr;
+    NavStated current_nav_state_;
+    NavStated last_nav_state_;
+    
     std::shared_ptr<gtsam::PreintegratedImuMeasurements> imu_preintegration_;
     IMUPtr last_imu_ = nullptr;
 
-    /// NDT数据
     std::shared_ptr<RegistrationBase> registration_;
     IncNdt3d ndt_;
     SE3 ndt_pose_;
     SE3 last_ndt_pose_;
 
-    // flags
     bool imu_need_init_ = true;
     bool flg_first_scan_ = true;
     int frame_num_ = 0;
-    MeasureGroup measures_;  // sync IMU and lidar scan
+    int frame_count_ = 0;
+    
+    MeasureGroup measures_;
     std::vector<NavStated> imu_states_;
-    SE3 TIL_;  // Lidar与IMU之间外参
+    SE3 TIL_;
     Options options_;
 
-
-    gtsam::ISAM2 isam2_;
-    gtsam::NonlinearFactorGraph graph_ ;
-    gtsam::Values initial_values_; 
-    gtsam::Marginals* marginals_ = nullptr;
-        // 导航状态
-    gtsam::NavState this_frame_;              // 当前时刻状态
-    gtsam::NavState last_frame_;              // 上一个时刻状态
-    gtsam::imuBias::ConstantBias this_bias_;  // 当前零偏
-    gtsam::imuBias::ConstantBias last_bias_;  // 上一零偏
-    int frame_count; 
+    std::shared_ptr<gtsam::IncrementalFixedLagSmoother> fixed_lag_smoother_;
 };
 
-}  // namespace sad
+}  // namespace wxpiggy

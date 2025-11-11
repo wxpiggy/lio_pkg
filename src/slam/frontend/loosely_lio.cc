@@ -148,6 +148,9 @@ void LooselyLIO::Align() {
     cloud_down_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_ );
     pose_pub_func_(pose_pub_topic_,pose_updated,measures_.lidar_end_time_);
     frame_num_++;
+
+    LOG(INFO) << "Bg: " << eskf_->GetNominalState().bg_;
+    LOG(INFO) << "Ba: " << eskf_->GetNominalState().ba_;
 }
 
 void LooselyLIO::PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr &msg) {

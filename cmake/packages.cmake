@@ -73,7 +73,7 @@ include_directories(${PROJECT_SOURCE_DIR}/thirdparty/robin-map/include)
 
     set(third_party_libs
             ${catkin_LIBRARIES}
-            ${g2o_libs}
+        #     ${g2o_libs}
         #     ${OpenCV_LIBS}
             ${PCL_LIBRARIES}
         #     ${Pangolin_LIBRARIES}
