@@ -12,7 +12,7 @@ public:
     enum class RegistraionType {
         LOAM = 1, 
         NDT,    
-        GICP,   
+        POINT2PLANE,   
     };
     virtual ~RegistrationBase() = default;
 
