@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <pcl/console/print.h>
 
-#include "slam/frontend/loosely_lio.h"
+#include "slam/frontend/loosely_eskf/loosely_lio.h"
 // #include "common/timer/timer.h"
 #include "ros_publisher.h"  // 新的头文件
 #include "tools/config.h"

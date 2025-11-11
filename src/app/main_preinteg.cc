@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <pcl/console/print.h>
 
-#include "slam/frontend/lio_preinteg.h"
+#include "slam/frontend/tightly_preinteg/lio_preinteg.h"
 #include "common/timer/timer.h"
 #include "ros_publisher.h"
 
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
     lio->setFunc(ros_publisher.GetCloudPublishFunc());
     lio->setFunc(ros_publisher.GetPosePublishFunc());
     lio->setFunc(ros_publisher.GetDownCloudPublishFunc());
-    lio->setIMUfunc(ros_publisher.GetPosePublishFunc());
+    // lio->setIMUfunc(ros_publisher.GetPosePublishFunc());
     lio->Init();
 
     // 根据数据集类型订阅点云

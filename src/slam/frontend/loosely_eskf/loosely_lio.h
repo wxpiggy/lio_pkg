@@ -5,7 +5,7 @@
 
 #include "core/filter/eskf.hpp"
 #include "core/init/static_imu_init.h"
-#include "slam/frontend/incremental_lo.h"
+#include "slam/frontend/loosely_eskf/incremental_lo.h"
 
 #include "preprocess/measure_sync.h"
 
