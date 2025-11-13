@@ -22,9 +22,9 @@ namespace wxpiggy {
 
 LioPreinteg::LioPreinteg() :  preinteg_(new IMUPreintegration()) {
 
-    double bg_rw2 = 1.0 / options_.bias_gyro_var_ * options_.bias_gyro_var_;
+    double bg_rw2 = 1.0 / (options_.bias_gyro_var_ * options_.bias_gyro_var_);
     options_.bg_rw_info_.diagonal() << bg_rw2, bg_rw2, bg_rw2;
-    double ba_rw2 = 1.0 / options_.bias_acce_var_ * options_.bias_acce_var_;
+    double ba_rw2 = 1.0 / (options_.bias_acce_var_ * options_.bias_acce_var_);
     options_.ba_rw_info_.diagonal() << ba_rw2, ba_rw2, ba_rw2;
 
     double gp2 = options_.ndt_pos_noise_ * options_.ndt_pos_noise_;
@@ -162,8 +162,19 @@ void LioPreinteg::TryInitIMU() {
 
         last_nav_state_ = current_nav_state_;
         last_imu_ = measures_.imu_.back();
-
+    //     cov.block<3, 3>(0, 0) = Mat3d::Identity() * 1.0e-6 * 1.0e-6; // rotation information matrix
+    // cov.block<3, 3>(3, 3) = Mat3d::Identity() * 1.0e-2 * 1.0e-2; // velocity information matrix
+    // cov.block<3, 3>(6, 6) = Mat3d::Identity() * 1.0e-6 * 1.0e-6; // position information matrix
+    // cov.block<3, 3>(9, 9) = Mat3d::Identity() * std::pow(0.1 * kDegree2Radian, 2); // bias gyro information matrix
+    // cov.block<3, 3>(12, 12) = Mat3d::Identity() * 0.1 * 0.1; // bias accel information matrix
+        prior_info_.block <3,3>(0,0) = 1e6 * Eigen::Matrix<double, 3,3>::Identity();
+        prior_info_.block <3,3>(3,3) = 1e2 * Eigen::Matrix<double, 3,3>::Identity();
+        prior_info_.block <3,3>(6,6) = 1e6 * Eigen::Matrix<double, 3,3>::Identity();
+        prior_info_.block <3,3>(9,9) = 1e4 * Eigen::Matrix<double, 3,3>::Identity();
+        prior_info_.block <3,3>(12,12) = 1e2 * Eigen::Matrix<double, 3,3>::Identity();
         LOG(INFO) << "IMU初始化成功";
+        LOG(INFO) <<  "noise accel "<< options_.preinteg_options_.noise_acce_;
+        LOG(INFO) <<  "init ba "<< options_.preinteg_options_.init_ba_;
     }
 }
 
@@ -334,8 +345,8 @@ void LioPreinteg::Optimize() {
         LOG(INFO) << "NDT: " << ndt_pose_.translation().transpose() << "," << ndt_pose_.so3().unit_quaternion().coeffs().transpose();
     }
 
-    v0_bg->setFixed(true);
-    v0_ba->setFixed(true);
+    // v0_bg->setFixed(true);
+    // v0_ba->setFixed(true);
 
     // go
     optimizer.setVerbose(options_.verbose_);
