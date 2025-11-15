@@ -33,8 +33,6 @@ add_library(lio_core SHARED
     src/common/keyframe.cc
     
     src/core/init/static_imu_init.cc
-    src/core/optimization/g2o_types.cc
-    src/core/optimization/imu_preintegration.cc
     src/core/registration/ndt_inc.cc
     src/core/registration/loam_icp.cc
     src/core/registration/p2pl_icp.cc
@@ -43,7 +41,6 @@ add_library(lio_core SHARED
     src/preprocess/measure_sync.cc
     src/slam/frontend/incremental_lo.cc
     src/slam/frontend/loosely_lio.cc
-    src/slam/frontend/lio_preinteg.cc
     # src/slam/frontend/lio_iekf.cc
     src/tools/point_cloud_utils.cc
     src/tools/utm_convert.cc
@@ -62,9 +59,6 @@ set_target_properties(lio_core PROPERTIES
     VISIBILITY_INLINES_HIDDEN OFF
 )
 # 创建可执行文件
-add_executable( lio_preinteg
-    src/app/main_preinteg.cc
-)
 add_executable(lio_eskf_online
     src/app/main_eskf_online.cc
 )
@@ -72,7 +66,6 @@ add_executable(lio_eskf_online
 #     src/app/main_iekf.cc
 # )
 
-target_link_libraries( lio_preinteg lio_core)
 target_link_libraries(lio_eskf_online lio_core)
 # target_link_libraries(lio_iekf lio_core)
 
