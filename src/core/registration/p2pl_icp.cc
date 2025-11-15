@@ -17,7 +17,9 @@ void IncIcp3d::Init(){
     // options.capacity_ = 100000;
     options.resolution_ = 0.5;
     // options.inv_resolution_ = 2.0; 
+    
     ivox_ = std::make_shared<IVoxType>(options);
+    ivdb_ = std::make_shared<IVdbType>(ivdb_options_);
     std::cout << "ivox init" << std::endl;
 }
 
@@ -31,7 +33,8 @@ void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
     auto cloud_world = *cloud.begin();
     
     if(!flag_first_scan_){
-        ivox_->AddPoints(cloud_world->points);
+        ivdb_->AddPoints(cloud_world->points);
+        // ivox_->AddPoints(cloud_world->points);
         flag_first_scan_ = true;
         return;
     }
@@ -80,8 +83,10 @@ void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
         }
     });
 
-    ivox_->AddPoints(points_to_add);
-    ivox_->AddPoints(point_no_need_downsample);
+    ivdb_->AddPoints(points_to_add);
+    ivdb_->AddPoints(point_no_need_downsample);
+    // ivox_->AddPoints(points_to_add);
+    // ivox_->AddPoints(point_no_need_downsample);
     
 }
 // =======================================================
@@ -118,8 +123,8 @@ bool IncIcp3d::Align(SE3& init_pose) {
             p.z = qs.z();
             // std::vector<Eigen::Vector3d> nn;
             auto &points_near = nearest_points_[idx];
-            
-            ivox_->GetClosestPoint(p,points_near,5);
+            ivdb_->GetClosestPoint(p,points_near,5);
+            // ivox_->GetClosestPoint(p,points_near,5);
             if (points_near.size() >= 5) {
                 std::vector<Eigen::Vector3d> nn;
                 nn.reserve(points_near.size());
@@ -218,95 +223,95 @@ double IncIcp3d::computeConditionNumber(const Eigen::MatrixXd& H) {
 // 计算残差和雅可比
 // =======================================================
 void IncIcp3d::ComputeResidualAndJacobians(const SE3& input_pose, Mat18d& HTVH, Vec18d& HTVr, bool nearest_search) {
-       // assert(target_ != nullptr && source_ != nullptr);
-    SE3 pose = input_pose;
-    // 对点的索引，预先生成
-    std::vector<int> index(source_->points.size());
-    for (int i = 0; i < index.size(); ++i) {
-        index[i] = i;
-    }
+//        // assert(target_ != nullptr && source_ != nullptr);
+//     SE3 pose = input_pose;
+//     // 对点的索引，预先生成
+//     std::vector<int> index(source_->points.size());
+//     for (int i = 0; i < index.size(); ++i) {
+//         index[i] = i;
+//     }
 
-    int total_size = index.size();
-    std:: cout << "enable? " << nearest_search << std::endl;
-    std::vector<bool> effect_pts(total_size, false);
-    std::vector<Eigen::Matrix<double, 1, 18>> jacobians(total_size);
-    std::vector<double> errors(total_size);
-    // nearest_points_.clear();  // 缺少这行
+//     int total_size = index.size();
+//     std:: cout << "enable? " << nearest_search << std::endl;
+//     std::vector<bool> effect_pts(total_size, false);
+//     std::vector<Eigen::Matrix<double, 1, 18>> jacobians(total_size);
+//     std::vector<double> errors(total_size);
+//     // nearest_points_.clear();  // 缺少这行
 
-    nearest_points_.resize(index.size());  // 缺少这行
-    // 最近邻，可以并发
-    std::for_each(std::execution::par_unseq, index.begin(), index.end(), [&](int idx) {
-        auto q = ToVec3d(source_->points[idx]);
-        Vec3d qs = pose * q;  // 转换之后的q
-        Point p;
-        p.x = qs.x();
-        p.y = qs.y();
-        p.z = qs.z();
-        // std::vector<Eigen::Vector3d> nn;
-        auto &points_near = nearest_points_[idx];
-        if(nearest_search){
-            ivox_->GetClosestPoint(p,points_near,5);
-        }
+//     nearest_points_.resize(index.size());  // 缺少这行
+//     // 最近邻，可以并发
+//     std::for_each(std::execution::par_unseq, index.begin(), index.end(), [&](int idx) {
+//         auto q = ToVec3d(source_->points[idx]);
+//         Vec3d qs = pose * q;  // 转换之后的q
+//         Point p;
+//         p.x = qs.x();
+//         p.y = qs.y();
+//         p.z = qs.z();
+//         // std::vector<Eigen::Vector3d> nn;
+//         auto &points_near = nearest_points_[idx];
+//         if(nearest_search){
+//             ivox_->GetClosestPoint(p,points_near,5);
+//         }
 
 
         
 
-        if (points_near.size() >= 3) {
-            std::vector<Eigen::Vector3d> nn;
-            nn.reserve(points_near.size());
-            for(auto it = points_near.begin();it != points_near.end(); it++){
-                nn.push_back(ToVec3d(*it));
-            }
-            Vec4d n;
-            if (!wxpiggy::math::FitPlane(nn, n,0.1)) {
-                effect_pts[idx] = false;
-                return;
-            }
+//         if (points_near.size() >= 3) {
+//             std::vector<Eigen::Vector3d> nn;
+//             nn.reserve(points_near.size());
+//             for(auto it = points_near.begin();it != points_near.end(); it++){
+//                 nn.push_back(ToVec3d(*it));
+//             }
+//             Vec4d n;
+//             if (!wxpiggy::math::FitPlane(nn, n,0.1)) {
+//                 effect_pts[idx] = false;
+//                 return;
+//             }
 
-            double dis = n.head<3>().dot(qs) + n[3];
-            double dis_sq = dis * dis;  // 距离的平方
-            if( q.norm() < 81 * dis_sq){
+//             double dis = n.head<3>().dot(qs) + n[3];
+//             double dis_sq = dis * dis;  // 距离的平方
+//             if( q.norm() < 81 * dis_sq){
 
-                effect_pts[idx] = false;
-                return;
-            }
+//                 effect_pts[idx] = false;
+//                 return;
+//             }
 
-            effect_pts[idx] = true;
+//             effect_pts[idx] = true;
 
-            // build residual - 18维雅可比
-            Eigen::Matrix<double, 1, 18> J;
-            J.setZero();
-            J.block<1, 3>(0, 0) = n.head<3>().transpose();                                       // 对p
-            J.block<1, 3>(0, 6) = -n.head<3>().transpose() * pose.so3().matrix() * SO3::hat(q);  // 对R
+//             // build residual - 18维雅可比
+//             Eigen::Matrix<double, 1, 18> J;
+//             J.setZero();
+//             J.block<1, 3>(0, 0) = n.head<3>().transpose();                                       // 对p
+//             J.block<1, 3>(0, 6) = -n.head<3>().transpose() * pose.so3().matrix() * SO3::hat(q);  // 对R
 
-            jacobians[idx] = J;
-            errors[idx] = dis;
-        } else {
-            effect_pts[idx] = false;
-        }
-    });
+//             jacobians[idx] = J;
+//             errors[idx] = dis;
+//         } else {
+//             effect_pts[idx] = false;
+//         }
+//     });
     
-    // 累加Hessian和error
-    double total_res = 0;
-    int effective_num = 0;
+//     // 累加Hessian和error
+//     double total_res = 0;
+//     int effective_num = 0;
 
-    HTVH.setZero();
-    HTVr.setZero();
+//     HTVH.setZero();
+//     HTVr.setZero();
 
-    const double R_inv =1000;
+//     const double R_inv =1000;
 
-    for (int idx = 0; idx < effect_pts.size(); ++idx) {
-        if (!effect_pts[idx]) {
-            continue;
-        }
+//     for (int idx = 0; idx < effect_pts.size(); ++idx) {
+//         if (!effect_pts[idx]) {
+//             continue;
+//         }
 
-        total_res += errors[idx] * errors[idx];
-        effective_num++;
+//         total_res += errors[idx] * errors[idx];
+//         effective_num++;
 
-        HTVH += jacobians[idx].transpose() * jacobians[idx] * R_inv;
-        HTVr += -jacobians[idx].transpose() * errors[idx] * R_inv;
-    }
+//         HTVH += jacobians[idx].transpose() * jacobians[idx] * R_inv;
+//         HTVr += -jacobians[idx].transpose() * errors[idx] * R_inv;
+//     }
 
-    LOG(INFO) << "effective: " << effective_num;
+//     LOG(INFO) << "effective: " << effective_num;
 }
 }  // namespace wxpiggy

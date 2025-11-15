@@ -3,7 +3,7 @@
 #include <pcl/console/print.h>
 
 #include "slam/frontend/loosely_lio.h"
-// #include "common/timer/timer.h"
+#include "common/timer/timer.h"
 #include "ros_publisher.h"  // 新的头文件
 #include "tools/config.h"
 #include <ros/ros.h>
@@ -15,9 +15,9 @@ wxpiggy::LooselyLIO* lm = nullptr;
 
 void pointCloudCallback(const sensor_msgs::PointCloud2::ConstPtr& msg) {
     sensor_msgs::PointCloud2::Ptr cloud(new sensor_msgs::PointCloud2(*msg));
-    // wxpiggy::common::Timer::Evaluate([&]() { 
+    wxpiggy::common::Timer::Evaluate([&]() { 
         lm->PCLCallBack(cloud); 
-    // }, "loosely lio");
+    }, "loosely lio");
 }
 
 void livoxCallback(const livox_ros_driver::CustomMsg::ConstPtr& msg) {
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     LOG(INFO) << "LooselyLIO node started, waiting for data...";
     ros::spin();
     lm->Finish();
-    // wxpiggy::common::Timer::PrintAll();
+    wxpiggy::common::Timer::PrintAll();
     LOG(INFO) << "done. Total path points: " << ros_publisher.GetPathSize();
 
     delete lm;

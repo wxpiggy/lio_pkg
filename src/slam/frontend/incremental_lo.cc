@@ -24,8 +24,12 @@ void incrementalLO::Init(){
     }
     else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::NDT)){
         LOG(INFO) << "using Incremental NDT";
+        // registration_ = std::make_unique<IncIcp3d>();
+        registration_ = std::make_unique<IncNdt3d>();
+        registration_->Init();
+    }else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::P2PL)){
+        LOG(INFO) << "using Incremental P2PL";
         registration_ = std::make_unique<IncIcp3d>();
-        // registration_ = std::make_unique<IncNdt3d>();
         registration_->Init();
     }
 

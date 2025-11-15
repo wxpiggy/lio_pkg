@@ -9,7 +9,7 @@ preprocess:
 mapping:
   extrinsic_T: [0, 0, 0.28]
   extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-  registration_type: 2
+  registration_type: 3
 registration:
   max_iteration: 15
   voxel_size: 1.0

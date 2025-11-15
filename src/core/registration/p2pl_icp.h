@@ -7,9 +7,11 @@
 #include "common/point_types.h"
 #include "core/registration/registration_base.h"
 #include "core/local_map/ivox/ivox3d.h"
+#include "core/local_map/ivdb/ivdb.hpp"
 namespace wxpiggy {
 class IncIcp3d  :public RegistrationBase {
     using IVoxType = IVox<3, IVoxNodeType::DEFAULT, PointType>;
+    using IVdbType = IVdb<PointType>;
    public:
     enum class NearbyType {
         CENTER = 0 ,    // 只考虑中心
@@ -59,9 +61,10 @@ class IncIcp3d  :public RegistrationBase {
 
     CloudPtr source_ = nullptr;
     Options options_;
-    
+    IVdbType::Options ivdb_options_;
     IVoxType::Options ivox_options_;
     std::shared_ptr<IVoxType> ivox_ = nullptr;
+    std::shared_ptr<IVdbType> ivdb_ = nullptr;
     bool flag_first_scan_ = false;
     std::vector<std::vector<Point, Eigen::aligned_allocator<Point>>> nearest_points_;
     float filter_size_map_min_ =0.5;

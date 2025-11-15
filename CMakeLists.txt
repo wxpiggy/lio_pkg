@@ -36,7 +36,7 @@ add_library(lio_core SHARED
     src/core/registration/ndt_inc.cc
     src/core/registration/loam_icp.cc
     src/core/registration/p2pl_icp.cc
-    # src/core/local_map/ivox.cc
+    src/core/local_map/ivdb/ivdb.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
     src/slam/frontend/incremental_lo.cc
