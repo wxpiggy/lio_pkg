@@ -63,8 +63,8 @@ void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
             }
             bool need_add = true;
             float dist = (point_world.getVector3fMap() - center).squaredNorm();
-            if (points_near.size() >= 3u) {
-                for (int readd_i = 0; readd_i < 3; readd_i++) {
+            if (points_near.size() >= 5u) {
+                for (int readd_i = 0; readd_i < 5; readd_i++) {
                     if ((points_near[readd_i].getVector3fMap() - center).squaredNorm() < dist + 1.0e-6) {
                             need_add = false;
                             break;
@@ -102,6 +102,8 @@ bool IncIcp3d::Align(SE3& init_pose) {
     nearest_points_.clear();
     nearest_points_.resize(index.size());
     is_converged_ = false;
+    double last_rotation_dx_norm = 0.0;
+    double last_position_dx_norm = 0.0;
     for (int iter = 0; iter < options_.max_iteration_; ++iter) {
         // gauss-newton 迭代
         // 最近邻，可以并发
@@ -118,7 +120,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
             auto &points_near = nearest_points_[idx];
             
             ivox_->GetClosestPoint(p,points_near,5);
-            if (points_near.size() >= 3) {
+            if (points_near.size() >= 5) {
                 std::vector<Eigen::Vector3d> nn;
                 nn.reserve(points_near.size());
                 for(auto it = points_near.begin();it != points_near.end(); it++){
@@ -130,7 +132,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
                     effect_pts[idx] = false;
                     return;
                 }
-                double dis = n.head<3>().dot(qs) + n[3];
+                double dis = n.head<3>().dot(qs -nn[0]);
                 double dis_sq = dis * dis;  // 距离的平方
 
                 // 使用类似您参考代码的判断条件
@@ -187,8 +189,14 @@ bool IncIcp3d::Align(SE3& init_pose) {
         // LOG(INFO) << "contionNumber " << contidtion;
         // 更新
         LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
-
-        if (dx.norm() < options_.eps_) {
+                    double temp_rotation_dx_norm = dx.head(3).norm();
+            double temp_position_dx_norm = dx.tail(3).norm();
+            double delta_rotation_dx = std::fabs(temp_rotation_dx_norm - last_rotation_dx_norm);
+            double delta_position_dx = std::fabs(temp_position_dx_norm - last_position_dx_norm);
+            last_rotation_dx_norm = temp_rotation_dx_norm;
+            last_position_dx_norm = temp_position_dx_norm;
+        if ((dx.head(3).norm() < 0.005 && dx.tail(3).norm() < 0.001)
+                || (delta_rotation_dx < static_cast<double>(1.0e-4) && delta_position_dx < static_cast<double>(1.0e-4))) {
             is_converged_ = true;
             LOG(INFO) << "converged, dx = " << dx.transpose();
             break;
@@ -197,7 +205,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
     }
 
     init_pose = pose;
-    return true;
+    return is_converged_;
 }
 double IncIcp3d::computeConditionNumber(const Eigen::MatrixXd& H) {
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(H);

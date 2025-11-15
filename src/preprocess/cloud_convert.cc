@@ -135,7 +135,7 @@ void CloudConvert::VelodyneHandler(const sensor_msgs::PointCloud2::ConstPtr &msg
         added_pt.time = pl_orig.points[i].time * time_scale_;  // curvature unit: ms
         added_pt.ring = pl_orig.points[i].ring;
         /// 略掉过近的点
-        if (added_pt.getVector3fMap().norm() < 4.0) {
+        if (added_pt.getVector3fMap().norm() < 2.0 || added_pt.getVector3fMap().norm() > 100) {
             continue;
         }
 

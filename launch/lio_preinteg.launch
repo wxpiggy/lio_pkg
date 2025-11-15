@@ -5,7 +5,7 @@
     </node>
 
     <!-- 启动 Rviz -->
-    <!-- <node pkg="rviz" type="rviz" name="rviz" 
+    <node pkg="rviz" type="rviz" name="rviz" 
           args="-d $(find lio_pkg)/rviz/show.rviz" 
-          output="screen"/> -->
+          output="screen"/>
 </launch>

@@ -19,7 +19,7 @@ class IncIcp3d  :public RegistrationBase {
     };
 
     struct Options {
-        int max_iteration_ = 10;        // ICP 最大迭代次数
+        int max_iteration_ = 15;        // ICP 最大迭代次数
         double voxel_size_ = 0.5;      // 体素大小
         double inv_voxel_size_ = 2.0;  // 体素大小之逆
         int min_effective_pts_ = 10;   

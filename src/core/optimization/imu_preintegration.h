@@ -60,7 +60,9 @@ class IMUPreintegration {
     // 零偏
     Vec3d bg_ = Vec3d::Zero();
     Vec3d ba_ = Vec3d::Zero();
-
+    Vec3d last_accel_ = Vec3d::Zero();
+    Vec3d last_gyro_ = Vec3d::Zero();
+    bool has_first_ = false;
     // 预积分观测量
     SO3 dR_;
     Vec3d dv_ = Vec3d::Zero();

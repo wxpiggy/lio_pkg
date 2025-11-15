@@ -65,8 +65,8 @@ bool LioPreinteg::Init() {
     imu_init_.Init();
     sync_ = std::make_shared<MessageSync>([this](const MeasureGroup &m) { ProcessMeasurements(m); });
     sync_->Init();
-    // registration_ = std::make_shared<IncIcp3d>();
-    registration_ = std::make_shared<IncNdt3d>();
+    registration_ = std::make_shared<IncIcp3d>();
+    // registration_ = std::make_shared<IncNdt3d>();
     registration_->Init();
     cloud_pub_topic_ = "/cloud";
     pose_pub_topic_ = "/pose";
@@ -110,25 +110,30 @@ void LioPreinteg::Align() {
     current_nav_state_ = preinteg_->Predict(last_nav_state_, imu_init_.GetGravity());//重力一直是fixed？
     ndt_pose_ = current_nav_state_.GetSE3();
 
-    registration_->Align(ndt_pose_);
+    bool converge = registration_->Align(ndt_pose_);
 
+        
+
+    
     Optimize();
-
     // 若运动了一定范围，则把点云放入地图中
     SE3 current_pose = current_nav_state_.GetSE3();
-    SE3 delta_pose = last_ndt_pose_.inverse() * current_pose;
+    CloudPtr current_scan_world(new PointCloudType);
+    pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
+
+
+    registration_->AddCloud({current_scan_world});
+    // SE3 delta_pose = last_ndt_pose_.inverse() * current_pose;
 
     // if (delta_pose.translation().norm() > 0.5 || delta_pose.so3().log().norm() > math::deg2rad(10.0)) {
         // 将地图合入NDT中
-        CloudPtr current_scan_world(new PointCloudType);
-        pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
-        registration_->AddCloud({current_scan_world});
-        last_ndt_pose_ = current_pose;
+
+    // last_ndt_pose_ = current_pose;
 
     // }
 
-
-    FullCloudPtr scan_pub(new FullPointCloudType);        // 放入UI
+    
+    // FullCloudPtr scan_pub(new FullPointCloudType);        // 放入UI
     // pcl::transformPointCloud(*scan_undistort_,*scan_pub,current_pose.matrix());
     // cloud_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_);
             // 放入UI
@@ -138,44 +143,47 @@ void LioPreinteg::Align() {
 }
 
 void LioPreinteg::TryInitIMU() {
-    for (auto imu : measures_.imu_) {
-        imu_init_.AddIMU(*imu);
-    }
-
-    if (imu_init_.InitSuccess()) {
+    // for (auto imu : measures_.imu_) {
+    //     imu_init_.AddIMU(*imu);
+    // }
+    
+    // if (imu_init_.InitSuccess()) {
         // 读取初始零偏，设置ESKF
         // // 噪声由初始化器估计
-        options_.preinteg_options_.noise_gyro_ = sqrt(imu_init_.GetCovGyro()[0]);
-        options_.preinteg_options_.noise_acce_ = sqrt(imu_init_.GetCovAcce()[0]);
-        // options_.preinteg_options_.noise_gyro_ = 0.01;
-        // options_.preinteg_options_.noise_acce_ = 0.1;
-        options_.preinteg_options_.init_ba_ = imu_init_.GetInitBa();
-        options_.preinteg_options_.init_bg_ = imu_init_.GetInitBg();
+        // options_.preinteg_options_.noise_gyro_ = sqrt(imu_init_.GetCovGyro()[0]);
+        // options_.preinteg_options_.noise_acce_ = sqrt(imu_init_.GetCovAcce()[0]);
+        options_.preinteg_options_.noise_gyro_ = 0.01;
+        options_.preinteg_options_.noise_acce_ = 0.1;
+        // options_.preinteg_options_.init_ba_ = imu_init_.GetInitBa();
+        // options_.preinteg_options_.init_bg_ = imu_init_.GetInitBg();
 
         preinteg_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
         imu_need_init_ = false;
 
         current_nav_state_.v_.setZero();
-        current_nav_state_.bg_ = imu_init_.GetInitBg();
-        current_nav_state_.ba_ = imu_init_.GetInitBa();
+        // current_nav_state_.bg_ = imu_init_.GetInitBg();
+        // current_nav_state_.ba_ = imu_init_.GetInitBa();
         current_nav_state_.timestamp_ = measures_.imu_.back()->timestamp_;
 
         last_nav_state_ = current_nav_state_;
         last_imu_ = measures_.imu_.back();
-    //     cov.block<3, 3>(0, 0) = Mat3d::Identity() * 1.0e-6 * 1.0e-6; // rotation information matrix
-    // cov.block<3, 3>(3, 3) = Mat3d::Identity() * 1.0e-2 * 1.0e-2; // velocity information matrix
-    // cov.block<3, 3>(6, 6) = Mat3d::Identity() * 1.0e-6 * 1.0e-6; // position information matrix
-    // cov.block<3, 3>(9, 9) = Mat3d::Identity() * std::pow(0.1 * kDegree2Radian, 2); // bias gyro information matrix
-    // cov.block<3, 3>(12, 12) = Mat3d::Identity() * 0.1 * 0.1; // bias accel information matrix
-        prior_info_.block <3,3>(0,0) = 1e6 * Eigen::Matrix<double, 3,3>::Identity();
-        prior_info_.block <3,3>(3,3) = 1e2 * Eigen::Matrix<double, 3,3>::Identity();
-        prior_info_.block <3,3>(6,6) = 1e6 * Eigen::Matrix<double, 3,3>::Identity();
-        prior_info_.block <3,3>(9,9) = 1e4 * Eigen::Matrix<double, 3,3>::Identity();
-        prior_info_.block <3,3>(12,12) = 1e2 * Eigen::Matrix<double, 3,3>::Identity();
+        Mat15d cov;
+        cov.block<3, 3>(0, 0) = Mat3d::Identity() * 1.0e-6 * 1.0e-6; // rotation information matrix
+        cov.block<3, 3>(3, 3) = Mat3d::Identity() * 1.0e-2 * 1.0e-2; // velocity information matrix
+        cov.block<3, 3>(6, 6) = Mat3d::Identity() * 1.0e-6 * 1.0e-6; // position information matrix
+        cov.block<3, 3>(9, 9) = Mat3d::Identity() * std::pow(0.1 * math::kDEG2RAD, 2); // bias gyro information matrix
+        cov.block<3, 3>(12, 12) = Mat3d::Identity() * 0.1 * 0.1; // bias accel information matrix
+        // prior_info_ = cov.inverse();
+        // prior_info_.block <3,3>(0,0) = 1e12 * Eigen::Matrix<double, 3,3>::Identity();
+        // prior_info_.block <3,3>(3,3) = 1e4 * Eigen::Matrix<double, 3,3>::Identity();
+        // prior_info_.block <3,3>(6,6) = 1e12 * Eigen::Matrix<double, 3,3>::Identity();
+        // prior_info_.block <3,3>(9,9) = 1e6 * Eigen::Matrix<double, 3,3>::Identity();
+        // prior_info_.block <3,3>(12,12) = 1e2 * Eigen::Matrix<double, 3,3>::Identity();
+        // prior_info_ = 1e4 * prior_info_;
         LOG(INFO) << "IMU初始化成功";
         LOG(INFO) <<  "noise accel "<< options_.preinteg_options_.noise_acce_;
         LOG(INFO) <<  "init ba "<< options_.preinteg_options_.init_ba_;
-    }
+    // }
 }
 
 void LioPreinteg::Undistort() {
@@ -190,7 +198,11 @@ void LioPreinteg::Undistort() {
 
         // 根据pt.time查找时间，pt.time是该点打到的时间与雷达开始时间之差，单位为毫秒
         math::PoseInterp<NavStated>(
-            measures_.lidar_begin_time_ + pt.time * 1e-3, imu_states_, [](const NavStated &s) { return s.timestamp_; }, [](const NavStated &s) { return s.GetSE3(); }, Ti, match);
+            measures_.lidar_begin_time_ + pt.time * 1e-3, imu_states_, 
+            [](const NavStated &s) { return s.timestamp_; }, 
+            [](const NavStated &s) { return s.GetSE3(); }, 
+            Ti, 
+            match);
 
         Vec3d pi = ToVec3d(pt);
         Vec3d p_compensate = TIL_.inverse() * T_end.inverse() * Ti * TIL_ * pi;
@@ -213,7 +225,7 @@ void LioPreinteg::Predict() {
         }
 
         last_imu_ = imu;
-        imu_states_.emplace_back(preinteg_->Predict(last_nav_state_, imu_init_.GetGravity()));
+        imu_states_.emplace_back(preinteg_->Predict(last_nav_state_, {0,0,-9.81}));
         // imu_pose_pub_func_("/imu_pose",imu_states_.back().GetSE3(),imu_states_.back().timestamp_);
     }
 }
@@ -276,8 +288,8 @@ void LioPreinteg::Optimize() {
     // 本时刻顶点，pose, v, bg, ba
     auto v1_pose = new VertexPose();
     v1_pose->setId(4);
-    v1_pose->setEstimate(ndt_pose_);  // NDT pose作为初值
-    // v1_pose->setEstimate(current_nav_state_.GetSE3());  // 预测的pose作为初值
+    // v1_pose->setEstimate(ndt_pose_);  // NDT pose作为初值
+    v1_pose->setEstimate(current_nav_state_.GetSE3());  // 预测的pose作为初值
     optimizer.addVertex(v1_pose);
 
     auto v1_vel = new VertexVelocity();
@@ -296,7 +308,7 @@ void LioPreinteg::Optimize() {
     optimizer.addVertex(v1_ba);
 
     // imu factor
-    auto edge_inertial = new EdgeInertial(preinteg_, imu_init_.GetGravity());
+    auto edge_inertial = new EdgeInertial(preinteg_, {0,0,-9.81});
     edge_inertial->setVertex(0, v0_pose);
     edge_inertial->setVertex(1, v0_vel);
     edge_inertial->setVertex(2, v0_bg);
@@ -304,8 +316,8 @@ void LioPreinteg::Optimize() {
     edge_inertial->setVertex(4, v1_pose);
     edge_inertial->setVertex(5, v1_vel);
     auto *rk = new g2o::RobustKernelHuber();
-    rk->setDelta(200.0);
-    edge_inertial->setRobustKernel(rk);
+    // rk->setDelta(200.0);
+    // edge_inertial->setRobustKernel(rk);
     optimizer.addEdge(edge_inertial);
 
     // 零偏随机游走
@@ -351,7 +363,7 @@ void LioPreinteg::Optimize() {
     // go
     optimizer.setVerbose(options_.verbose_);
     optimizer.initializeOptimization();
-    optimizer.optimize(30);
+    optimizer.optimize(1);
 
     // get results
     last_nav_state_.R_ = v0_pose->estimate().so3();
@@ -373,7 +385,7 @@ void LioPreinteg::Optimize() {
         LOG(INFO) << "prior chi2: " << edge_prior->chi2() << ", err: " << edge_prior->error().transpose();
         LOG(INFO) << "ndt: " << edge_ndt->chi2() << "/" << edge_ndt->error().transpose();
     }
-
+    // LOG(INFO) << "info  " << prior_info_;
     /// 重置预积分
 
     options_.preinteg_options_.init_bg_ = current_nav_state_.bg_;
@@ -416,7 +428,7 @@ void LioPreinteg::Optimize() {
         LOG(INFO) << "optimization done.";
     }
 
-    NormalizeVelocity();
+    // NormalizeVelocity();
     last_nav_state_ = current_nav_state_;
 }
 
