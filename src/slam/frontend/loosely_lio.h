@@ -9,7 +9,7 @@
 
 #include "preprocess/measure_sync.h"
 
-
+#include "common/keyframe.h"
 namespace wxpiggy {
 namespace ui {
 class PangolinWindow;
@@ -25,12 +25,6 @@ class PangolinWindow;
 class LooselyLIO {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    struct Options {
-        Options() {}
-        StaticIMUInit::Options static_init_options_;
-        
-        bool save_motion_undistortion_pcd_ = false;  // 是否保存去畸变前后的点云
-    };
 
     // LooselyLIO();
     ~LooselyLIO() = default;
@@ -99,7 +93,7 @@ class LooselyLIO {
     /// point clouds data
     FullCloudPtr scan_undistort_{new FullPointCloudType()};  // scan after undistortion
     SE3 pose_of_lo_;
-
+    SE3 last_kf_pose_;
     // Options options_;
 
     // flags
@@ -118,6 +112,9 @@ class LooselyLIO {
 
     std::string cloud_pub_topic_;   
     std::string pose_pub_topic_; 
+
+    std::map<IdType, KFPtr> keyframes_; // for loop 
+    IdType kf_id_ = 0;
 };
 
 }  // namespace sad

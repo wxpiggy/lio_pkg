@@ -39,12 +39,16 @@ add_library(lio_core SHARED
     src/core/local_map/ivdb/ivdb.cc
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
-    src/slam/frontend/incremental_lo.cc
-    src/slam/frontend/loosely_lio.cc
+
     # src/slam/frontend/lio_iekf.cc
     src/tools/point_cloud_utils.cc
     src/tools/utm_convert.cc
     src/tools/config.cc
+
+    src/slam/frontend/incremental_lo.cc
+    src/slam/frontend/loosely_lio.cc
+
+    src/slam/backend/loop_closure.cc
 
     thirdparty/utm_convert/utm.cc
     thirdparty/utm_convert/tranmerc.cc

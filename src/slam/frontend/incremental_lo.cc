@@ -12,6 +12,7 @@
 #include "core/registration/ndt_inc.h"
 #include "tools/config.h"
 #include "core/registration/p2pl_icp.h"
+
 // #include "tools/pcl_map_viewer.h"
 namespace wxpiggy {
 void incrementalLO::Init(){

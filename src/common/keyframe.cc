@@ -25,17 +25,15 @@ void Keyframe::Save(std::ostream &os) {
         Vec3d t = pose.translation();
         f << t[0] << " " << t[1] << " " << t[2] << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << " ";
     };
-    os << id_ << " " << std::setprecision(18) << timestamp_ << " " << rtk_heading_valid_ << " " << rtk_valid_ << " "
-       << rtk_inlier_ << " ";
+    os << id_ << " " << std::setprecision(18) << timestamp_ << " " ;
     save_SE3(os, lidar_pose_);
-    save_SE3(os, rtk_pose_);
-    save_SE3(os, opti_pose_1_);
-    save_SE3(os, opti_pose_2_);
+    // save_SE3(os, rtk_pose_);
+    save_SE3(os, opti_pose_);
     os << std::endl;
 }
 
 void Keyframe::Load(std::istream &is) {
-    is >> id_ >> timestamp_ >> rtk_heading_valid_ >> rtk_valid_ >> rtk_inlier_;
+    is >> id_ >> timestamp_ ;
 
     auto load_SE3 = [](std::istream &f) -> SE3 {
         SE3 ret;
@@ -45,9 +43,9 @@ void Keyframe::Load(std::istream &is) {
         return SE3(Quatd(q[3], q[0], q[1], q[2]), Vec3d(t[0], t[1], t[2]));
     };
     lidar_pose_ = load_SE3(is);
-    rtk_pose_ = load_SE3(is);
-    opti_pose_1_ = load_SE3(is);
-    opti_pose_2_ = load_SE3(is);
+    // rtk_pose_ = load_SE3(is);
+    opti_pose_ = load_SE3(is);
+    // opti_pose_2_ = load_SE3(is);
 }
 
 bool LoadKeyFrames(const std::string &path, std::map<IdType, std::shared_ptr<Keyframe>> &keyframes) {
