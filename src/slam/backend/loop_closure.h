@@ -21,7 +21,7 @@ struct LoopCandidate {
 
 class LoopClosure {
    public:
-    explicit LoopClosure(const std ::string& config_yaml);
+    explicit LoopClosure();
 
     bool Init();
 
@@ -46,7 +46,8 @@ class LoopClosure {
     double min_distance_ = 30;   // 候选帧之间的最小距离
     int skip_id_ = 5;            // 如果选择了一个候选帧，那么隔开多少个ID之后再选一个
     double ndt_score_th_ = 2.5;  // 有效回环的NDT分值阈值
-
+    std::string pcd_path_ = "";
+    std::string keyframe_list_file_ = "";
     std::map<IdType, KFPtr> keyframes_;
 
     std::string yaml_;

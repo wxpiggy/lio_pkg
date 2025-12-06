@@ -83,7 +83,14 @@ public:
         double gnss_height_noise = 0.1;
         double gnss_ang_noise = 1.0;
     };
-    
+    struct LoopConfig{
+        int min_id_interval_ = 50;   // 被选为候选的两个关键帧之间的ID差值
+        double min_distance_ = 30;   // 候选帧之间的最小距离
+        int skip_id_ = 5;            // 如果选择了一个候选帧，那么隔开多少个ID之后再选一个
+        double ndt_score_th_ = 2.5;  // 有效回环的NDT分值阈值
+        std::string pcd_path_ = "";
+        std::string keyframe_list_file_ = "";
+    };
     // 获取各模块配置
     const SystemConfig& getSystemConfig() const{ return system_;}
     const PreprocessConfig& GetPreprocessConfig() const { return preprocess_; }
@@ -92,7 +99,7 @@ public:
     const InitConfig& GetInitConfig() const { return init_; }
     const IMUConfig& GetIMUConfig() const { return imu_; }
     const GNSSConfig& GetGNSSConfig() const { return gnss_; }
-    
+    const LoopConfig& GetLoopConfig() const {return loop_;}
     // 禁止拷贝和赋值
     Config(const Config&) = delete;
     Config& operator=(const Config&) = delete;
@@ -109,7 +116,7 @@ private:
     void LoadInitConfig(const YAML::Node& node);
     void LoadIMUConfig(const YAML::Node& node);
     void LoadGNSSConfig(const YAML::Node& node);
-    
+    void LoadLoopConfig(const YAML::Node& node);
 private:
     SystemConfig system_;
     PreprocessConfig preprocess_;
@@ -118,7 +125,7 @@ private:
     InitConfig init_;
     IMUConfig imu_;
     GNSSConfig gnss_;
-    
+    LoopConfig loop_;
     bool is_loaded_ = false;
 };
 

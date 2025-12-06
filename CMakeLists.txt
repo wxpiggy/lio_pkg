@@ -66,13 +66,16 @@ set_target_properties(lio_core PROPERTIES
 add_executable(lio_eskf_online
     src/app/main_eskf_online.cc
 )
+add_executable(loop 
+    src/app/loop_closer.cc
+)
 # add_executable(lio_iekf
 #     src/app/main_iekf.cc
 # )
 
 target_link_libraries(lio_eskf_online lio_core)
 # target_link_libraries(lio_iekf lio_core)
-
+target_link_libraries(loop lio_core)
 # add_executable(test_node 
 # src/app/front.cc)
 

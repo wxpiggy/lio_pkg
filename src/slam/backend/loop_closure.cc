@@ -13,23 +13,28 @@
 
 #include "tools/lidar_utils.h"
 #include "tools/point_cloud_utils.h"
-
+#include "tools/config.h"
 namespace wxpiggy {
 
-LoopClosure::LoopClosure(const std::string& config_yaml) : yaml_(config_yaml) {}
+LoopClosure::LoopClosure()  {}
 
 bool LoopClosure::Init() {
-    if (!LoadKeyFrames("./data/ch9/keyframes.txt", keyframes_)) {
+    
+    Config::LoopConfig loop_cofig = Config::GetInstance().GetLoopConfig();
+    min_id_interval_ = loop_cofig.min_id_interval_;
+    min_distance_ = loop_cofig.min_distance_;
+    skip_id_ = loop_cofig.skip_id_;
+    ndt_score_th_ = loop_cofig.ndt_score_th_;
+    pcd_path_ = loop_cofig.pcd_path_;
+    keyframe_list_file_ = loop_cofig.keyframe_list_file_;
+    std::cout << keyframe_list_file_ << std::endl;
+    if (!LoadKeyFrames(keyframe_list_file_, keyframes_)) {
         LOG(ERROR) << "cannot load keyframes";
         return false;
     }
     LOG(INFO) << "keyframes: " << keyframes_.size();
 
-    auto yaml = YAML::LoadFile(yaml_);
-    min_id_interval_ = yaml["loop_closing"]["min_id_interval"].as<int>();
-    min_distance_ = yaml["loop_closing"]["min_distance"].as<double>();
-    skip_id_ = yaml["loop_closing"]["skip_id"].as<int>();
-    ndt_score_th_ = yaml["loop_closing"]["ndt_score_th"].as<double>();
+
     return true;
 }
 
@@ -119,7 +124,8 @@ void LoopClosure::ComputeForCandidate(wxpiggy::LoopCandidate& c) {
 
             auto kf = iter->second;
             CloudPtr cloud(new PointCloudType);
-            pcl::io::loadPCDFile("./data/ch9/" + std::to_string(id) + ".pcd", *cloud);
+            pcl::io::loadPCDFile(pcd_path_+"/"
+                 + std::to_string(id) + ".pcd", *cloud);
             wxpiggy::RemoveGround(cloud, 0.1);
 
             if (cloud->empty()) {
@@ -144,7 +150,7 @@ void LoopClosure::ComputeForCandidate(wxpiggy::LoopCandidate& c) {
     auto submap_kf1 = build_submap(kf1->id_, true);
 
     CloudPtr submap_kf2(new PointCloudType);
-    pcl::io::loadPCDFile("./data/ch9/" + std::to_string(kf2->id_) + ".pcd", *submap_kf2);
+    pcl::io::loadPCDFile(pcd_path_ + "/" + std::to_string(kf2->id_) + ".pcd", *submap_kf2);
 
     if (submap_kf1->empty() || submap_kf2->empty()) {
         c.ndt_score_ = 0;
@@ -188,7 +194,7 @@ void LoopClosure::SaveResults() {
         f << t[0] << " " << t[1] << " " << t[2] << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << " ";
     };
 
-    std::ofstream fout("./data/ch9/loops.txt");
+    std::ofstream fout("/dataset/output/loops.txt");
     for (const auto& lc : loop_candiates_) {
         fout << lc.idx1_ << " " << lc.idx2_ << " " << lc.ndt_score_ << " ";
         save_SE3(fout, lc.Tij_);
