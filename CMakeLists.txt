@@ -51,8 +51,8 @@ add_library(lio_core SHARED
     src/tools/utm_convert.cc
     src/tools/config.cc
 
-    src/slam/frontend/incremental_lo.cc
-    src/slam/frontend/loosely_lio.cc
+    # src/slam/frontend/incremental_lo.cc
+    # src/slam/frontend/loosely_lio.cc
 
     src/slam/backend/loop_closure.cc
 

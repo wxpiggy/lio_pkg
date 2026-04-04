@@ -32,7 +32,7 @@ void incrementalLO::Init(){
         LOG(INFO) << "using Incremental P2PL";
         registration_ = std::make_unique<IncIcp3d>();
         registration_->Init();
-    }else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::POINT2PLANE)){
+    }else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::P2PL)){
         LOG(INFO) << "using Incremental POINT2PLANE";
         registration_ = std::make_unique<IncIcp3d>();
         registration_->Init();
