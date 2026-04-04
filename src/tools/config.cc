@@ -36,7 +36,9 @@ bool Config::LoadConfig(const std::string& config_file) {
         if (config["gnss"]) {
             LoadGNSSConfig(config["gnss"]);
         }
-        
+        if (config["loop"]) {
+            LoadLoopConfig(config["loop"]);
+        }
         is_loaded_ = true;
         std::cout << "Config loaded successfully from: " << config_file << std::endl;
         return true;
@@ -99,4 +101,14 @@ void Config::LoadGNSSConfig(const YAML::Node& node) {
     if (node["gnss_pos_noise"]) gnss_.gnss_pos_noise = node["gnss_pos_noise"].as<double>();
     if (node["gnss_height_noise"]) gnss_.gnss_height_noise = node["gnss_height_noise"].as<double>();
     if (node["gnss_ang_noise"]) gnss_.gnss_ang_noise = node["gnss_ang_noise"].as<double>();
+}
+
+void Config::LoadLoopConfig(const YAML::Node& node){
+    if (node["min_id_interval"]) loop_.min_id_interval_ = node["min_id_interval"].as<int>();
+    if (node["min_distance"]) loop_.min_distance_ = node["min_distance"].as<double>();
+    if (node["skip_id"]) loop_.skip_id_ = node["skip_id"].as<int>();
+    if (node["ndt_score_th"]) loop_.ndt_score_th_ = node["ndt_score_th"].as<double>();
+    if (node["pcd_path"]) loop_.pcd_path_ = node["pcd_path"].as<std::string>();
+    if (node["keyframe_list_file"]) loop_.keyframe_list_file_ = node["keyframe_list_file"].as<std::string>();
+    
 }

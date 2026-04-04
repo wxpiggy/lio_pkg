@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
     using namespace wxpiggy;
     std::map<IdType, KFPtr> keyframes;
-    if (!LoadKeyFrames("/catkin_ws/src/lio_pkg/data/keyframes.txt", keyframes)) {
+    if (!LoadKeyFrames("/dataset/output/keyframes.txt", keyframes)) {
         LOG(ERROR) << "failed to load keyframes.txt";
         return -1;
     }
@@ -46,17 +46,13 @@ int main(int argc, char** argv) {
     for (auto& kfp : keyframes) {
         auto kf = kfp.second;
         SE3 pose;
-        if (FLAGS_pose_source == "rtk") {
-            pose = kf->rtk_pose_;
-        } else if (FLAGS_pose_source == "lidar") {
+        if (FLAGS_pose_source == "lidar") {
             pose = kf->lidar_pose_;
-        } else if (FLAGS_pose_source == "opti1") {
-            pose = kf->opti_pose_1_;
-        } else if (FLAGS_pose_source == "opti2") {
-            pose = kf->opti_pose_2_;
+        } else if (FLAGS_pose_source == "opti") {
+            pose = kf->opti_pose_;
         }
 
-        kf->LoadScan("/catkin_ws/src/lio_pkg/data/");
+        kf->LoadScan("/dataset/output/pcd/");
 
         CloudPtr cloud_trans(new PointCloudType);
         pcl::transformPointCloud(*kf->cloud_, *cloud_trans, pose.matrix());

@@ -5,23 +5,23 @@ preprocess:
   lidar_type: 2
   scan_line: 32
   time_scale: 1e-3
-  point_filter_num: 3
+  point_filter_num: 6
 mapping:
   extrinsic_T: [0, 0, 0.28]
   extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-  registration_type: 2
+  registration_type: 3
 registration:
   max_iteration: 15
   voxel_size: 1.0
   min_effective_pts: 10
   min_pts_in_voxel: 5
   max_pts_in_voxel: 40
-  eps: 1e-2
+  eps: 1e-3
   res_outlier_th: 5.0
   capacity: 5000000
   nearby_type: 6
 init:
-  init_time_seconds: 0.1
+  init_time_seconds: 1
   init_imu_queue_max_size: 2000
   static_odom_pulse: 5
   max_static_gyro_var: 0.5
@@ -39,6 +39,13 @@ gnss:
   gnss_pos_noise: 0.1
   gnss_height_noise: 0.1
   gnss_ang_noise: 1.0
+loop:
+  min_id_interval: 50 
+  min_distance: 30   
+  skip_id: 5           
+  ndt_score_th: 2.5 
+  pcd_path: /dataset/output/pcd
+  keyframe_list_file: /dataset/output/keyframes.txt
 origin:
   - 276726.5626579862
   - 4685961.4821172

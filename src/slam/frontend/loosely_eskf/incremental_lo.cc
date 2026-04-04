@@ -12,6 +12,7 @@
 #include "core/registration/ndt_inc.h"
 #include "tools/config.h"
 #include "core/registration/p2pl_icp.h"
+
 // #include "tools/pcl_map_viewer.h"
 namespace wxpiggy {
 void incrementalLO::Init(){
@@ -24,10 +25,14 @@ void incrementalLO::Init(){
     }
     else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::NDT)){
         LOG(INFO) << "using Incremental NDT";
-        registration_ = std::make_unique<IncIcp3d>();
-        // registration_ = std::make_unique<IncNdt3d>();
+        // registration_ = std::make_unique<IncIcp3d>();
+        registration_ = std::make_unique<IncNdt3d>();
         registration_->Init();
-    }else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::POINT2PLANE)){
+    }else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::P2PL)){
+        LOG(INFO) << "using Incremental P2PL";
+        registration_ = std::make_unique<IncIcp3d>();
+        registration_->Init();
+    }else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::P2PL)){
         LOG(INFO) << "using Incremental POINT2PLANE";
         registration_ = std::make_unique<IncIcp3d>();
         registration_->Init();

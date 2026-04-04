@@ -10,8 +10,31 @@
 
 /// 点云的一些工具函数
 template class pcl::VoxelGrid<wxpiggy::PointType>;
-namespace wxpiggy {
 
+namespace wxpiggy {
+    /// 体素滤波
+void VoxelGrid(CloudPtr cloud, float voxel_size) {
+    pcl::VoxelGrid<wxpiggy::PointType> voxel;
+    voxel.setLeafSize(voxel_size, voxel_size, voxel_size);
+    voxel.setInputCloud(cloud);
+
+    CloudPtr output(new PointCloudType);
+    voxel.filter(*output);
+    cloud->swap(*output);
+}
+void RemoveGround(CloudPtr cloud, float z_min) {
+    CloudPtr output(new PointCloudType);
+    for (const auto& pt : cloud->points) {
+        if (pt.z > z_min) {
+            output->points.emplace_back(pt);
+        }
+    }
+
+    output->height = 1;
+    output->is_dense = false;
+    output->width = output->points.size();
+    cloud->swap(*output);
+}
 /// 写点云文件
 template<typename CloudType> 
 void SaveCloudToFile(const std::string &filePath, CloudType &cloud) {
