@@ -33,6 +33,8 @@ add_library(lio_core SHARED
     src/common/keyframe.cc
     
     src/core/init/static_imu_init.cc
+    # src/core/optimization/g2o_types.cc
+    src/core/optimization/gtsam/gtsam_manager.cc
     src/core/registration/ndt_inc.cc
     src/core/registration/loam_icp.cc
     src/core/registration/p2pl_icp.cc
@@ -40,6 +42,10 @@ add_library(lio_core SHARED
     src/preprocess/cloud_convert.cc
     src/preprocess/measure_sync.cc
 
+
+    src/slam/frontend/loosely_eskf/incremental_lo.cc
+    src/slam/frontend/loosely_eskf/loosely_lio.cc
+    src/slam/frontend/tightly_preinteg/lio_preinteg.cc
     # src/slam/frontend/lio_iekf.cc
     src/tools/point_cloud_utils.cc
     src/tools/utm_convert.cc

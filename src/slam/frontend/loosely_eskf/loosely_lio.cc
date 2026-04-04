@@ -151,6 +151,9 @@ void LooselyLIO::Align() {
         keyframes_.emplace(kf_id_,kf);
     }
     frame_num_++;
+
+    LOG(INFO) << "Bg: " << eskf_->GetNominalState().bg_;
+    LOG(INFO) << "Ba: " << eskf_->GetNominalState().ba_;
 }
 
 void LooselyLIO::PCLCallBack(const sensor_msgs::PointCloud2::ConstPtr &msg) {

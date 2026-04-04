@@ -19,7 +19,7 @@ void incrementalLO::Init(){
     auto config = Config::GetInstance().GetMappingConfig();
     registration_type_ = config.registration_type;
     if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::LOAM)){
-        LOG(INFO) << "using LOAM";
+        LOG(INFO) << "using LOAM, but not surported";
         // registration_ = std::make_unique<LoamICP>();
         // registration_->Init();
     }
@@ -32,8 +32,12 @@ void incrementalLO::Init(){
         LOG(INFO) << "using Incremental P2PL";
         registration_ = std::make_unique<IncIcp3d>();
         registration_->Init();
+    }else if(registration_type_ == static_cast<int>(RegistrationBase::RegistraionType::POINT2PLANE)){
+        LOG(INFO) << "using Incremental POINT2PLANE";
+        registration_ = std::make_unique<IncIcp3d>();
+        registration_->Init();
     }
-
+    
 }
 void incrementalLO::AddCloud(CloudPtr scan, SE3& pose, bool use_guess) {
     if (first_frame_) {

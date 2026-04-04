@@ -6,6 +6,7 @@
 
 #include "common/eigen_types.h"
 #include "common/point_types.h"
+// #include "core/optimization/g2o_types.h"
 
 #include "core/registration/registration_base.h"
 

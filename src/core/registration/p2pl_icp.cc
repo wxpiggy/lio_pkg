@@ -95,7 +95,7 @@ void IncIcp3d::AddCloud(const std::initializer_list<CloudPtr>& cloud) {
 
 
 bool IncIcp3d::Align(SE3& init_pose) {
-    std::cout << ivox_->NumValidGrids()<< std::endl;
+    // std::cout << ivox_->NumValidGrids()<< std::endl;
     SE3 pose = init_pose;
     std::vector<int> index(source_->points.size());
     for (int i = 0; i < index.size(); ++i) {
@@ -193,17 +193,11 @@ bool IncIcp3d::Align(SE3& init_pose) {
         // double contidtion = computeConditionNumber(H);
         // LOG(INFO) << "contionNumber " << contidtion;
         // 更新
-        LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
-        double temp_rotation_dx_norm = dx.head(3).norm();
-        double temp_position_dx_norm = dx.tail(3).norm();
-        double delta_rotation_dx = std::fabs(temp_rotation_dx_norm - last_rotation_dx_norm);
-        double delta_position_dx = std::fabs(temp_position_dx_norm - last_position_dx_norm);
-        last_rotation_dx_norm = temp_rotation_dx_norm;
-        last_position_dx_norm = temp_position_dx_norm;
-        if ((dx.head(3).norm() < 0.005 && dx.tail(3).norm() < 0.001)
-                || (delta_rotation_dx < static_cast<double>(1.0e-4) && delta_position_dx < static_cast<double>(1.0e-4))) {
+        // LOG(INFO) << "iter " << iter << " total res: " << total_res << ", eff: " << effective_num << ", mean res: " << total_res / effective_num << ", dxn: " << dx.norm();
+
+        if (dx.norm() < options_.eps_) {
             is_converged_ = true;
-            LOG(INFO) << "converged, dx = " << dx.transpose();
+            // LOG(INFO) << "converged, dx = " << dx.transpose();
             break;
         }
 
