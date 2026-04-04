@@ -35,7 +35,7 @@ bool LioPreinteg::Init() {
 }
 
 void LioPreinteg::ProcessMeasurements(const MeasureGroup &meas) {
-    LOG(INFO) << "call meas, imu: " << meas.imu_.size() << ", lidar pts: " << meas.lidar_->size();
+    // LOG(INFO) << "call meas, imu: " << meas.imu_.size() << ", lidar pts: " << meas.lidar_->size();
     measures_ = meas;
 
     if (imu_need_init_) {
@@ -159,7 +159,7 @@ void LioPreinteg::Align() {
         return;
     }
 
-    LOG(INFO) << "=== frame " << frame_num_;
+    // LOG(INFO) << "=== frame " << frame_num_;
     registration_->SetSource({current_scan_filter});
     
     

@@ -19,7 +19,7 @@ bool GtsamManager::Initialize(const Options& options, const Vec3d& gravity,
     p->n_gravity = gravity;
     p->integrationCovariance = 1e-8 * Eigen::Matrix3d::Identity();
     p->accelerometerCovariance = 0.01 * Eigen::Matrix3d::Identity();
-    p->gyroscopeCovariance = 0.0001 * Eigen::Matrix3d::Identity();
+    p->gyroscopeCovariance = 0.01 * Eigen::Matrix3d::Identity();
     p->biasAccCovariance = options.bias_acce_var_ * options.bias_acce_var_ * Eigen::Matrix3d::Identity();
     p->biasOmegaCovariance = options.bias_gyro_var_ * options.bias_gyro_var_ * Eigen::Matrix3d::Identity();
     

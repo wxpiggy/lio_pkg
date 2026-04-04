@@ -78,10 +78,10 @@ private:
 
     // 配置选项
     struct {
-        double bias_gyro_var_ = 0.001;
-        double bias_acce_var_ = 0.01;
-        double ndt_pos_noise_ = 0.1;
-        double ndt_ang_noise_ = 0.05;
+        double bias_gyro_var_ = 1e-5;
+        double bias_acce_var_ = 1e-5;
+        double ndt_pos_noise_ = 0.01;
+        double ndt_ang_noise_ = 0.005;
         bool verbose_ = false;
     } options_;
 
