@@ -143,13 +143,13 @@ void LooselyLIO::Align() {
     pcl::transformPointCloud(*current_scan_filter,*scan_pub,pose_updated.matrix());
     
     // cloud_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_);
-    // cloud_down_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_ );
-    // pose_pub_func_(pose_pub_topic_,pose_updated,measures_.lidar_end_time_);
-    if(frame_num_ % 5 == 0) {
-        auto kf = std::make_shared<Keyframe>(measures_.lidar_end_time_,kf_id_++, pose_updated, current_scan_filter);
-        kf->SaveAndUnloadScan("/dataset/output/pcd");
-        keyframes_.emplace(kf_id_,kf);
-    }
+    cloud_down_pub_func_(cloud_pub_topic_,scan_pub,measures_.lidar_end_time_ );
+    pose_pub_func_(pose_pub_topic_,pose_updated,measures_.lidar_end_time_);
+    // if(frame_num_ % 5 == 0) {
+    //     auto kf = std::make_shared<Keyframe>(measures_.lidar_end_time_,kf_id_++, pose_updated, current_scan_filter);
+    //     kf->SaveAndUnloadScan("/dataset/output/pcd");
+    //     keyframes_.emplace(kf_id_,kf);
+    // }
     frame_num_++;
 
     LOG(INFO) << "Bg: " << eskf_->GetNominalState().bg_;

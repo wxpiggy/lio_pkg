@@ -90,7 +90,7 @@ NavStated GtsamManager::PredictState(const NavStated& last_state) const {
     );
 }
 
-void GtsamManager::AddLidarMeasurement(const SE3& lidar_pose, double timestamp) {
+void GtsamManager::AddLidarMeasurement(const SE3& lidar_pose, const NavStated& base_state, const double timestamp) {
     using namespace gtsam;
     
     int i = frame_count_ - 1;
@@ -122,13 +122,13 @@ void GtsamManager::AddLidarMeasurement(const SE3& lidar_pose, double timestamp) 
     // 初始值
     if (imu_preintegration_) {
         gtsam::NavState predicted_gtsam = imu_preintegration_->predict(
-            ToGTSAMNavState(GetLastState()), 
-            ToGTSAMBias(GetLastState())
+            ToGTSAMNavState(base_state), 
+            ToGTSAMBias(base_state)
         );
         
         new_values.insert(X(j), predicted_gtsam.pose());
         new_values.insert(V(j), predicted_gtsam.velocity());
-        new_values.insert(B(j), ToGTSAMBias(GetLastState()));
+        new_values.insert(B(j), ToGTSAMBias(base_state));
     }
 
     // 更新时间戳

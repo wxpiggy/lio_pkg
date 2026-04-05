@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <param name="config" type="string" value="$(find lio_pkg)/config/velodyne_nclt.yaml" />
+    <node pkg="lio_pkg" type="lio_preinteg" name="lio_preinteg" output="screen">
+    </node>
+
+    <!-- 启动 Rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" 
+          args="-d $(find lio_pkg)/rviz/show.rviz" 
+          output="screen"/>
+</launch>

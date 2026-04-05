@@ -55,7 +55,8 @@ private:
     std::shared_ptr<RegistrationBase> registration_;
 
     // 状态变量
-    NavStated last_nav_state_;
+    // NavStated last_nav_state_;
+    NavStated predicted_nav_state_;
     NavStated current_nav_state_;
     std::vector<NavStated> imu_states_;
     
@@ -81,7 +82,7 @@ private:
         double bias_gyro_var_ = 1e-5;
         double bias_acce_var_ = 1e-5;
         double ndt_pos_noise_ = 0.01;
-        double ndt_ang_noise_ = 0.005;
+        double ndt_ang_noise_ = 0.001;
         bool verbose_ = false;
     } options_;
 

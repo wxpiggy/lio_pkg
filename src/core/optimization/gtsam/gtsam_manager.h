@@ -29,7 +29,7 @@ public:
         double lag_duration_ = 0.3;
         double bias_gyro_var_ = 0.0001;
         double bias_acce_var_ = 0.0001;
-        double ndt_pos_noise_ = 0.01;
+        double ndt_pos_noise_ = 0.05;
         double ndt_ang_noise_ = 0.001;
     };
 
@@ -45,7 +45,7 @@ public:
     NavStated PredictState(const NavStated& last_state) const;
 
     // 优化
-    void AddLidarMeasurement(const SE3& lidar_pose, double timestamp);
+    void AddLidarMeasurement(const SE3& lidar_pose, const NavStated& base_state, double timestamp);
     
     // 获取结果
     NavStated GetCurrentState() const;

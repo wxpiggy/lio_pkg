@@ -83,7 +83,7 @@ void LioPreinteg::TryInitIMU() {
     );
     
     
-    last_nav_state_ = current_nav_state_;
+    // last_nav_state_ = current_nav_state_;
     last_imu_ = measures_.imu_.back();
     imu_need_init_ = false;
     
@@ -92,7 +92,8 @@ void LioPreinteg::TryInitIMU() {
 
 void LioPreinteg::Predict() {
     imu_states_.clear();
-    imu_states_.emplace_back(last_nav_state_);
+    const NavStated base_state = current_nav_state_;
+    imu_states_.emplace_back(base_state);
 
     for (auto &imu : measures_.imu_) {
         if (last_imu_ != nullptr) {
@@ -103,10 +104,16 @@ void LioPreinteg::Predict() {
         last_imu_ = imu;
         
         // 预测状态
-        NavStated predicted_state = gtsam_manager_->PredictState(last_nav_state_);
+        NavStated predicted_state = gtsam_manager_->PredictState(base_state);
         predicted_state.timestamp_ = imu->timestamp_;
         imu_states_.emplace_back(predicted_state);
     }
+    if (!imu_states_.empty()) {
+        predicted_nav_state_ = imu_states_.back();
+    } else {
+        predicted_nav_state_ = base_state;
+    }
+
 }
 
 void LioPreinteg::Undistort() {
@@ -163,13 +170,17 @@ void LioPreinteg::Align() {
     registration_->SetSource({current_scan_filter});
     
     
-    NavStated predicted_state = gtsam_manager_->PredictState(last_nav_state_);
-    ndt_pose_ = predicted_state.GetSE3();
+    // NavStated predicted_state = gtsam_manager_->PredictState(last_nav_state_);
+    ndt_pose_ = predicted_nav_state_.GetSE3();
     
     registration_->Align(ndt_pose_);
     Optimize();
 
-    SE3 current_pose = current_nav_state_.GetSE3();
+    SE3 current_pose = 
+    // ndt_pose_;
+    current_nav_state_.GetSE3();
+    LOG(INFO) << " current state" << current_nav_state_ ;
+ 
     CloudPtr current_scan_world(new PointCloudType);
     pcl::transformPointCloud(*current_scan_filter, *current_scan_world, current_pose.matrix());
     
@@ -194,7 +205,7 @@ void LioPreinteg::Optimize() {
     }
 
     
-    gtsam_manager_->AddLidarMeasurement(ndt_pose_, measures_.lidar_end_time_);
+    gtsam_manager_->AddLidarMeasurement(ndt_pose_,current_nav_state_, measures_.lidar_end_time_);
     
  
     
@@ -202,8 +213,9 @@ void LioPreinteg::Optimize() {
     current_nav_state_ = gtsam_manager_->GetCurrentState();
     current_nav_state_.timestamp_ = measures_.lidar_end_time_;
     
-    last_nav_state_ = gtsam_manager_->GetLastState();
-    last_nav_state_.timestamp_ = measures_.lidar_end_time_;
+    // last_nav_state_ = current_nav_state_;
+    // gtsam_manager_->GetLastState();
+    // last_nav_state_.timestamp_ = measures_.lidar_end_time_;
     
     // 重置预积分器
     gtsam_manager_->ResetIntegration();
