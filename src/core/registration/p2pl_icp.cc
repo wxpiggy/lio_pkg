@@ -1,5 +1,5 @@
 #include "p2pl_icp.h"
-
+#include "tools/config.h"
 #include <glog/logging.h>
 
 #include <algorithm>  // std::for_each
@@ -11,6 +11,16 @@
 namespace wxpiggy {
 
 void IncIcp3d::Init(){
+    auto config = Config::GetInstance().GetRegistrationConfig();
+    options_.max_iteration_ = config.max_iteration;
+    options_.voxel_size_ = config.voxel_size;
+    options_.inv_voxel_size_ = 1.0 / config.voxel_size;
+    options_.min_effective_pts_ = config.min_effective_pts;
+    options_.nearby_type_ = static_cast<NearbyType>(config.nearby_type);
+    ivdb_options_.voxel_size_ = config.voxel_size;
+    ivdb_options_.max_points_per_voxel_ = config.max_pts_in_voxel;
+    ivdb_options_.capacity_ = config.capacity;
+    
     std::cout << "ivox init begin" << std::endl;
     IVoxType::Options options;
     // options.nearby_type_ = IVoxType::NearbyType::NEARBY18;
@@ -139,14 +149,7 @@ bool IncIcp3d::Align(SE3& init_pose) {
                 }
                 double dis = n.head<3>().dot(qs -nn[0]);
                 double dis_sq = dis * dis;  // 距离的平方
-
-                // 使用类似您参考代码的判断条件
-                // bool valid_corr = qs.norm() > 81 * dis_sq;  // 81 * 距离平方
                 if( q.norm() < 81 * dis_sq){
-                // float s = 1 - 0.9 * fabs(dis) / sqrt(sqrt(q.x() * q.x()
-                //             + q.y() * q.y() + q.z() * q.z()));
-                // if(s < 0.1){
-                // if (std::fabs(dis) > 0.03) {
                     effect_pts[idx] = false;
                     return;
                 }

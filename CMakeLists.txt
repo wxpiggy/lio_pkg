@@ -75,12 +75,12 @@ add_executable(lio_eskf_online
 add_executable(loop 
     src/app/loop_closer.cc
 )
-# add_executable(lio_iekf
-#     src/app/main_iekf.cc
-# )
+add_executable(lio_preinteg
+    src/app/main_preinteg.cc
+)
 
 target_link_libraries(lio_eskf_online lio_core)
-# target_link_libraries(lio_iekf lio_core)
+target_link_libraries(lio_preinteg lio_core)
 target_link_libraries(loop lio_core)
 # add_executable(test_node 
 # src/app/front.cc)

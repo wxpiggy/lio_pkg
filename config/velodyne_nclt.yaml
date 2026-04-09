@@ -11,6 +11,7 @@ mapping:
   extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
   registration_type: 3
 registration:
+  local_map: "ivdb"
   max_iteration: 15
   voxel_size: 1.0
   min_effective_pts: 10

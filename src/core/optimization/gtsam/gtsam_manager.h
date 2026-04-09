@@ -26,7 +26,7 @@ namespace wxpiggy {
 class GtsamManager {
 public:
     struct Options {
-        double lag_duration_ = 0.3;
+        double lag_duration_ = 0.5;
         double bias_gyro_var_ = 0.0001;
         double bias_acce_var_ = 0.0001;
         double ndt_pos_noise_ = 0.05;
