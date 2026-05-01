@@ -12,6 +12,7 @@
 #include "common/nav_state.h"
 #include "common/odom.h"
 #include "tools/math_utils.h"
+#include "tools/config.h"
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 

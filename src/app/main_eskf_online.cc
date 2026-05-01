@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
     lm->setFunc(ros_publisher.GetPosePublishFunc());
     lm->setFunc(ros_publisher.GetDownCloudPublishFunc());
     lm->Init();
+    std::cout << "subscribe topics: " << system_config.lidar_topic << " and " << system_config.imu_topic << std::endl;
     ros::Subscriber subPointCloud = nh.subscribe<sensor_msgs::PointCloud2>(system_config.lidar_topic, 1000, pointCloudCallback);
     ros::Subscriber subImu = nh.subscribe<sensor_msgs::Imu>(system_config.imu_topic, 5000, imuCallback);
     LOG(INFO) << "LooselyLIO node started, waiting for data...";
