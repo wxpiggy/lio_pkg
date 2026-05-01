@@ -71,7 +71,7 @@ void LioPreinteg::TryInitIMU() {
     current_nav_state_.bg_ = imu_init_->GetInitBg();
     current_nav_state_.ba_ = imu_init_->GetInitBa();
     current_nav_state_.timestamp_ = measures_.imu_.back()->timestamp_;
-    
+    current_nav_state_.R_ = imu_init_->getInitQ().toRotationMatrix();
     // 初始化偏置
     gtsam::imuBias::ConstantBias prior_bias(current_nav_state_.ba_, current_nav_state_.bg_);
     

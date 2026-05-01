@@ -49,6 +49,7 @@ class StaticIMUInit {
     Vec3d GetCovAcce() const { return cov_acce_; }
     Vec3d GetInitBg() const { return init_bg_; }
     Vec3d GetInitBa() const { return init_ba_; }
+    Eigen::Quaterniond getInitQ() const { return q_init_; }
     Vec3d GetGravity() const { return gravity_; }
     void Init(); 
    private:
@@ -57,6 +58,7 @@ class StaticIMUInit {
 
     Options options_;                 // 选项信息
     bool init_success_ = false;       // 初始化是否成功
+    Eigen::Quaterniond q_init_ = Eigen::Quaterniond::Identity();  // 初始旋转
     Vec3d cov_gyro_ = Vec3d::Zero();  // 陀螺测量噪声协方差（初始化时评估）
     Vec3d cov_acce_ = Vec3d::Zero();  // 加计测量噪声协方差（初始化时评估）
     Vec3d init_bg_ = Vec3d::Zero();   // 陀螺初始零偏

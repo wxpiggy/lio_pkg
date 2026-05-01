@@ -86,7 +86,25 @@ class ESKF {
         g_ = gravity;
         cov_ = Mat18T::Identity() * 1e-4;
     }
-
+    
+    /**
+     * 设置初始条件
+     * @param options 噪声项配置
+     * @param q_init 初始旋转
+     * @param init_bg 初始零偏 陀螺
+     * @param init_ba 初始零偏 加计
+     * @param gravity 重力
+     */
+    void SetInitialConditions(Options options,const Eigen::Quaterniond& q_init, const VecT& init_bg, const VecT& init_ba,
+                              const VecT& gravity = VecT(0, 0, -9.8)) {
+        BuildNoise(options);
+        options_ = options;
+        R_ = q_init.toRotationMatrix();
+        bg_ = init_bg;
+        ba_ = init_ba;
+        g_ = gravity;
+        cov_ = Mat18T::Identity() * 1e-4;
+    }
     /// 使用IMU递推
     bool Predict(const IMU& imu);
 

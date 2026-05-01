@@ -72,12 +72,23 @@ bool StaticIMUInit::TryStaticInit() {
 
     // 以acce均值为方向，取9.8长度为重力
     LOG(INFO) << "mean acce: " << mean_acce.transpose();
-    gravity_ = -mean_acce / mean_acce.norm() * options_.gravity_norm_;
-
+    // gravity_ = -mean_acce / mean_acce.norm() * options_.gravity_norm_;
+    gravity_(3) = options_.gravity_norm_;
+    Eigen::Vector3d z_axis = mean_acce / mean_acce.norm();
+    Eigen::Vector3d e_1(1,0,0);
+    Eigen::Vector3d x_axis = e_1 - z_axis * z_axis.transpose() * e_1;
+    x_axis = x_axis / x_axis.norm();
+    Eigen::Vector3d y_axis = math::SKEW_SYM_MATRIX(z_axis)* x_axis;
+    Eigen::Matrix3d rotation;
+    rotation.block(0, 0, 3, 1) = x_axis;
+    rotation.block(0, 1, 3, 1) = y_axis;
+    rotation.block(0, 2, 3, 1) = z_axis;
+    q_init_ = Eigen::Quaterniond(rotation);
     // 重新计算加计的协方差
+    
     math::ComputeMeanAndCovDiag(init_imu_deque_, mean_acce, cov_acce_,
-                                [this](const IMU& imu) { return imu.acce_ + gravity_; });
-
+                                [this](const IMU& imu) { return imu.acce_ - q_init_ * gravity_; });
+    
     // 检查IMU噪声
     // if (cov_gyro_.norm() > options_.max_static_gyro_var) {
     //     LOG(ERROR) << "陀螺仪测量噪声太大" << cov_gyro_.norm() << " > " << options_.max_static_gyro_var;
@@ -93,7 +104,9 @@ bool StaticIMUInit::TryStaticInit() {
     init_bg_ = mean_gyro;
     init_ba_ = mean_acce;
 
-    LOG(INFO) << "IMU 初始化成功，初始化时间= " << current_time_ - init_start_time_ << ", bg = " << init_bg_.transpose()
+    LOG(INFO) << "IMU 初始化成功，初始化时间= " << current_time_ - init_start_time_ 
+              << ", init q = " << q_init_.coeffs().transpose()
+              << ", bg = " << init_bg_.transpose()
               << ", ba = " << init_ba_.transpose() << ", gyro sq = " << cov_gyro_.transpose()
               << ", acce sq = " << cov_acce_.transpose() << ", grav = " << gravity_.transpose()
               << ", norm: " << gravity_.norm();

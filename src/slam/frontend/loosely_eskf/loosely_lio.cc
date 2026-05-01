@@ -77,11 +77,14 @@ void LooselyLIO::TryInitIMU() {
         // 噪声由初始化器估计
         options.gyro_var_ = sqrt(imu_init_.GetCovGyro()[0]);
         options.acce_var_ = sqrt(imu_init_.GetCovAcce()[0]);
-        eskf_->SetInitialConditions(options, imu_init_.GetInitBg(), imu_init_.GetInitBa(), imu_init_.GetGravity());
+        
+        // eskf_->SetInitialConditions(options, imu_init_.GetInitBg(), imu_init_.GetInitBa(), imu_init_.GetGravity());
+        eskf_->SetInitialConditions(options, imu_init_.getInitQ(), imu_init_.GetInitBg(), imu_init_.GetInitBa(), imu_init_.GetGravity());
         LOG(INFO) << "gyro_var: " << options.gyro_var_;
         LOG(INFO) << "acce_var_: " << options.acce_var_;
         LOG(INFO) << "InitBg: " << imu_init_.GetInitBg();
         LOG(INFO) << "InitBa: " << imu_init_.GetInitBa();
+        LOG(INFO) << "InitQ: " << imu_init_.getInitQ().coeffs().transpose();
         imu_need_init_ = false;
 
         LOG(INFO) << "IMU初始化成功";
